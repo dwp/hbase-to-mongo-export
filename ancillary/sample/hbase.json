@@ -1,0 +1,16 @@
+{
+    "column": "cf:data",
+    "timestamp": "1562060185662",
+    "value": {
+        "id": "090c17fb-7943-4bbf-9d4e-0d54230200cf",
+        "timestamp": "2019-07-02T09:36:13.836+0000",
+        "encryption": {
+            "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
+            "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
+            "initialisationVector": "kjGyvY67jhJHVdo2",
+            "keyEncryptionKeyId": "example-key_2019-12-14_01"
+        },
+        "topic": "docker",
+        "data": "achsjOlplDdUplFjHttGNXPERtogfOTGKkmsrkIgZljJQeUiuEeETCjMbCQoFdUChitmGqQpXwZKYmyMnwUAqMQowxsJoJnFVDvWcACseFftVYiWOlpfFyiObpZxewuRFRRjIGmaTsXYHpKNnnlyJWwdpHEbOtDUIhBANoKcbvbUSYUpxkspTlOdEchyNtXOgfQVgDncWBqNMwhJZYtsovolxCLwWdCLAaVNZLJbLyDHMtkscthyshtakiAJcvJbYcUKxUpOMeDvcRKrZbbX"
+    }
+}

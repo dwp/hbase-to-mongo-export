@@ -1,0 +1,89 @@
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:8-jdk
+
+    # Specify service dependencies here if necessary
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle.kts" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: gradle build
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle.kts" }}
+
+      - run:
+          name: mkdir for artifact
+          command: |
+            mkdir artifacts
+            cp build/libs/dataworks-nightly-export-*.jar ./artifacts/
+
+      - persist_to_workspace:
+          root: artifacts
+          paths:
+            - dataworks-nightly-export-*.jar
+
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            set -u
+            set -o pipefail
+            ls -l ./artifacts
+            for jar in ./artifacts/*.jar; do
+              mv -v $jar ${jar/-SNAPSHOT/}
+            done
+            VERSION=$(ls ./artifacts/*.jar | head -n1 | sed -e 's/\.jar$// ' | sed -e 's/\.\/artifacts\/dataworks-nightly-export-//')
+            echo VERSION: \'${VERSION}\'.
+            PREVIOUS_VERSION=$(echo $VERSION | awk -F. '{$NF = $NF - 1;} 1' | sed 's/ /./g')
+            echo PREVIOUS_VERSION: \'$PREVIOUS_VERSION\'.
+            ghr \
+              -t ${GITHUB_TOKEN} \
+              -u ${CIRCLE_PROJECT_USERNAME} \
+              -r ${CIRCLE_PROJECT_REPONAME} \
+              -c ${CIRCLE_SHA1} -recreate \
+              ${VERSION} ./artifacts/
+
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - publish-github-release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
