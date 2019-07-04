@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.batch
+package app.batch
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import uk.gov.dwp.dataworks.export.domain.EncryptionBlock
-import uk.gov.dwp.dataworks.export.domain.RecordId
-import uk.gov.dwp.dataworks.export.domain.SourceRecord
-import uk.gov.dwp.dataworks.export.exceptions.MissingFieldException
+import app.domain.EncryptionBlock
+import app.domain.RecordId
+import app.domain.SourceRecord
+import app.exceptions.MissingFieldException
 import java.nio.charset.Charset
 
 @Component
@@ -36,7 +36,7 @@ constructor(private val connection: Connection): ItemReader<SourceRecord> {
 
             logger.info("encryptedDbObject: '$encryptedDbObject'.")
             if (encryptedDbObject.isNullOrEmpty()) {
-                throw MissingFieldException(id,  "dbObject")
+                throw MissingFieldException(id, "dbObject")
             }
             val recordId = RecordId(id)
             val lastModified = dataBlock.getAsJsonPrimitive("timestamp").asString

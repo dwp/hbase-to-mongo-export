@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export
+package app
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration

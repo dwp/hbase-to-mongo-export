@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.batch
+package app.batch
 
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
@@ -15,10 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
-import uk.gov.dwp.dataworks.export.domain.EncryptionBlock
-import uk.gov.dwp.dataworks.export.domain.RecordId
-import uk.gov.dwp.dataworks.export.domain.SourceRecord
-import uk.gov.dwp.dataworks.export.exceptions.MissingFieldException
+import app.domain.EncryptionBlock
+import app.domain.RecordId
+import app.domain.SourceRecord
+import app.exceptions.MissingFieldException
 import java.nio.charset.Charset
 
 @RunWith(SpringRunner::class)

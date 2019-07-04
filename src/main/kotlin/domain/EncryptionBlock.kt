@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.domain
+package app.domain
 
 data class EncryptionBlock (val encryptionKeyId: String,
                             val encryptedEncryptionKey: String)

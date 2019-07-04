@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.configuration
+package app.configuration
 
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 
 @Configuration
-@Profile("localDatasource")
+@Profile("localDataSource")
 class DataSourceConfiguration {
     @Bean
     fun connection(): Connection {

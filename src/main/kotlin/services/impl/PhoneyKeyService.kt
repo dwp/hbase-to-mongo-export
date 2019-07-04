@@ -1,8 +1,8 @@
-package uk.gov.dwp.dataworks.export.services.impl
+package app.services.impl
 
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import uk.gov.dwp.dataworks.export.services.KeyService
+import app.services.KeyService
 
 @Service
 @Profile("phoneyServices")

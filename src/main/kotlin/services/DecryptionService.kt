@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.services
+package app.services
 
 interface DecryptionService {
     fun decrypt(key: String, data: String): String
