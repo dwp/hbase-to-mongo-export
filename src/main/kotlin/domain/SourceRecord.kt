@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.domain
+package app.domain
 
 data class SourceRecord(val _id: RecordId,
                         val _lastModifiedDateTime: String,

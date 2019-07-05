@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.batch
+package app.batch
 
 import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component

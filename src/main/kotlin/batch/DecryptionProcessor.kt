@@ -1,12 +1,12 @@
-package uk.gov.dwp.dataworks.export.batch
+package app.batch
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import uk.gov.dwp.dataworks.export.domain.SourceRecord
-import uk.gov.dwp.dataworks.export.services.DecryptionService
-import uk.gov.dwp.dataworks.export.services.KeyService
+import app.domain.SourceRecord
+import app.services.DecryptionService
+import app.services.KeyService
 
 @Component
 class DecryptionProcessor(private val decryptionService: DecryptionService,

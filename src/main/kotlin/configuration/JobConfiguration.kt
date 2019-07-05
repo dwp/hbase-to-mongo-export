@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.configuration
+package app.configuration
 
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.transaction.PlatformTransactionManager
-import uk.gov.dwp.dataworks.export.domain.SourceRecord
+import app.domain.SourceRecord
 import javax.sql.DataSource
 
 @Configuration

@@ -1,4 +1,4 @@
-package uk.gov.dwp.dataworks.export.configuration
+package app.configuration
 
 import org.apache.hadoop.hbase.client.Connection
 import org.mockito.Mockito

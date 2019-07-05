@@ -1,9 +1,9 @@
-package uk.gov.dwp.dataworks.export.batch
+package app.batch
 
 import com.google.gson.Gson
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import uk.gov.dwp.dataworks.export.domain.SourceRecord
+import app.domain.SourceRecord
 
 @Component
 class JsonProcessor: ItemProcessor<SourceRecord, String> {

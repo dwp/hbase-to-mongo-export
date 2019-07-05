@@ -3,4 +3,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
-rootProject.name = "dataworks-nightly-export"
+rootProject.name = "hbase-crown-export"
