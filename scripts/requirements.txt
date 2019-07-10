@@ -1,0 +1,4 @@
+happybase==1.2.0
+ply==3.11
+six==1.12.0
+thriftpy2==0.4.4

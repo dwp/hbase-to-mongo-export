@@ -19,7 +19,6 @@ COPY gradlew .
 COPY gradle/ ./gradle
 
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${BUILD_DIR}
-
 USER ${SERVICE_USER}
 
 RUN $GRADLE wrapper
@@ -27,23 +26,4 @@ RUN $GRADLE --refresh-dependencies compileKotlin
 COPY src/ ./src
 RUN $GRADLE build
 
-FROM openjdk:8-slim
-ARG HBASE_CROWN_EXPORT_VERSION
-
-ENV SERVICE_USER=dataworks
-ENV SERVICE_USER_HOME=/home/${SERVICE_USER}
-ENV INSTALL_DIR=/opt/hbase-crown-export
-RUN mkdir -p ${SERVICE_USER_HOME} ${INSTALL_DIR}/data
-RUN useradd -d ${SERVICE_USER_HOME} ${SERVICE_USER}
-RUN id -a ${SERVICE_USER}
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
-
-WORKDIR ${INSTALL_DIR}
-ENV JAR=hbase-crown-export-${HBASE_CROWN_EXPORT_VERSION}.jar
-COPY --from=buildImage \
-        $INSTALL_DIR/build/libs/$JAR \
-        $INSTALL_DIR
-
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
-USER ${SERVICE_USER}
-ENTRYPOINT ["sh", "-c", "${INSTALL_DIR}/${JAR} \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "${BUILD_DIR}/gradlew \"$@\"", "--"]

@@ -7,13 +7,14 @@ import org.springframework.stereotype.Component
 import app.domain.SourceRecord
 import app.services.DecryptionService
 import app.services.KeyService
+import com.google.gson.Gson
 
 @Component
 class DecryptionProcessor(private val decryptionService: DecryptionService,
                           private val keyService: KeyService):
-        ItemProcessor<SourceRecord, SourceRecord> {
+        ItemProcessor<SourceRecord, String> {
 
-    override fun process(item: SourceRecord): SourceRecord? {
+    override fun process(item: SourceRecord): String? {
         logger.info("item: '$item'.")
 
         val decryptedKey: String =
@@ -24,7 +25,8 @@ class DecryptionProcessor(private val decryptionService: DecryptionService,
                 decryptionService.decrypt(decryptedKey, item.dbObject)
 
         item.dbObject= decryptedRecord
-        return item
+        return Gson().toJson(item)
+
     }
 
     companion object {

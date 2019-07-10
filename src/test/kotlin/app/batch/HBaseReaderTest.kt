@@ -1,5 +1,10 @@
 package app.batch
 
+import app.domain.EncryptionBlock
+import app.domain.RecordId
+import app.domain.SourceRecord
+import app.exceptions.MissingFieldException
+import org.apache.hadoop.hbase.Cell
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.junit.Assert.assertEquals
@@ -14,16 +19,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import app.domain.EncryptionBlock
-import app.domain.RecordId
-import app.domain.SourceRecord
-import app.exceptions.MissingFieldException
 import java.nio.charset.Charset
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyServices", "unitTest")
+@ActiveProfiles("phoneyServices", "unitTest", "consoleOutput")
 @SpringBootTest
+@TestPropertySource(properties = ["source.table.name=ucdata"])
 class HBaseReaderTest {
 
     @Before
@@ -37,6 +40,8 @@ class HBaseReaderTest {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
+        val current: Cell = Mockito.mock(Cell::class.java)
+
         hbaseReader.resetScanner()
 
         val expectedId = "EXPECTED_ID"
@@ -61,12 +66,14 @@ class HBaseReaderTest {
             |    "dbObject": "$dbObject"
             |}""".trimMargin()
 
+        given(current.timestamp).willReturn(10)
+        given(result.current()).willReturn(current)
         given(result.getValue("cf".toByteArray(), "data".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(TableName.valueOf("ucdata"))).willReturn(table)
 
-        val recordId  = RecordId(expectedId)
+        val recordId  = RecordId(expectedId, 10)
         val encryption = EncryptionBlock(keyEncryptionKeyId, encryptedEncryptionKey)
         val expected = SourceRecord(recordId, timestamp, encryption, dbObject)
         val actual = hbaseReader.read()
@@ -79,6 +86,8 @@ class HBaseReaderTest {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
+        val current: Cell = Mockito.mock(Cell::class.java)
+
         hbaseReader.resetScanner()
 
         val expectedId = "ID"
@@ -94,13 +103,15 @@ class HBaseReaderTest {
             |     "timestamp": "$timestamp", 
             |     "topic": "$topic", 
             |     "encryption": {
-            |       "encryptionKeyId": "$encryptionKeyId", 
+            |       "encryptionKeyId": timestamp.toLong()"$encryptionKeyId", 
             |       "encryptedEncryptionKey": "$encryptedEncryptionKey", 
             |       "initialisationVector": "$initialisationVector", 
             |       "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    } 
             |}""".trimMargin()
 
+        given(current.timestamp).willReturn(10)
+        given(result.current()).willReturn(current)
         given(result.getValue("cf".toByteArray(), "data".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)

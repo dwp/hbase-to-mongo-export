@@ -1,0 +1,19 @@
+package app.configuration
+
+import org.slf4j.LoggerFactory
+import org.springframework.batch.core.JobExecution
+import org.springframework.batch.core.listener.JobExecutionListenerSupport
+import org.springframework.stereotype.Component
+
+
+@Component
+class JobCompletionNotificationListener: JobExecutionListenerSupport() {
+
+    override fun afterJob(jobExecution: JobExecution) {
+        logger.info("Finished, status: '${jobExecution.status}'.")
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(JobCompletionNotificationListener::class.java)
+    }
+}
