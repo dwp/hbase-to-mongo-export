@@ -9,3 +9,41 @@ services:
       - 2181:2181
       - 16201:16201
     container_name: hbase
+
+  hbase-populate:
+    image: hbase_populate
+    build: ./scripts
+    container_name: hbase-populate
+    depends_on:
+      - hbase
+    volumes:
+      - shared-volume:/opt/hbase-crown-export/data
+    command: "-d -c data/ready -o data/output.txt"
+
+  hbase-crown-export:
+    image: hbase-crown-export
+    build:
+      context: .
+      args:
+        - HBASE_CROWN_EXPORT_VERSION
+    container_name: hbase-crown-export
+    depends_on:
+      - hbase
+    volumes:
+      - shared-volume:/opt/hbase-crown-export/data
+    command: "--spring.profiles.active=phoneyServices,localDataSource,outputFile --source.table.name=ucdata --data.ready.flag.location=data/ready --hbase.crown.export.file.output=data/output.txt"
+
+  hbase-crown-itest:
+    image: hbase-crown-itest
+    build:
+      context: .
+      args:
+        - HBASE_CROWN_EXPORT_VERSION
+      dockerfile: Dockerfile_itests
+    container_name: hbase-crown-itests
+    volumes:
+      - shared-volume:/opt/hbase-crown-export/data
+    command: "integration"
+
+volumes:
+  shared-volume:
