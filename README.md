@@ -8,8 +8,6 @@ mongo backup format, i.e. 1 json record per line.
 1. JDK 8+
 2. Docker
 3. docker-compose
-4. Python 3.7
-5. virtualenv
 
 ## Run locally
 
@@ -22,25 +20,12 @@ file.
 
 1. Bring up the hbase container:
 
-    docker-compose up -d hbase
+    docker-compose up -d hbase hbase-populate
 
-2. Populate local hosts file:
+2. Add hbase entry in local /etc/hosts file:
 
     sudo ./scripts/hosts.sh
 
-3. Populate local instance with sample data
-
-    1. (Optional) activate a local python environment
-       ```
-       cd scripts
-       virtualenv -p $(which python3) environment
-       . ./environment/bin/activate
-       pip3 install -r ./requirements.txt
-       ```
-    2. Populate the instance (from the ```scripts``` directory):
-       ```
-       ./populate.py -dz localhost ./sample-data.json
-       ```
 It should now be possible to run code in an IDE against the local instance.
 
 * The main class is
