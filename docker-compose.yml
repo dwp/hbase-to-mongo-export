@@ -37,8 +37,6 @@ services:
     image: hbase-crown-itest
     build:
       context: .
-      args:
-        - HBASE_CROWN_EXPORT_VERSION
       dockerfile: Dockerfile_itests
     container_name: hbase-crown-itests
     volumes:
