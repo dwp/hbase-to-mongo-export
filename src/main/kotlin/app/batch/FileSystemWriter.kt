@@ -21,7 +21,7 @@ class FileSystemWriter: ItemWriter<String> {
         fw.close()
     }
 
-    @Value("\${hbase.crown.export.file.output}")
+    @Value("\${file.output}")
     private lateinit var outputFile: String
 
     companion object {

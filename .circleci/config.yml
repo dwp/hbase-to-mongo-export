@@ -42,12 +42,12 @@ jobs:
           name: mkdir for artifact
           command: |
             mkdir artifacts
-            cp build/libs/hbase-crown-export-*.jar ./artifacts/
+            cp build/libs/hbase-to-mongo-export-*.jar ./artifacts/
 
       - persist_to_workspace:
           root: artifacts
           paths:
-            - hbase-crown-export-*.jar
+            - hbase-to-mongo-export-*.jar
 
   integration-test:
     docker:
@@ -61,9 +61,9 @@ jobs:
           name: "Run the integration test"
           command: |
             sudo pip3 install docker-compose
-            HBASE_CROWN_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') docker-compose up --build -d hbase hbase-populate hbase-crown-export
-            docker-compose build hbase-crown-itest
-            docker-compose run hbase-crown-itest
+            HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export
+            docker-compose build hbase-to-mongo-export-itest
+            docker-compose run hbase-to-mongo-export-itest
 
   publish-github-release:
     docker:
@@ -80,7 +80,7 @@ jobs:
             for jar in ./artifacts/*.jar; do
               mv -v $jar ${jar/-SNAPSHOT/}
             done
-            VERSION=$(ls ./artifacts/*.jar | head -n1 | sed -e 's/\.jar$// ' | sed -e 's/\.\/artifacts\/hbase-crown-export-//')
+            VERSION=$(ls ./artifacts/*.jar | head -n1 | sed -e 's/\.jar$// ' | sed -e 's/\.\/artifacts\/hbase-to-mongo-export-//')
             echo VERSION: \'${VERSION}\'.
             PREVIOUS_VERSION=$(echo $VERSION | awk -F. '{$NF = $NF - 1;} 1' | sed 's/ /./g')
             echo PREVIOUS_VERSION: \'$PREVIOUS_VERSION\'.

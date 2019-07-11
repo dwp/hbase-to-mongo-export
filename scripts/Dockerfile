@@ -2,7 +2,7 @@ FROM python:3.7.3-stretch
 
 ENV SERVICE_USER=dataworks
 ENV SERVICE_USER_HOME=/home/${SERVICE_USER}
-ENV INSTALL_DIR=/opt/hbase-crown-export
+ENV INSTALL_DIR=/opt/hbase-to-mongo-export
 RUN mkdir -p ${SERVICE_USER_HOME} ${INSTALL_DIR}/data
 RUN useradd -d ${SERVICE_USER_HOME} ${SERVICE_USER}
 RUN id -a ${SERVICE_USER}

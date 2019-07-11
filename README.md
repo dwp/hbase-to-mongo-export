@@ -1,4 +1,4 @@
-# hbase-crown-export
+# hbase-to-mongo-export
 
 Selects the latest records from a single hbase table and writes them out in
 mongo backup format, i.e. 1 json record per line.
@@ -29,21 +29,21 @@ file.
 It should now be possible to run code in an IDE against the local instance.
 
 * The main class is
-  ```app.HBaseCrownExport```
+  ```app.HBaseToMongoExport```
 
 * The program arguments are
   ```
   --source.table.name=ucdata
   --hbase.zookeeper.quorum=localhost
-  --hbase.crown.export.file.output=data/output.txt
+  --file.output=data/output.txt
   ```
 * The active spring profiles are (-Dspring.profiles.active=)
   ```phoneyServices,localDataSource,outputFile```
 
 ### Run locally containerized
-    HBASE_CROWN_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
-        docker-compose up --build -d hbase hbase-populate hbase-crown-export
+    HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
+        docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export
 
 ### Additionally run the integration tests against local containerized setup
-    docker-compose build hbase-crown-itest
-    docker-compose run hbase-crown-itest
+    docker-compose build hbase-to-mongo-export-itest
+    docker-compose run hbase-to-mongo-export-itest
