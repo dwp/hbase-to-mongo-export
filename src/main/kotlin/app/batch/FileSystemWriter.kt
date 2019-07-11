@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 import java.io.FileWriter
 
 @Component
-@Profile("outputFile")
+@Profile("outputToFile")
 class FileSystemWriter: ItemWriter<String> {
 
     override fun write(items: MutableList<out String>) {
