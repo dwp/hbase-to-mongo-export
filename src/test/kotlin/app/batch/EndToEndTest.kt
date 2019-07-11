@@ -6,9 +6,9 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
-@RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyServices", "unitTest", "outputToDirectory")
-@SpringBootTest
-@TestPropertySource(properties = ["source.table.name=ucdata"])
+//@RunWith(SpringRunner::class)
+//@ActiveProfiles("phoneyServices", "unitTest", "outputToDirectory")
+//@SpringBootTest
+//@TestPropertySource(properties = ["source.table.name=ucdata"])
 class EndToEndTest {
 }

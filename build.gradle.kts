@@ -56,7 +56,7 @@ tasks.withType<KotlinCompile> {
 }
 
 application {
-    mainClassName = "app.HBaseCrownExportKt"
+    mainClassName = "app.HBaseToMongoExportKt"
 }
 
 tasks.getByName<BootRun>("bootRun") {

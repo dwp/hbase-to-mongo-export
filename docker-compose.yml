@@ -31,7 +31,7 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--spring.profiles.active=phoneyServices,localDataSource,outputFile --source.table.name=ucdata --data.ready.flag.location=data/ready --file.output=data/output.txt"
+    command: "--spring.profiles.active=phoneyServices,localDataSource,outputToFile --source.table.name=ucdata --data.ready.flag.location=data/ready --file.output=data/output.txt"
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
