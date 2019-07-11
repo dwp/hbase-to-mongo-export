@@ -1,4 +1,4 @@
-# hbase-crown-export
+# hbase-to-mongo-export
 
 Selects the latest records from a single hbase table and writes them out in
 mongo backup format, i.e. 1 json record per line.
@@ -8,8 +8,6 @@ mongo backup format, i.e. 1 json record per line.
 1. JDK 8+
 2. Docker
 3. docker-compose
-4. Python 3.7
-5. virtualenv
 
 ## Run locally
 
@@ -22,43 +20,30 @@ file.
 
 1. Bring up the hbase container:
 
-    docker-compose up -d hbase
+    docker-compose up -d hbase hbase-populate
 
-2. Populate local hosts file:
+2. Add hbase entry in local /etc/hosts file:
 
     sudo ./scripts/hosts.sh
 
-3. Populate local instance with sample data
-
-    1. (Optional) activate a local python environment
-       ```
-       cd scripts
-       virtualenv -p $(which python3) environment
-       . ./environment/bin/activate
-       pip3 install -r ./requirements.txt
-       ```
-    2. Populate the instance (from the ```scripts``` directory):
-       ```
-       ./populate.py -dz localhost ./sample-data.json
-       ```
 It should now be possible to run code in an IDE against the local instance.
 
 * The main class is
-  ```app.HBaseCrownExport```
+  ```app.HBaseToMongoExport```
 
 * The program arguments are
   ```
   --source.table.name=ucdata
   --hbase.zookeeper.quorum=localhost
-  --hbase.crown.export.file.output=data/output.txt
+  --file.output=data/output.txt
   ```
 * The active spring profiles are (-Dspring.profiles.active=)
   ```phoneyServices,localDataSource,outputFile```
 
 ### Run locally containerized
-    HBASE_CROWN_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
-        docker-compose up --build -d hbase hbase-populate hbase-crown-export
+    HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
+        docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export
 
 ### Additionally run the integration tests against local containerized setup
-    docker-compose build hbase-crown-itest
-    docker-compose run hbase-crown-itest
+    docker-compose build hbase-to-mongo-export-itest
+    docker-compose run hbase-to-mongo-export-itest

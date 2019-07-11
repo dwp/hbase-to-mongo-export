@@ -15,6 +15,8 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.core.task.TaskExecutor
 
 @Configuration
 @EnableBatchProcessing
@@ -32,7 +34,7 @@ class JobConfiguration: DefaultBatchConfigurer() {
 
     @Bean
     fun step() = stepBuilderFactory.get("step")
-            .chunk<SourceRecord, String>(10)
+            .chunk<SourceRecord, String>(2)
             .reader(itemReader)
             .faultTolerant()
             .skip(MissingFieldException::class.java)

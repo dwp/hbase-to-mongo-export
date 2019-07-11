@@ -3,4 +3,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
-rootProject.name = "hbase-crown-export"
+rootProject.name = "hbase-to-mongo-export"

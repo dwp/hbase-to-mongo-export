@@ -24,7 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyServices", "unitTest", "consoleOutput")
+@ActiveProfiles("phoneyServices", "unitTest", "outputToConsole")
 @SpringBootTest
 @TestPropertySource(properties = ["source.table.name=ucdata"])
 class HBaseReaderTest {

@@ -7,8 +7,8 @@ import org.springframework.boot.runApplication
 import kotlin.system.exitProcess
 
 @SpringBootApplication (exclude = [DataSourceAutoConfiguration::class])
-class HBaseCrownExport
+class HBaseToMongoExport
 
 fun main(args: Array<String>) {
-    exitProcess(SpringApplication.exit(runApplication<HBaseCrownExport>(*args)))
+    exitProcess(SpringApplication.exit(runApplication<HBaseToMongoExport>(*args)))
 }

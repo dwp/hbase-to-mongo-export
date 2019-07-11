@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 import java.io.FileWriter
 
 @Component
-@Profile("outputFile")
+@Profile("outputToFile")
 class FileSystemWriter: ItemWriter<String> {
 
     override fun write(items: MutableList<out String>) {
@@ -21,7 +21,7 @@ class FileSystemWriter: ItemWriter<String> {
         fw.close()
     }
 
-    @Value("\${hbase.crown.export.file.output}")
+    @Value("\${file.output}")
     private lateinit var outputFile: String
 
     companion object {

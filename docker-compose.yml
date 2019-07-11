@@ -17,32 +17,30 @@ services:
     depends_on:
       - hbase
     volumes:
-      - shared-volume:/opt/hbase-crown-export/data
+      - shared-volume:/opt/hbase-to-mongo-export/data
     command: "-d -c data/ready -o data/output.txt"
 
-  hbase-crown-export:
-    image: hbase-crown-export
+  hbase-to-mongo-export:
+    image: hbase-to-mongo-export
     build:
       context: .
       args:
-        - HBASE_CROWN_EXPORT_VERSION
-    container_name: hbase-crown-export
+        - HBASE_TO_MONGO_EXPORT_VERSION
+    container_name: hbase-to-mongo-export
     depends_on:
       - hbase
     volumes:
-      - shared-volume:/opt/hbase-crown-export/data
-    command: "--spring.profiles.active=phoneyServices,localDataSource,outputFile --source.table.name=ucdata --data.ready.flag.location=data/ready --hbase.crown.export.file.output=data/output.txt"
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    command: "--spring.profiles.active=phoneyServices,localDataSource,outputToFile --source.table.name=ucdata --data.ready.flag.location=data/ready --file.output=data/output.txt"
 
-  hbase-crown-itest:
-    image: hbase-crown-itest
+  hbase-to-mongo-export-itest:
+    image: hbase-to-mongo-export-itest
     build:
       context: .
-      args:
-        - HBASE_CROWN_EXPORT_VERSION
       dockerfile: Dockerfile_itests
-    container_name: hbase-crown-itests
+    container_name: hbase-to-mongo-export-itests
     volumes:
-      - shared-volume:/opt/hbase-crown-export/data
+      - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
 
 volumes:

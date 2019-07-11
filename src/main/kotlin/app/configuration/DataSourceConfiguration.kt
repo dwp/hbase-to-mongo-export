@@ -18,12 +18,12 @@ class DataSourceConfiguration {
     @Bean
     @Profile("localDataSource")
     fun localConnection(): Connection {
-        logger.warn("dataReadyFlagLocation: '$dataReadyFlagLocation'.")
+        logger.info("dataReadyFlagLocation: '$dataReadyFlagLocation'.")
         if (dataReadyFlagLocation.isNotBlank()) {
             var attempts = 0
             val path = Paths.get(dataReadyFlagLocation)
             while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < 100) {
-                logger.warn("Waiting for data: '$path', attempt no. $attempts.")
+                logger.info("Waiting for data: '$path', attempt no. $attempts.")
                 Thread.sleep(3_000)
             }
         }
