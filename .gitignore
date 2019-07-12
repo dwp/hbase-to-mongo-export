@@ -30,8 +30,11 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### local ###
 src/main/python/environment/
 scripts/environment/
 __pycache__
 classes/
 data/
+ephemera/
