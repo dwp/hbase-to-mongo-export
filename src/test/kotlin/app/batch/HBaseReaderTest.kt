@@ -1,7 +1,6 @@
 package app.batch
 
 import app.domain.EncryptionBlock
-import app.domain.RecordId
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
 import org.apache.hadoop.hbase.Cell
@@ -24,7 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyServices", "unitTest", "outputToConsole")
+@ActiveProfiles("phoneyDecryptionService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
 @TestPropertySource(properties = ["source.table.name=ucdata"])
 class HBaseReaderTest {
@@ -36,7 +35,7 @@ class HBaseReaderTest {
     }
 
     @Test
-    fun read() {
+    fun testRead() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
@@ -72,17 +71,14 @@ class HBaseReaderTest {
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(TableName.valueOf("ucdata"))).willReturn(table)
-
-        val recordId  = RecordId(expectedId, 10)
-        val encryption = EncryptionBlock(keyEncryptionKeyId, encryptedEncryptionKey)
-        val expected = SourceRecord(recordId, timestamp, encryption, dbObject)
+        val encryption = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
+        val expected = SourceRecord(expectedId, 10, encryption, dbObject)
         val actual = hbaseReader.read()
         assertEquals(expected, actual)
-
     }
 
     @Test(expected = MissingFieldException::class)
-    fun reject() {
+    fun testReject() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)

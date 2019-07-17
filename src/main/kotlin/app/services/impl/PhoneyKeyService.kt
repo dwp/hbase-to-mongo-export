@@ -1,12 +1,11 @@
 package app.services.impl
 
+import app.services.KeyService
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import app.services.KeyService
 
 @Service
-@Profile("phoneyServices")
+@Profile("phoneyDataKeyService")
 class PhoneyKeyService: KeyService {
-    override fun decryptKey(encryptionKeyId: String, encryptedKey: String) =
-            "[ DECRYPTED VERSION OF '$encryptedKey', DECRYPTED WITH '$encryptionKeyId' ]"
+    override fun decryptKey(encryptionKeyId: String, encryptedKey: String) = "czMQLgW/OrzBZwFV9u4EBA=="
 }

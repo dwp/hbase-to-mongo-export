@@ -45,7 +45,7 @@ class IntegrationTest extends Specification {
             def object = jsonSlurper.parse(line.getBytes())
             println(object)
             println(object.getClass())
-            def timestamp = object.get('_id').get('timestamp')
+            def timestamp = object.get('timestamp')
             lineCount++
             assert timestamp == 10
         }

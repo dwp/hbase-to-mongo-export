@@ -15,7 +15,7 @@ mongo backup format, i.e. 1 json record per line.
 
 This is slightly cumbersome as zookeeper gives the docker network name of the
 hbase host which can't be resolved outside of docker, however this can be remedied
-if the name given by zooker is then entered into the local ```/etc/hosts```
+if the name given by zookeeper is then entered into the local ```/etc/hosts```
 file.
 
 1. Bring up the hbase container:

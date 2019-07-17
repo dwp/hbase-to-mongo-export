@@ -14,7 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyServices", "unitTest", "outputToDirectory")
+@ActiveProfiles("phoneyDataKeyService", "phoneyDecryptionService", "unitTest", "outputToDirectory")
 @SpringBootTest
 @TestPropertySource(properties = [
     "directory.output=ephemera",
@@ -92,15 +92,16 @@ class DirectoryWriterChunkingTest {
 
         val filenameRegex = Regex("""(\d+)\.\w+$""")
 
-        outputs.forEach { it ->
-            logger.info("Checking $it.")
-            val match = filenameRegex.find(it.name)
+        outputs.forEach { outputFile ->
+            logger.info("Checking $outputFile.")
+            val match = filenameRegex.find(outputFile.name)
 
             match?.groups?.get(1)?.value?.toInt().let {
                 fileNumber ->
                     val expectedSize = expectedSizes[fileNumber]
-                    it.length().toInt().also {
-                        assertEquals(expectedSize, it)
+                    outputFile.length().toInt().also {actualSize ->
+                        logger.info("Checking that $outputFile actual size $actualSize is the expected size $expectedSize")
+                        assertEquals(expectedSize, actualSize)
                     }
             }
 

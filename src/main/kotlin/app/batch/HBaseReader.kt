@@ -1,7 +1,6 @@
 package app.batch
 
 import app.domain.EncryptionBlock
-import app.domain.RecordId
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
 import com.google.gson.Gson
@@ -17,36 +16,29 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 
-
 @Component
 class HBaseReader constructor(private val connection: Connection): ItemReader<SourceRecord> {
 
     override fun read(): SourceRecord? {
-        return scanner().next()?.let {
-            logger.info("it: $it")
-
-            val value = it.getValue("cf".toByteArray(), "data".toByteArray())
-            it.advance()
-            val current = it.current()
+        return scanner().next()?.let { result ->
+            val value = result.getValue("cf".toByteArray(), "data".toByteArray())
+            result.advance()
+            val current = result.current()
             val timestamp = current.timestamp
-            logger.info("current: $current ${current::class}")
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
             val id = dataBlock.getAsJsonPrimitive("id").asString
             val encryptionInfo = dataBlock.getAsJsonObject("encryption")
             val encryptedKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
             val encryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
+            val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
             val encryptedDbObject = dataBlock.getAsJsonPrimitive("dbObject")?.asString
-
             if (encryptedDbObject.isNullOrEmpty()) {
                 logger.error("'$id' missing dbObject field, skipping this record.")
                 throw MissingFieldException(id, "dbObject")
             }
-
-            val recordId = RecordId(id, timestamp)
-            val lastModified = dataBlock.getAsJsonPrimitive("timestamp").asString
-            val encryptionBlock = EncryptionBlock(encryptionKeyId, encryptedKey)
-            return SourceRecord(recordId, lastModified, encryptionBlock, encryptedDbObject)
+            val encryptionBlock = EncryptionBlock(encryptionKeyId, initializationVector, encryptedKey)
+            return SourceRecord(id, timestamp, encryptionBlock, encryptedDbObject)
         }
     }
 

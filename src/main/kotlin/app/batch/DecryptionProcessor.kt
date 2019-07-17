@@ -1,32 +1,49 @@
 package app.batch
 
+import app.domain.SourceRecord
+import app.exceptions.DataKeyServiceUnavailableException
+import app.exceptions.DecryptionFailureException
+import app.services.DecryptionService
+import app.services.KeyService
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import app.domain.SourceRecord
-import app.services.DecryptionService
-import app.services.KeyService
-import com.google.gson.Gson
 
 @Component
 class DecryptionProcessor(private val decryptionService: DecryptionService,
                           private val keyService: KeyService):
-        ItemProcessor<SourceRecord, String> {
+        ItemProcessor<SourceRecord, JsonObject> {
 
-    override fun process(item: SourceRecord): String? {
-        logger.info("item: '$item'.")
-
-        val decryptedKey: String =
-                keyService.decryptKey(item.encryption.encryptionKeyId,
-                        item.encryption.encryptedEncryptionKey)
-
-        val decryptedRecord: String =
-                decryptionService.decrypt(decryptedKey, item.dbObject)
-
-        item.dbObject= decryptedRecord
-        return Gson().toJson(item)
-
+    @Throws(DataKeyServiceUnavailableException::class)
+    override fun process(item: SourceRecord): JsonObject? {
+        try {
+            logger.info("Processing '$item'.")
+            val decryptedKey = keyService.decryptKey(item.encryption.encryptionKeyId,
+                                                           item.encryption.encryptedEncryptionKey)
+            val decrypted =
+                    decryptionService.decrypt(decryptedKey,
+                                                item.encryption.initializationVector,
+                                                item.dbObject)
+            val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)
+            jsonObject.addProperty("timestamp", item.hbaseTimestamp)
+            return jsonObject
+        }
+        catch (e: DataKeyServiceUnavailableException) {
+            throw e
+        }
+        catch (e: Exception) {
+            logger.error("Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
+            throw DecryptionFailureException(
+                    "database",     // TODO: not sure where this will come from yet.
+                    "collection",   // TODO: not sure where this will come from yet.
+                    item.hbaseId,
+                    item.hbaseTimestamp,
+                    item.encryption.encryptionKeyId,
+                    e)
+        }
     }
 
     companion object {

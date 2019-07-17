@@ -11,7 +11,7 @@ services:
     container_name: hbase
 
   hbase-populate:
-    image: hbase_populate
+    image: hbase-populate
     build: ./scripts
     container_name: hbase-populate
     depends_on:
@@ -31,7 +31,11 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--spring.profiles.active=phoneyServices,localDataSource,outputToFile,batchRun --source.table.name=ucdata --data.ready.flag.location=data/ready --file.output=data/output.txt"
+    command: >-
+      --spring.profiles.active=phoneyDecryptionService,phoneyDataKeyService,localDataSource,outputToFile,batchRun
+      --source.table.name=ucdata
+      --data.ready.flag.location=data/ready
+      --file.output=data/output.txt
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

@@ -7,13 +7,11 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component
 
-
 @Component
 class JobCompletionNotificationListener(private val writer: ItemWriter<String>): JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-        logger.info("Finished, status: '${jobExecution.status}', writer: $writer.")
-
+        logger.info("Finished, status: '${jobExecution.status}'.")
         if (writer is DirectoryWriter) {
             writer.closeOutput()
         }
