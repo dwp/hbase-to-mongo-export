@@ -14,4 +14,4 @@ RUN pip3 install -r ./requirements.txt
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
 USER $SERVICE_USER
-ENTRYPOINT ["./populate.py", "./sample-data.json"]
+ENTRYPOINT ["./populate_hbase.py", "./sample-data.json"]

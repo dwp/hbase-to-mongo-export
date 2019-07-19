@@ -1,12 +1,12 @@
 package app.services.impl
 
+import app.services.DecryptionService
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
-import app.services.DecryptionService
 
 @Service
-@Profile("phoneyServices")
+@Profile("phoneyDecryptionService")
 class PhoneyDecryptionService: DecryptionService {
-    override fun decrypt(key: String, data: String) =
-            "[ DECRYPTED VERSION OF '${data.substring(0, 10)} ...' ]"
+    override fun decrypt(key: String, initializationVector: String, encrypted: String) =
+            """{ "decryptedObject": "${encrypted.substring(10)} ..." }"""
 }

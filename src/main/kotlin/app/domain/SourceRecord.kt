@@ -1,6 +1,6 @@
 package app.domain
 
-data class SourceRecord(val _id: RecordId,
-                        val _lastModifiedDateTime: String,
+data class SourceRecord(val hbaseId: String,
+                        val hbaseTimestamp: Long,
                         val encryption: EncryptionBlock,
                         var dbObject: String)

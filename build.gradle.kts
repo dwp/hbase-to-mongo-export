@@ -41,6 +41,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.commons:commons-compress:1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M2")
+    implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
+    implementation("com.amazonaws:aws-encryption-sdk-java:1.6.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")
     implementation("org.spockframework:spock-core:1.3-groovy-2.5")

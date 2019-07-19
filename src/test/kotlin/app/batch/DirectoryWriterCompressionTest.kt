@@ -19,7 +19,7 @@ import java.nio.file.Paths
 
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyServices", "unitTest", "outputToDirectory")
+@ActiveProfiles("phoneyDataKeyService", "phoneyDecryptionService", "unitTest", "outputToDirectory")
 @SpringBootTest
 @TestPropertySource(properties = [
     "directory.output=ephemera",

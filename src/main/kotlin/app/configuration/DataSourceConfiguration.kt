@@ -18,7 +18,7 @@ class DataSourceConfiguration {
     @Bean
     @Profile("localDataSource")
     fun localConnection(): Connection {
-        logger.info("dataReadyFlagLocation: '$dataReadyFlagLocation'.")
+
         if (dataReadyFlagLocation.isNotBlank()) {
             var attempts = 0
             val path = Paths.get(dataReadyFlagLocation)
@@ -57,5 +57,4 @@ class DataSourceConfiguration {
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DataSourceConfiguration::class.toString())
     }
-
 }
