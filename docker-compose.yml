@@ -32,7 +32,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyDecryptionService,phoneyDataKeyService,localDataSource,outputToFile,batchRun
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
       --file.output=data/output.txt

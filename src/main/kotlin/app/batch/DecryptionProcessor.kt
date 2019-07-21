@@ -3,7 +3,7 @@ package app.batch
 import app.domain.SourceRecord
 import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
-import app.services.DecryptionService
+import app.services.CipherService
 import app.services.KeyService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -13,7 +13,7 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component
-class DecryptionProcessor(private val decryptionService: DecryptionService,
+class DecryptionProcessor(private val cipherService: CipherService,
                           private val keyService: KeyService):
         ItemProcessor<SourceRecord, JsonObject> {
 
@@ -24,7 +24,7 @@ class DecryptionProcessor(private val decryptionService: DecryptionService,
             val decryptedKey = keyService.decryptKey(item.encryption.encryptionKeyId,
                                                            item.encryption.encryptedEncryptionKey)
             val decrypted =
-                    decryptionService.decrypt(decryptedKey,
+                    cipherService.decrypt(decryptedKey,
                                                 item.encryption.initializationVector,
                                                 item.dbObject)
             val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)

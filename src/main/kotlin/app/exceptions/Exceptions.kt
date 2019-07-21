@@ -1,5 +1,8 @@
 package app.exceptions
 
+class MissingFieldException(id: String, field: String):
+        Exception("Missing field '$field' in record '$id'.")
+
 class DecryptionFailureException (database: String,
                                   collection: String,
                                   id: String,
@@ -9,3 +12,6 @@ class DecryptionFailureException (database: String,
                                       Failed to decrypt record '$id', timestamp '$timestamp' sourced from
                                       collection '$collection' on database '$database', master key id: '$masterKeyId'.
                                   """.trimIndent().replace('\n', ' '), cause)
+
+class DataKeyDecryptionException(message: String): Exception(message)
+class DataKeyServiceUnavailableException(message: String): Exception(message)
