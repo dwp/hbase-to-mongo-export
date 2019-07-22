@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec
 
 @Service
 @Profile("aesCipherService")
-class AESCipherService: CipherService {
+class AESCipherService(private val secureRandom: SecureRandom): CipherService {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -27,7 +27,7 @@ class AESCipherService: CipherService {
 
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
         var initialisationVector = ByteArray(16).apply {
-            SecureRandom.getInstanceStrong().nextBytes(this)
+            secureRandom.nextBytes(this)
         }
 
         val keySpec: Key = SecretKeySpec(key.toByteArray(), "AES")

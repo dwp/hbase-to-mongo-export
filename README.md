@@ -57,6 +57,7 @@ It should now be possible to run code in an IDE against the local instance.
   | aesCipherService     | Use the actual cipher service that does real encryption and decryption.
   | phoneyDataKeyService | Use a dummy key service that does not require a configured DKS instance.
   | phoneyCipherService  | Use a cipher service that does not do real encryption.
+  | strongRng            | Use a strong rng (alternative is the psuedo rng for unit tests.)
 
 ### Run locally containerized
     HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
