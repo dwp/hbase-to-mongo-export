@@ -11,9 +11,14 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.security.SecureRandom
 
 @Configuration
 class DataSourceConfiguration {
+
+    @Bean
+    @Profile("strongRng")
+    fun secureRandom() = SecureRandom.getInstanceStrong()
 
     @Bean
     @Profile("localDataSource")

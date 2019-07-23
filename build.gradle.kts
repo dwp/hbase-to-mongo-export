@@ -42,13 +42,12 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M2")
     implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
-    implementation("com.amazonaws:aws-encryption-sdk-java:1.6.0")
+    implementation("commons-codec:commons-codec:1.12")
+    implementation("org.apache.commons:commons-crypto:1.0.0")
+    implementation("org.spockframework:spock-core:1.3-groovy-2.5")
+    implementation("junit:junit:4.12")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")
-    implementation("org.spockframework:spock-core:1.3-groovy-2.5")
-// https://mvnrepository.com/artifact/org/junit
-    implementation("junit:junit:4.12")
-
 }
 
 tasks.withType<KotlinCompile> {

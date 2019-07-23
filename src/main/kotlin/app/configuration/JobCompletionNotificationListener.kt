@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component
 class JobCompletionNotificationListener(private val writer: ItemWriter<String>): JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-        logger.info("Finished, status: '${jobExecution.status}'.")
         if (writer is DirectoryWriter) {
-            writer.closeOutput()
+            writer.writeOutput()
         }
+        logger.info("Finished, status: '${jobExecution.status}'.")
     }
 
     companion object {

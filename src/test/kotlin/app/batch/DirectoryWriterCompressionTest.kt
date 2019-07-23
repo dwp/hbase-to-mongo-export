@@ -19,13 +19,14 @@ import java.nio.file.Paths
 
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyDataKeyService", "phoneyDecryptionService", "unitTest", "outputToDirectory")
+@ActiveProfiles("phoneyDataKeyService", "phoneyCipherService", "unitTest", "outputToDirectory")
 @SpringBootTest
 @TestPropertySource(properties = [
     "directory.output=ephemera",
-    "file.size.max=100000",
+    "output.batch.size.max=100000",
     "source.table.name=ucdata",
-    "compress.output=true"
+    "compress.output=true",
+    "encrypt.output=false"
 ])
 class DirectoryWriterCompressionTest {
 
@@ -66,7 +67,7 @@ class DirectoryWriterCompressionTest {
             directoryWriter.write(it)
         }
 
-        directoryWriter.closeOutput()
+        directoryWriter.writeOutput()
         val outputs = File(outputDirectoryPath).list()
         assertEquals(4, outputs.size)
         val filenameRegex = Regex("""(\d+)\.\w+\.bz2$""")

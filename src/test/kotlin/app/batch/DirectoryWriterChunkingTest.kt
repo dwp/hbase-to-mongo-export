@@ -14,13 +14,14 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyDataKeyService", "phoneyDecryptionService", "unitTest", "outputToDirectory")
+@ActiveProfiles("phoneyDataKeyService", "phoneyCipherService", "unitTest", "outputToDirectory")
 @SpringBootTest
 @TestPropertySource(properties = [
     "directory.output=ephemera",
-    "file.size.max=100000",
+    "output.batch.size.max=100000",
     "source.table.name=ucdata",
-    "compress.output=false"
+    "compress.output=false",
+    "encrypt.output=false"
 ])
 class DirectoryWriterChunkingTest {
 
@@ -83,6 +84,8 @@ class DirectoryWriterChunkingTest {
         listOfLists.forEach {
             directoryWriter.write(it)
         }
+
+        directoryWriter.writeOutput()
 
         val outputs = File(outputDirectoryPath).listFiles()
 

@@ -21,7 +21,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("decryptionTest", "aesDecryptionService", "unitTest", "outputToConsole")
+@ActiveProfiles("decryptionTest", "aesCipherService", "unitTest", "outputToConsole")
 @SpringBootTest
 @TestPropertySource(properties = ["source.table.name=ucdata"])
 class DecryptionProcessorTest {
@@ -39,7 +39,7 @@ class DecryptionProcessorTest {
                         "encryptedEncryptionKey")
 
         val sourceRecord = SourceRecord("00001", 10, encryptionBlock, "dbObject")
-        val actual = decryptionProcessor.process(sourceRecord)
+        decryptionProcessor.process(sourceRecord)
     }
 
 

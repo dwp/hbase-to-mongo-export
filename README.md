@@ -32,13 +32,32 @@ It should now be possible to run code in an IDE against the local instance.
   ```app.HBaseToMongoExport```
 
 * The program arguments are
-  ```
-  --source.table.name=ucdata
-  --hbase.zookeeper.quorum=localhost
-  --file.output=data/output.txt
-  ```
-* The active spring profiles are (-Dspring.profiles.active=)
-  ```phoneyServices,localDataSource,outputFile```
+
+  | Parameter name           | Default Value     | Further info
+  |--------------------------|-------------------|--------------
+  | compress.output          | false             | Whether to compress the output.
+  | directory.output         |                   | Directory to write output files to.
+  | encrypt.output           | true              | Whether to encrypt the output.
+  | file.output              |                   | File to write output to - only needed if 'outputToFile' spring profile is active.
+  | hbase.zookeeper.quorum   | hbase             | Name of the hbase host (set this to 'localhost' to run from IDE).
+  | output.batch.size.max    |                   | The maxmum size of each  batch of output (calculated before compression and encryption.
+  | source.cipher.algorithm  | AES/CTR/NoPadding | The algorithm that was used to encrypt the source data.
+  | source.table.name        |                   | Table in hbase to read data from.
+  | target.cipher.algorithm  | AES/CTR/NoPadding | The algorithm that should be used to encrypt the output data.
+
+* The available spring profiles are
+
+  | Profile name         | Result
+  |----------------------|--------
+  | outputToDirectory    | Output is chunked and written to the configured directory.
+  | outputToConsole      | Output is written to console as is (not encrypted or compressed).
+  | outputToFile         | Output is written to configured file as is (used for the hbase integration test).
+  | batchRun             | Activates the batch run (omit for unit tests).
+  | localDataSource      | Indicates hbase is running locally i.e. not on a cluster.
+  | aesCipherService     | Use the actual cipher service that does real encryption and decryption.
+  | phoneyDataKeyService | Use a dummy key service that does not require a configured DKS instance.
+  | phoneyCipherService  | Use a cipher service that does not do real encryption.
+  | strongRng            | Use a strong rng (alternative is the psuedo rng for unit tests.)
 
 ### Run locally containerized
     HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
