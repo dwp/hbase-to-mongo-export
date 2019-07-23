@@ -24,7 +24,6 @@ class AESCipherService(private val secureRandom: SecureRandom): CipherService {
         Security.addProvider(BouncyCastleProvider())
     }
 
-
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
         var initialisationVector = ByteArray(16).apply {
             secureRandom.nextBytes(this)
@@ -39,7 +38,6 @@ class AESCipherService(private val secureRandom: SecureRandom): CipherService {
         return EncryptionResult(String(Base64.getEncoder().encode(initialisationVector)),
                 String(Base64.getEncoder().encode(encrypted)))
     }
-
 
     override fun decrypt(key: String, initializationVector: String, encrypted: String): String {
         val keySpec: Key = SecretKeySpec(key.toByteArray(), "AES")

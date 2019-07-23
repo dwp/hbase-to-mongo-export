@@ -14,4 +14,5 @@ class DecryptionFailureException (database: String,
                                   """.trimIndent().replace('\n', ' '), cause)
 
 class DataKeyDecryptionException(message: String): Exception(message)
+
 class DataKeyServiceUnavailableException(message: String): Exception(message)

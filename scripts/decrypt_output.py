@@ -4,6 +4,7 @@ import base64
 import binascii
 import sys
 
+import requests
 import regex
 
 from Crypto.Cipher import AES
@@ -25,8 +26,15 @@ def main():
 
     with open(sys.argv[2]) as encrypted_file:
         contents = encrypted_file.read()
-        wtf = decrypt(config['plaintext'], config['iv'], contents)
-        sys.stdout.buffer.write(wtf)
+        ciphertext = config['ciphertext']
+        master_key_id = regex.sub(r'^.*?/', '', config['dataKeyEncryptionKeyId'])
+        result = \
+            requests.post(f"http://localhost:8080/datakey/actions/decrypt?keyId={master_key_id}",
+                          data=ciphertext)
+        content = result.json()
+        plaintext = content['plaintextDataKey']
+        decrypted = decrypt(plaintext, config['iv'], contents)
+        sys.stdout.buffer.write(decrypted)
 
 if __name__ == '__main__':
     main()

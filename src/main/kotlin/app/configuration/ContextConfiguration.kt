@@ -3,6 +3,7 @@ package app.configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
+import org.apache.http.impl.client.HttpClients
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -14,11 +15,15 @@ import java.nio.file.Paths
 import java.security.SecureRandom
 
 @Configuration
-class DataSourceConfiguration {
+class ContextConfiguration {
 
     @Bean
-    @Profile("strongRng")
+    @Profile("production")
     fun secureRandom() = SecureRandom.getInstanceStrong()
+
+    @Bean
+    @Profile("production")
+    fun httpClient() = HttpClients.createDefault()
 
     @Bean
     @Profile("localDataSource")
@@ -43,7 +48,6 @@ class DataSourceConfiguration {
         return connection
     }
 
-
     private fun addShutdownHook(connection: Connection) {
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
@@ -60,6 +64,6 @@ class DataSourceConfiguration {
     private lateinit var dataReadyFlagLocation: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DataSourceConfiguration::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(ContextConfiguration::class.toString())
     }
 }
