@@ -32,7 +32,8 @@ class DirectoryWriter(private val keyService: KeyService,
     fun writeOutput() {
         if (batchSize > 0) {
             if (encryptOutput) {
-
+                val dataKeyResult = keyService.batchDataKey()
+                logger.info("dataKeyResult: '$dataKeyResult'.")
                 val byteArrayOutputStream = ByteArrayOutputStream()
 
                 bufferedOutputStream(byteArrayOutputStream).use {
@@ -40,23 +41,19 @@ class DirectoryWriter(private val keyService: KeyService,
                 }
 
                 val encryptionResult =
-                        this.cipherService.encrypt(keyService.batchDataKey().plaintext,
+                        this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                                 byteArrayOutputStream.toByteArray())
-
-                logger.info("encryptionResult: ${encryptionResult.encrypted}")
 
                 Files.write(outputPath(++currentOutputFileNumber),
                         encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
 
                 nextMetadata().use {
                     val iv = encryptionResult.initialisationVector
-                    val plaintext = keyService.batchDataKey().plaintext
+                    val plaintext = dataKeyResult.plaintextDataKey
                     it.write("iv=$iv\n")
-                    it.write("plaintext=$plaintext\n")
-                    it.write("ciphertext=${keyService.batchDataKey().cipherText}\n")
-                    it.write("masterKeyId=${keyService.batchDataKey().masterKeyId}\n")
+                    it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n")
+                    it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n")
                 }
-
             }
             else {
                 bufferedOutputStream(Files.newOutputStream(outputPath(++currentOutputFileNumber))).use {

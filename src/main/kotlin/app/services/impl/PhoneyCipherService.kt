@@ -8,16 +8,9 @@ import org.springframework.stereotype.Service
 @Service
 @Profile("phoneyCipherService")
 class PhoneyCipherService: CipherService {
-//    override fun encryptOpenSsl(key: String, unencrypted: ByteArray): EncryptionResult {
-//        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-//    }
-
-//    override fun decryptCBC(key: String, initializationVector: String, encrypted: String): String {
-//        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-//    }
 
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun decrypt(key: String, initializationVector: String, encrypted: String) =

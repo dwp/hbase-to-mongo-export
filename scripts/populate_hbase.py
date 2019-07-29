@@ -8,8 +8,12 @@ import os
 import time
 import uuid
 
+from pprint import pprint
+
 import happybase
+import requests
 import thriftpy2
+
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
@@ -19,7 +23,6 @@ def main():
     connected = False
     attempts = 0
     init(args)
-
     while not connected and attempts < 100:
         try:
             connection = happybase.Connection(args.zookeeper_quorum)
@@ -31,7 +34,16 @@ def main():
 
             table = connection.table(args.destination_table)
             connected = True
-            encryption_key = "czMQLgW/OrzBZwFV9u4EBA=="
+
+            if args.data_key_service:
+                content = requests.get(f'{args.data_key_service}/datakey').json()
+                encryption_key = content['plaintextDataKey']
+                encrypted_key = content['ciphertextDataKey']
+                master_key_id = content['dataKeyEncryptionKeyId']
+            else:
+                encryption_key = "czMQLgW/OrzBZwFV9u4EBA=="
+                master_key_id = "1234567890"
+                encrypted_key = "blahblah"
 
             with (open(args.sample_data_file)) as file:
                 data = json.load(file)
@@ -49,6 +61,15 @@ def main():
                                                              record_string)
                             value['encryption']['initialisationVector'] \
                                 = iv.decode('ascii')
+
+                            if master_key_id:
+                                value['encryption']['keyEncryptionKeyId'] = \
+                                    master_key_id
+
+                            if encrypted_key:
+                                value['encryption']['encryptedEncryptionKey'] = \
+                                    encrypted_key
+
                             value['dbObject'] = encrypted_record.decode('ascii')
                         else:
                             value['encryption']['initialisationVector'] = "PHONEYVECTOR"
@@ -137,6 +158,8 @@ def command_line_args():
                         help='The flag to write on successful completion.')
     parser.add_argument('-d', '--dump-table-contents', action='store_true',
                         help='Dump table contents after inserts.')
+    parser.add_argument('-k', '--data-key-service',
+                        help='Use the specified data key service.')
     parser.add_argument('-o', '--prepare-output-file',
                         help='Prepare the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
