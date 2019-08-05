@@ -40,7 +40,7 @@ It should now be possible to run code in an IDE against the local instance.
   | directory.output         |                       | Directory to write output files to.
   | encrypt.output           | true                  | Whether to encrypt the output.
   | file.output              |                       | File to write output to - only needed if 'outputToFile' spring profile is active so not used in production.
-  | s3folder.output          |                       | S3 folder to write output to - required when 'outputToS3' spring profile is active. Should be of form "s3://bucket/folder/"
+  | s3folder.output          |                       | S3 folder to write output to - required when 'outputToS3Directory' spring profile is active. Should be of form "s3://bucket/folder/"
   | hbase.zookeeper.quorum   | hbase                 | Name of the hbase host (set this to 'localhost' to run from IDE).
   | output.batch.size.max    |                       | The maxmum size of each  batch of output (calculated before compression and encryption).
   | source.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
