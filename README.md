@@ -40,6 +40,7 @@ It should now be possible to run code in an IDE against the local instance.
   | directory.output         |                       | Directory to write output files to.
   | encrypt.output           | true                  | Whether to encrypt the output.
   | file.output              |                       | File to write output to - only needed if 'outputToFile' spring profile is active so not used in production.
+  | s3folder.output          |                       | S3 folder to write output to - required when 'outputToS3' spring profile is active. Should be of form "s3://bucket/folder/"
   | hbase.zookeeper.quorum   | hbase                 | Name of the hbase host (set this to 'localhost' to run from IDE).
   | output.batch.size.max    |                       | The maxmum size of each  batch of output (calculated before compression and encryption).
   | source.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
@@ -56,8 +57,9 @@ It should now be possible to run code in an IDE against the local instance.
   | httpDataKeyService   | Yes                | Use a remote (i.e. real) data key service (not a fake stubbed one)
   | localDataSource      | No                 | Indicates hbase is running locally i.e. not on a cluster.
   | outputToConsole      | No                 | Output is written to console as is (not encrypted or compressed).
-  | outputToDirectory    | Yes                | Output is chunked and written to the configured directory.
-  | outputToFile         | No                 | Output is written to configured file as is (used for the hbase integration test).
+  | outputToDirectory    | No                 | Output is chunked and written to the configured directory.
+  | outputToFile         | No                 | Output is written to configured local file as is (used for the hbase integration test).
+  | outputToS3Directory  | Yes                | Output is chunked and written to configured S3 folder.
   | phoneyCipherService  | No                 | Use a cipher service that does not do real encryption.
   | phoneyDataKeyService | No                 | Use a dummy key service that does not require a configured DKS instance.
   | production           | Yes                | Use real http client and a strong random number generator (contrast with 'unitTest').

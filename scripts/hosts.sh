@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 hbase_name=$(docker exec hbase cat /etc/hosts \
                  | egrep -v '(localhost|ip6)' | tail -n1)
