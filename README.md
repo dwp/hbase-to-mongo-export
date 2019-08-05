@@ -41,7 +41,7 @@ It should now be possible to run code in an IDE against the local instance.
   | encrypt.output           | true                  | Whether to encrypt the output.
   | file.output              |                       | File to write output to - only needed if 'outputToFile' spring profile is active so not used in production.
   | hbase.zookeeper.quorum   | hbase                 | Name of the hbase host (set this to 'localhost' to run from IDE).
-  | output.batch.size.max    |                       | The maxmum size of each  batch of output (calculated before compression and encryption.
+  | output.batch.size.max    |                       | The maxmum size of each  batch of output (calculated before compression and encryption).
   | source.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
   | source.table.name        |                       | Table in hbase to read data from.
   | target.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that should be used to encrypt the output data.

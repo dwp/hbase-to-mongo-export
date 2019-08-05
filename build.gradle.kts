@@ -26,7 +26,7 @@ tasks.bootJar {
 
 
 release {
-   failOnPublishNeeded = false
+    failOnPublishNeeded = false
     with (propertyMissing("git") as GitAdapter.GitConfig) {
         requireBranch = ""
     }
