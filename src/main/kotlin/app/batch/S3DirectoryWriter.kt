@@ -14,6 +14,22 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+//import software.amazon.awssdk.core.exception.SdkClientException
+//import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+//import software.amazon.awssdk.core.exception.*
+//import software.amazon.awssdk.regions.*
+//import software.amazon.awssdk.services.s3.*
+//import software.amazon.awssdk.services.s3.model.CopyObjectRequest
+
+import com.amazonaws.AmazonServiceException
+import com.amazonaws.SdkClientException
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
+
+// PutObjectRequest#withInputStream
 
 // See https://github.com/aws/aws-sdk-java-v2
 // See https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/java/example_code/s3/src/main/java/CopyObjectSingleOperation.java
@@ -77,6 +93,39 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
     private fun writeToS3(fileName: Path, fileBytes: ByteArray) {
         Files.write(fileName, fileBytes)
+        val clientRegion = Regions.valueOf("eu-west-1")
+        val bucketName = "*** Bucket name ***"
+        val stringObjKeyName = "*** String object key name ***"
+        val fileObjKeyName = "*** File object key name ***"
+        val fileName = "*** Path to file to upload ***"
+
+        try {
+            //This code expects that you have AWS credentials set up per:
+            // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
+            val s3Client = AmazonS3ClientBuilder.standard()
+                    .withRegion(clientRegion)
+                    .build()
+
+            // Upload a text string as a new object.
+            s3Client.putObject(bucketName, stringObjKeyName, "Uploaded String Object")
+
+            // Upload a file as a new object with ContentType and title specified.
+            val request = PutObjectRequest(bucketName, fileObjKeyName, File(fileName))
+            val metadata = ObjectMetadata()
+            metadata.contentType = "plain/text"
+            metadata.addUserMetadata("x-amz-meta-title", "someTitle")
+            request.metadata = metadata
+            s3Client.putObject(request)
+        } catch (e: AmazonServiceException) {
+            // The call was transmitted successfully, but Amazon S3 couldn't process
+            // it, so it returned an error response.
+            e.printStackTrace()
+        } catch (e: SdkClientException) {
+            // Amazon S3 couldn't be contacted for a response, or the client
+            // couldn't parse the response from Amazon S3.
+            e.printStackTrace()
+        }
+
     }
 
     private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =

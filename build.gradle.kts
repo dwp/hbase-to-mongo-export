@@ -35,7 +35,11 @@ release {
 dependencies {
     // See https://github.com/aws/aws-sdk-java-v2
     // See https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/java/example_code/s3/src/main/java/CopyObjectSingleOperation.java
-    implementation("software.amazon.awssdk:s3:2.7.16")
+    //implementation("software.amazon.awssdk:aws-sdk-java:2.7.16")
+
+    // sdk v1
+    implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
+    implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-batch")
