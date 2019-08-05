@@ -46,7 +46,7 @@ It should now be possible to run code in an IDE against the local instance.
   | hbase.zookeeper.quorum   | hbase                 | Name of the hbase host (set this to 'localhost' to run from IDE).
   | output.batch.size.max    |                       | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
   | source.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
-  | source.table.name        |                       | Table in hbase to read data from.
+  | source.table.name        | ucdata                | Table in hbase to read data from.
   | target.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that should be used to encrypt the output data.
 
 
@@ -75,3 +75,31 @@ It should now be possible to run code in an IDE against the local instance.
 ### Additionally run the integration tests against local containerized setup
     docker-compose build hbase-to-mongo-export-itest
     docker-compose run hbase-to-mongo-export-itest
+
+### Running locally in IDE
+Make a run configuration and add arguments like this:
+```
+--spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
+--source.table.name=ucdata
+--data.ready.flag.location=data/ready
+--file.output=data/output.txt
+```
+...it should the print out what it has exported from the local containerised hbase
+
+To test a running it from local HBase to S3, you can try this:
+
+#### Env vars:
+```
+aws_access_key_id=keykeykey
+aws_secret_access_key=secretsecretsecret
+```
+
+#### Arguments:
+```
+--spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
+--source.table.name=ucdata
+--hbase.zookeeper.quorum=localhost
+--aws.region=eu-west-1
+--s3.bucket=9876543210
+--s3.folder=test/businessdata/mongo/ucdata
+```

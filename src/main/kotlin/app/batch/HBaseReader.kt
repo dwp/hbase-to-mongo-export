@@ -60,7 +60,7 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
     private var scanner: ResultScanner? = null
 
     @Value("\${source.table.name}")
-    private lateinit var tableName: String
+    private var tableName: String = "ucdata"
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
