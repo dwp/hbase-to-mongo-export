@@ -24,7 +24,6 @@ import java.nio.file.Paths
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -91,13 +90,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
         }
     }
 
-    private fun writeToS3(fileName: Path, fileBytes: ByteArray) {
-        Files.write(fileName, fileBytes)
-        val clientRegion = Regions.valueOf("eu-west-1")
-        val bucketName = "*** Bucket name ***"
-        val stringObjKeyName = "*** String object key name ***"
-        val fileObjKeyName = "*** File object key name ***"
-        val fileName = "*** Path to file to upload ***"
+    private fun writeToS3(fullLocalFilePath: Path, fileBytes: ByteArray) {
+        Files.write(fullLocalFilePath, fileBytes)
+
+        val clientRegion = Regions.valueOf(region)
+
+        // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
+        // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
+        val objKeyName: String = fullLocalFilePath.toString()
 
         try {
             //This code expects that you have AWS credentials set up per:
@@ -106,14 +106,12 @@ class S3DirectoryWriter(private val keyService: KeyService,
                     .withRegion(clientRegion)
                     .build()
 
-            // Upload a text string as a new object.
-            s3Client.putObject(bucketName, stringObjKeyName, "Uploaded String Object")
-
             // Upload a file as a new object with ContentType and title specified.
-            val request = PutObjectRequest(bucketName, fileObjKeyName, File(fileName))
+            val sourceFile = fullLocalFilePath.toFile()
+            val request = PutObjectRequest(s3BucketName, objKeyName, sourceFile)
             val metadata = ObjectMetadata()
-            metadata.contentType = "plain/text"
-            metadata.addUserMetadata("x-amz-meta-title", "someTitle")
+            metadata.contentType = "binary/octetstream"
+            metadata.addUserMetadata("x-amz-meta-title", objKeyName)
             request.metadata = metadata
             s3Client.putObject(request)
         } catch (e: AmazonServiceException) {
@@ -137,13 +135,13 @@ class S3DirectoryWriter(private val keyService: KeyService,
             }
 
     private fun metadataPath() =
-            Paths.get(s3outputDirectory, """$tableName-%04d.metadata""".format(currentOutputFileNumber))
+            Paths.get(s3FolderPrefix, """$tableName-%04d.metadata""".format(currentOutputFileNumber))
 
 
     private var currentBatch = StringBuilder()
     private var batchSize = 0
 
-    private fun outputPath(number: Int) = Paths.get(s3outputDirectory, outputName(number))
+    private fun outputPath(number: Int) = Paths.get(s3FolderPrefix, outputName(number))
 
     private fun outputName(number: Int) =
             """$tableName-%04d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
@@ -155,11 +153,17 @@ class S3DirectoryWriter(private val keyService: KeyService,
     @Value("\${output.batch.size.max}")
     private var maxBatchOutputSize: Int = 0
 
-    @Value("\${s3folder.output}")
-    private lateinit var s3outputDirectory: String
+    @Value("\${user.region}")
+    private var region: String = "eu-west-1"
+
+    @Value("\${s3.bucket}")
+    private lateinit var s3BucketName: String // i.e. "1234567890"
+
+    @Value("\${s3.folder}")
+    private lateinit var s3FolderPrefix: String //i.e. "mongo-export-2019-06-23"
 
     @Value("\${source.table.name}")
-    private lateinit var tableName: String
+    private lateinit var tableName: String // i.e. "db.user.data"
 
     @Value("\${compress.output:false}")
     private var compressOutput: Boolean = true
