@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 // See https://github.com/aws/aws-sdk-java-v2
@@ -46,20 +47,22 @@ class S3DirectoryWriter(private val keyService: KeyService,
                         this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                                 byteArrayOutputStream.toByteArray())
 
-                Files.write(outputPath(++currentOutputFileNumber),
-                        encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
+                val dataFile = outputPath(++currentOutputFileNumber)
+                val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
+                writeToS3(dataFile, dataBytes)
 
                 val metadataFile = metadataPath()
                 val metadataByteArrayOutputStream = ByteArrayOutputStream()
                 val metadataStream: OutputStream = BufferedOutputStream(metadataByteArrayOutputStream)
                 metadataStream.use {
                     val iv = encryptionResult.initialisationVector
-                    val plaintext = dataKeyResult.plaintextDataKey
+                    val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
                     it.write("iv=$iv\n".toByteArray(StandardCharsets.UTF_8))
                     it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n".toByteArray(StandardCharsets.UTF_8))
                     it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n".toByteArray(StandardCharsets.UTF_8))
                 }
-                Files.write(metadataFile, metadataByteArrayOutputStream.toByteArray())
+                val metadataBytes = metadataByteArrayOutputStream.toByteArray()
+                writeToS3(metadataFile, metadataBytes)
 
             } else {
                 bufferedOutputStream(Files.newOutputStream(outputPath(++currentOutputFileNumber))).use {
@@ -72,6 +75,9 @@ class S3DirectoryWriter(private val keyService: KeyService,
         }
     }
 
+    private fun writeToS3(fileName: Path, fileBytes: ByteArray) {
+        Files.write(fileName, fileBytes)
+    }
 
     private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
             if (compressOutput) {

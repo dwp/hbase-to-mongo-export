@@ -49,7 +49,7 @@ class DirectoryWriter(private val keyService: KeyService,
 
                 nextMetadata().use {
                     val iv = encryptionResult.initialisationVector
-                    val plaintext = dataKeyResult.plaintextDataKey
+                    val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
                     it.write("iv=$iv\n")
                     it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n")
                     it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n")
