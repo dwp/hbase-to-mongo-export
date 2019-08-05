@@ -40,9 +40,11 @@ It should now be possible to run code in an IDE against the local instance.
   | directory.output         |                       | Directory to write output files to.
   | encrypt.output           | true                  | Whether to encrypt the output.
   | file.output              |                       | File to write output to - only needed if 'outputToFile' spring profile is active so not used in production.
-  | s3folder.output          |                       | S3 folder to write output to - required when 'outputToS3Directory' spring profile is active. Should be of form "s3://bucket/folder/"
+  | aws.region               | eu-west-1             | AWS Region to use for client auth - required when 'outputToS3' is used
+  | s3.bucket                |                       | S3 bucket to write output to - required when 'outputToS3' spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
+  | s3.folder                |                       | S3 folder to write to in the bucket - required when 'outputToS3' spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
   | hbase.zookeeper.quorum   | hbase                 | Name of the hbase host (set this to 'localhost' to run from IDE).
-  | output.batch.size.max    |                       | The maxmum size of each  batch of output (calculated before compression and encryption).
+  | output.batch.size.max    |                       | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
   | source.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
   | source.table.name        |                       | Table in hbase to read data from.
   | target.cipher.algorithm  | AES/CTR/NoPadding     | The algorithm that should be used to encrypt the output data.
@@ -59,7 +61,7 @@ It should now be possible to run code in an IDE against the local instance.
   | outputToConsole      | No                 | Output is written to console as is (not encrypted or compressed).
   | outputToDirectory    | No                 | Output is chunked and written to the configured directory.
   | outputToFile         | No                 | Output is written to configured local file as is (used for the hbase integration test).
-  | outputToS3Directory  | Yes                | Output is chunked and written to configured S3 folder.
+  | outputToS3           | Yes                | Output is chunked and written to configured S3 folder.
   | phoneyCipherService  | No                 | Use a cipher service that does not do real encryption.
   | phoneyDataKeyService | No                 | Use a dummy key service that does not require a configured DKS instance.
   | production           | Yes                | Use real http client and a strong random number generator (contrast with 'unitTest').

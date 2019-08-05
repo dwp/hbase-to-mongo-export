@@ -14,12 +14,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-//import software.amazon.awssdk.core.exception.SdkClientException
-//import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
-//import software.amazon.awssdk.core.exception.*
-//import software.amazon.awssdk.regions.*
-//import software.amazon.awssdk.services.s3.*
-//import software.amazon.awssdk.services.s3.model.CopyObjectRequest
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
@@ -28,12 +22,10 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 
-// PutObjectRequest#withInputStream
+// See also https://github.com/aws/aws-sdk-java
 
-// See https://github.com/aws/aws-sdk-java-v2
-// See https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/java/example_code/s3/src/main/java/CopyObjectSingleOperation.java
 @Component
-@Profile("outputToS3Directory")
+@Profile("outputToS3")
 class S3DirectoryWriter(private val keyService: KeyService,
                         private val cipherService: CipherService) : ItemWriter<String> {
 
@@ -49,6 +41,9 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
     fun writeOutput() {
         if (batchSize > 0) {
+
+            val dataFile = outputName(++currentOutputFileNumber)
+
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
                 logger.info("dataKeyResult: '$dataKeyResult'.")
@@ -62,7 +57,6 @@ class S3DirectoryWriter(private val keyService: KeyService,
                         this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                                 byteArrayOutputStream.toByteArray())
 
-                val dataFile = outputPath(++currentOutputFileNumber)
                 val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
                 writeToS3(dataFile, dataBytes)
 
@@ -80,9 +74,13 @@ class S3DirectoryWriter(private val keyService: KeyService,
                 writeToS3(metadataFile, metadataBytes)
 
             } else {
-                bufferedOutputStream(Files.newOutputStream(outputPath(++currentOutputFileNumber))).use {
+                //no encryption
+                val byteArrayOutputStream = ByteArrayOutputStream()
+
+                bufferedOutputStream(byteArrayOutputStream).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
+                writeToS3(dataFile, byteArrayOutputStream.toByteArray())
             }
 
             this.currentBatch = StringBuilder()
@@ -90,8 +88,11 @@ class S3DirectoryWriter(private val keyService: KeyService,
         }
     }
 
-    private fun writeToS3(fullLocalFilePath: Path, fileBytes: ByteArray) {
-        Files.write(fullLocalFilePath, fileBytes)
+    private fun writeToS3(fullLocalFilePath: String, fileBytes: ByteArray) {
+        // See also https://github.com/aws/aws-sdk-java
+
+        val inputStream = ByteArrayInputStream(fileBytes)
+        val bufferedInputStream = BufferedInputStream(inputStream)
 
         val clientRegion = Regions.valueOf(region)
 
@@ -107,12 +108,12 @@ class S3DirectoryWriter(private val keyService: KeyService,
                     .build()
 
             // Upload a file as a new object with ContentType and title specified.
-            val sourceFile = fullLocalFilePath.toFile()
-            val request = PutObjectRequest(s3BucketName, objKeyName, sourceFile)
             val metadata = ObjectMetadata()
             metadata.contentType = "binary/octetstream"
             metadata.addUserMetadata("x-amz-meta-title", objKeyName)
-            request.metadata = metadata
+            metadata.contentLength = fileBytes.size.toLong()
+            val request = PutObjectRequest(s3BucketName, objKeyName, bufferedInputStream, metadata)
+
             s3Client.putObject(request)
         } catch (e: AmazonServiceException) {
             // The call was transmitted successfully, but Amazon S3 couldn't process
@@ -135,16 +136,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
             }
 
     private fun metadataPath() =
-            Paths.get(s3FolderPrefix, """$tableName-%04d.metadata""".format(currentOutputFileNumber))
+              """$s3FolderPrefix/$tableName-%04d.metadata""".format(currentOutputFileNumber)
 
 
     private var currentBatch = StringBuilder()
     private var batchSize = 0
 
-    private fun outputPath(number: Int) = Paths.get(s3FolderPrefix, outputName(number))
-
     private fun outputName(number: Int) =
-            """$tableName-%04d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$s3FolderPrefix/$tableName-%04d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
 
@@ -153,7 +152,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
     @Value("\${output.batch.size.max}")
     private var maxBatchOutputSize: Int = 0
 
-    @Value("\${user.region}")
+    @Value("\${aws.region}")
     private var region: String = "eu-west-1"
 
     @Value("\${s3.bucket}")
