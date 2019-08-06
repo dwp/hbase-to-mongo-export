@@ -136,4 +136,4 @@ logs-s3-exporter: ## Show the logs of the s3 exporter
 	docker logs hbase-to-mongo-export-s3
 
 .PHONY: reset-all
-reset-all: destroy up logs-directory ## Destroy all, rebuild and up all, and check the export logs
+reset-all: destroy up logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
