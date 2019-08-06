@@ -136,14 +136,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
             }
 
     private fun metadataPath(number: Int) =
-              """$s3FolderPrefix/$tableName-%06d.metadata""".format(number)
+              """$s3PrefixFolder/$tableName-%06d.metadata""".format(number)
 
 
     private var currentBatch = StringBuilder()
     private var batchSize = 0
 
     private fun outputName(number: Int) =
-            """$s3FolderPrefix/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$s3PrefixFolder/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
 
@@ -158,8 +158,8 @@ class S3DirectoryWriter(private val keyService: KeyService,
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String // i.e. "1234567890"
 
-    @Value("\${s3.folder}")
-    private lateinit var s3FolderPrefix: String //i.e. "mongo-export-2019-06-23"
+    @Value("\${s3.prefix.folder}")
+    private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
 
     @Value("\${source.table.name}")
     private lateinit var tableName: String // i.e. "db.user.data"

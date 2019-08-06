@@ -98,13 +98,13 @@ You will need to have valid aws credentials to access S3 with a bucket you alrea
 can be updated in the `docker-compose` file
 
 ```
-    make export-to-s3 --aws_default_region=eu-west-2 \
-                      --aws_access_key_id=keykeykey \
-                      --aws_session_token=tokentokentoken \
-                      --aws_default_profile=profile \
-                      --s3_bucket=9876543210 -
-                      --s3_prefix_folder=hbase-export/2019-07-11/ \
-                      --data_key_service_url=dummy.com:8080
+    make export-to-s3 aws_default_region=eu-west-2 \
+                      aws_access_key_id=keykeykey \
+                      aws_session_token=tokentokentoken \
+                      aws_default_profile=profile \
+                      s3_bucket=9876543210 -
+                      s3_prefix_folder=hbase-export/2019-07-11/ \
+                      data_key_service_url=dummy.com:8080
 ```
 then check the logs
 ```
