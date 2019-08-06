@@ -12,7 +12,9 @@ services:
 
   hbase-populate:
     image: hbase-populate
-    build: ./scripts/Dockerfile_populate_hbase
+    build:
+      context: scripts
+      dockerfile: Dockerfile_populate_hbase
     container_name: hbase-populate
     depends_on:
       - hbase
