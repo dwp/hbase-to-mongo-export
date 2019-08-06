@@ -65,13 +65,6 @@ services:
       context: .
       args:
         - HBASE_TO_MONGO_EXPORT_VERSION
-        - AWS_DEFAULT_REGION
-        - AWS_SESSION_TOKEN
-        - AWS_ACCESS_KEY_ID
-        - AWS_DEFAULT_PROFILE
-        - S3_BUCKET
-        - S3_PREFIX_FOLDER
-        - DATA_KEY_SERVICE_URL
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
@@ -89,7 +82,7 @@ services:
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
     environment:
-      - AWS_DEFAULT_REGION
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_DEFAULT_PROFILE=${AWS_DEFAULT_PROFILE}

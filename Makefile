@@ -69,7 +69,7 @@ export-to-s3: ## Bring up a sample s3-exporter service
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up --build -d  hbase-to-mongo-export-s3; \
+		docker-compose up --build -d hbase-to-mongo-export-s3; \
 	}
 
 .PHONY: restart
