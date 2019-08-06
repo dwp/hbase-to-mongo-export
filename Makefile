@@ -6,6 +6,7 @@ aws_default_profile=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
 data_key_service_url=http://localhost:8080
+follow_flag=--follow
 
 default: help
 
@@ -124,16 +125,16 @@ hbase-shell: ## Open an Hbase shell onto the running hbase container
 	docker-compose run --rm hbase shell
 
 .PHONY: logs-file-exporter
-logs-file-exporter: ## Show the logs of the file exporter
-	docker logs hbase-to-mongo-export-file
+logs-file-exporter: ## Show the logs of the file exporter. Update follow_flag as required.
+	docker logs $(follow_flag) hbase-to-mongo-export-file
 
 .PHONY: logs-directory-exporter
-logs-directory-exporter: ## Show the logs of the directory exporter
-	docker logs hbase-to-mongo-export-directory
+logs-directory-exporter: ## Show the logs of the directory exporter. Update follow_flag as required.
+	docker logs $(follow_flag) hbase-to-mongo-export-directory
 
 .PHONY: logs-s3-exporter
-logs-s3-exporter: ## Show the logs of the s3 exporter
-	docker logs hbase-to-mongo-export-s3
+logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as required.
+	docker logs $(follow_flag) hbase-to-mongo-export-s3
 
 .PHONY: reset-all
 reset-all: destroy up logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
