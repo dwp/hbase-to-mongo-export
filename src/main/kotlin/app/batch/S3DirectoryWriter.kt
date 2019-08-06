@@ -94,7 +94,9 @@ class S3DirectoryWriter(private val keyService: KeyService,
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
 
-        val clientRegion = Regions.valueOf(region)
+        // eu-west-1 -> EU_WEST_2 (i.e tf style to enum name)
+        val updated_region = region.toUpperCase().replace("-", "_")
+        val clientRegion = Regions.valueOf(updated_region)
 
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
