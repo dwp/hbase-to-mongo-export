@@ -53,18 +53,40 @@ mongo backup format, i.e. 1 json record per line.
 
 ## Run locally containerized
 
+There are makefile commands for all your common actions;
+
+ | Command                 | Description
+ |-------------------------|--------------------
+ | add-hbase-to-hosts      | Update laptop hosts file with reference to hbase container
+ | build-images            | Build the hbase, population, exporter images
+ | build                   | Build the hbase exporter jar file
+ | destroy                 | Bring down the hbase and other services then delete all volumes
+ | dist                    | Assemble distribution files in build/dist
+ | down                    | Bring down the hbase and other services
+ | echo                    | Echo the current version
+ | hbase-shell             | Open an Hbase shell onto the running hbase container
+ | integration             | Run the integration tests in a Docker container
+ | logs-directory-exporter | Show the logs of the directory exporter
+ | logs-file-exporter      | Show the logs of the file exporter
+ | reset-all               | Destroy all, rebuild and up all, and check the export logs
+ | restart                 | Restart hbase and other services
+ | up                      | Bring up hbase, population, and sample exporter services
 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
+Create all:
 ```
-    export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
-    docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder 
+    make up
+``` 
+Check the logs:
 ```
+    make logs-file-exporter
+    make logs-directory-eporter
+``` 
 
 ### Additionally run the integration tests against local containerized setup
 ```
-    docker-compose build hbase-to-mongo-export-itest
-    docker-compose run hbase-to-mongo-export-itest
+    make integration
 ```
 
 ## Run locally in IDE or as a jar
@@ -75,35 +97,46 @@ This is slightly cumbersome as zookeeper gives the docker network name of the
 hbase host which can't be resolved outside of docker, however this can be remedied
 if the name given by zookeeper is then entered into the local `/etc/hosts` file.
 
-1. Bring up the hbase container and poulate it with test data:
+1. Bring up the hbase container and populate it with test data:
 
-    docker-compose up -d hbase hbase-populate
+```
+   docker-compose up -d hbase hbase-populate
+```
 
 2. Add hbase entry in local /etc/hosts file:
 
-    sudo ./scripts/hosts.sh
+```
+    make add-hbase-to-hosts
+```
 
 It should now be possible to run code in an IDE against the local instance.
 
 ### Running locally in IDE
-Make a run configuration and add arguments like this:
+
+See the makefile command `up` and the docker-compose file for `hbase-to-mongo-export-directory` for a sample of the arguments you need
+
+#### Console output
+
+Make a run configuration and add arguments as per `export-to-s3`:
 ```
---spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
+--spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToConsole,batchRun,strongRng
 --source.table.name=ucdata
 --data.ready.flag.location=data/ready
---file.output=data/output.txt
 ```
 ...it should the print out what it has exported from the local containerised hbase
 
-To test a running it from local HBase to S3, you can try this:
+#### S3 Output
 
-#### Env vars:
+To test a running it from local HBase to S3, you can try this - 
+See the makefile command `export-to-s3` and the docker-compose file for `hbase-to-mongo-export-s3` for a sample of the arguments you need
+
+* Env vars:
 ```
 aws_access_key_id=keykeykey
 aws_secret_access_key=secretsecretsecret
 ```
 
-#### Arguments:
+* Arguments:
 ```
 --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
 --source.table.name=ucdata

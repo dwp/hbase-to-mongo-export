@@ -7,14 +7,15 @@ s3_bucket=not_set
 s3_prefix_folder=not_set
 data_key_service_url=http://localhost:8080
 
-echo:
-	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
-
 default: help
 
 .PHONY: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: echo
+echo: ## Echo the current version
+	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
 
 .PHONY: build
 build: ## Build the hbase exporter jar file
@@ -23,6 +24,10 @@ build: ## Build the hbase exporter jar file
 .PHONY: dist
 dist: ## Assemble distribution files in build/dist
 	./gradlew assembleDist
+
+.PHONY: add-hbase-to-hosts
+add-hbase-to-hosts: ## Update laptop hosts file with reference to hbase container
+	./scripts/add-hbase-to-hosts.sh;
 
 .PHONY: build-images
 build-images: build ## Build the hbase, population, exporter images
@@ -50,7 +55,7 @@ up: build-images ## Bring up hbase, population, and sample exporter services
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		docker-compose up -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder; \
-		./scripts/add-hbase-to-hosts.sh; \
+		make add-hbase-to-hosts; \
 	}
 
 .PHONY: export-to-s3
@@ -118,3 +123,17 @@ integration: up ## Run the integration tests in a Docker container
 hbase-shell: ## Open an Hbase shell onto the running hbase container
 	docker-compose run --rm hbase shell
 
+.PHONY: logs-file-exporter
+logs-file-exporter: ## Show the logs of the file exporter
+	docker logs hbase-to-mongo-export-file
+
+.PHONY: logs-directory-exporter
+logs-directory-exporter: ## Show the logs of the directory exporter
+	docker logs hbase-to-mongo-export-directory
+
+.PHONY: logs-s3-exporter
+logs-s3-exporter: ## Show the logs of the s3 exporter
+	docker logs hbase-to-mongo-export-s3
+
+.PHONY: reset-all
+reset-all: destroy up logs-directory ## Destroy all, rebuild and up all, and check the export logs

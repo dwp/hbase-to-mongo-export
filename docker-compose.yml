@@ -39,13 +39,13 @@ services:
       --data.ready.flag.location=data/ready
       --file.output=data/output.txt
 
-  hbase-to-mongo-export-folder:
+  hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
     build:
       context: .
       args:
         - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export-folder
+    container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
     volumes:
