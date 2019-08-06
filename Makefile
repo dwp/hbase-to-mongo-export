@@ -40,7 +40,7 @@ build-images: build ## Build the hbase, population, exporter images
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 .PHONY: up
@@ -54,7 +54,7 @@ up: build-images ## Bring up hbase, population, and sample exporter services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder; \
+		docker-compose up -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory; \
 		make add-hbase-to-hosts; \
 	}
 
