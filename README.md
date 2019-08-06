@@ -92,9 +92,9 @@ Check the logs:
 
 ### Run the s3 exporter
 
-You will need to have valid aws credentials to access S3 with a bcuket you already have created and have permissions for.
+You will need to have valid aws credentials to access S3 with a bucket you already have created and have permissions for.
 * This is a sample only
-* This uses some default values - further settings (like using the real DWP Data Key Service) 
+* This uses some default values - further settings (like changing profiles for the real DWP Data Key Service) 
 can be updated in the `docker-compose` file
 
 ```
