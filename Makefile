@@ -1,4 +1,4 @@
-hbase_to_mongo_version=$(cat ./gradle.properties | cut -f2 -d'=')
+hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-1
 aws_session_token=not_set
 aws_access_key_id=not_set
@@ -6,6 +6,9 @@ aws_default_profile=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
 data_key_service_url=http://localhost:8080
+
+echo:
+	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
 
 default: help
 
@@ -21,35 +24,76 @@ build: ## Build the hbase exporter jar file
 dist: ## Assemble distribution files in build/dist
 	./gradlew assembleDist
 
+.PHONY: build-images
+build-images: build ## Build the hbase, population, exporter images
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_SESSION_TOKEN=$(aws_session_token); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+	}
+
 .PHONY: up
-up: ## Bring up hbase, population, and sample exporter services
-	{
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(HBASE_TO_MONGO_EXPORT_VERSION) \
-		docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder
-		./scripts/add-hbase-to-hosts.sh
+up: build-images ## Bring up hbase, population, and sample exporter services
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_SESSION_TOKEN=$(aws_session_token); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose up -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder; \
+		./scripts/add-hbase-to-hosts.sh; \
 	}
 
 .PHONY: export-to-s3
 export-to-s3: ## Bring up a sample s3-exporter service
-	{
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version) \
-		export AWS_DEFAULT_REGION=$(aws_default_region) \
-		export AWS_SESSION_TOKEN=$(aws_session_token) \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id) \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile) \
-		export S3_BUCKET=$(s3_bucket) \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder) \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url) \
-		docker-compose up --build -d  hbase-to-mongo-export-s3
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_SESSION_TOKEN=$(aws_session_token); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose up --build -d  hbase-to-mongo-export-s3; \
 	}
 
 .PHONY: restart
 restart: ## Restart hbase and other services
-	docker-compose restart
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_SESSION_TOKEN=$(aws_session_token); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose restart; \
+	}
 
 .PHONY: down
 down: ## Bring down the hbase and other services
-	docker-compose down
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_SESSION_TOKEN=$(aws_session_token); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose down; \
+	}
 
 .PHONY: destroy
 destroy: down ## Bring down the hbase and other services then delete all volumes
@@ -58,7 +102,17 @@ destroy: down ## Bring down the hbase and other services then delete all volumes
 
 .PHONY: integration
 integration: up ## Run the integration tests in a Docker container
-	docker-compose up --build hbase-to-mongo-export-itest
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_SESSION_TOKEN=$(aws_session_token); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose up --build hbase-to-mongo-export-itest; \
+	}
 
 .PHONY: hbase-shell
 hbase-shell: ## Open an Hbase shell onto the running hbase container

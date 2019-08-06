@@ -86,11 +86,11 @@ services:
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
-    env:
+    environment:
       - AWS_DEFAULT_REGION
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_DEFAULT_PROFILE=${AWS_DEFAULT_PROFILE}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-"not-set"}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-"not-set"}
+      - AWS_DEFAULT_PROFILE=${AWS_DEFAULT_PROFILE:-"not-set"}
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
