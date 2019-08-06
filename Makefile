@@ -1,5 +1,7 @@
 HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=')
 
+default: help
+
 .PHONY: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -13,14 +15,15 @@ dist: ## Assemble distribution files in build/dist
 	./gradlew assembleDist
 
 .PHONY: up
-up: ## Bring up Kafka2Hbase in Docker with supporting services
+up: ## Bring up Hbase in Docker with supporting services
 	{
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(HBASE_TO_MONGO_EXPORT_VERSION) \
 		docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder
+		./scripts/add-hbase-to-hosts.sh
 	}
 
 .PHONY: restart
-restart: ## Restart Kafka2Hbase and all supporting services
+restart: ## Restart Hbase and all supporting services
 	docker-compose restart
 
 .PHONY: down
@@ -28,7 +31,7 @@ down: ## Bring down the hbase container and support services
 	docker-compose down
 
 .PHONY: destroy
-destroy: down ## Bring down the Kafka2Hbase Docker container and services then delete all volumes
+destroy: down ## Bring down the hbase container and services then delete all volumes
 	docker network prune -f
 	docker volume prune -f
 
