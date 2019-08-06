@@ -35,7 +35,8 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
             result
         }
         else  {
-            throw DataKeyServiceUnavailableException("DataKeyService returned status code '${response.statusLine.statusCode}'.")
+            throw DataKeyServiceUnavailableException(
+                    "DataKeyService returned status code '${response.statusLine.statusCode}'.")
         }
     }
 
@@ -60,13 +61,15 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
                     dataKeyResult.plaintextDataKey
                 }
                 response.statusLine.statusCode == 400 ->
-                    throw DataKeyDecryptionException("""Decrypting encryptedKey: '$encryptedKey' with 
-                |encryptionKeyId: '$encryptionKeyId'
-                |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
+                    throw DataKeyDecryptionException(
+                            """Decrypting encryptedKey: '$encryptedKey' with 
+                            |encryptionKeyId: '$encryptionKeyId'
+                            |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
                 else ->
-                    throw DataKeyServiceUnavailableException("""Decrypting encryptedKey: '$encryptedKey' with 
-                |encryptionKeyId: '$encryptionKeyId'
-                |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
+                    throw DataKeyServiceUnavailableException(
+                            """Decrypting encryptedKey: '$encryptedKey' with 
+                            |encryptionKeyId: '$encryptionKeyId'
+                            |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
             }
         }
     }
@@ -77,8 +80,8 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
 
     private var decryptedKeyCache = mutableMapOf<String, String>()
 
-    @Value("\${dataKeyServiceUrl:http://localhost:8080}")
-    private lateinit var dataKeyServiceUrl: String
+    @Value("\${data.key.service.url}")
+    private var dataKeyServiceUrl: String = "http://localhost:8080"
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())

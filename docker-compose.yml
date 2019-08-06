@@ -20,13 +20,13 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "-d -c data/ready -o data/output.txt"
 
-  hbase-to-mongo-export:
+  hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
     build:
       context: .
       args:
         - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export
+    container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
     volumes:
@@ -36,6 +36,56 @@ services:
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
       --file.output=data/output.txt
+
+  hbase-to-mongo-export-folder:
+    image: hbase-to-mongo-export
+    build:
+      context: .
+      args:
+        - HBASE_TO_MONGO_EXPORT_VERSION
+    container_name: hbase-to-mongo-export-folder
+    depends_on:
+      - hbase
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    command: >-
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
+      --source.table.name=ucdata
+      --data.ready.flag.location=data/ready
+      --directory.output=data
+      --encrypt.output=false
+      --compress.output=false
+      --output.batch.size.max=2048
+
+  hbase-to-mongo-export-s3-dev:
+    image: hbase-to-mongo-export
+    build:
+      context: .
+      args:
+        - HBASE_TO_MONGO_EXPORT_VERSION
+        - AWS_DEFAULT_REGION=eu-west-1
+        - AWS_SESSION_TOKEN
+        - AWS_ACCESS_KEY_ID
+        - AWS_DEFAULT_PROFILE
+        - S3_BUCKET
+        - S3_PREFIX_FOLDER
+        - DATA_KEY_SERVICE_URL
+    container_name: hbase-to-mongo-export-s3-dev
+    depends_on:
+      - hbase
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    command: >-
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
+      --source.table.name=ucdata
+      --data.ready.flag.location=data/ready
+      --encrypt.output=true
+      --compress.output=true
+      --output.batch.size.max=2048
+      --data.key.service.url=${DATA_KEY_SERVICE_URL}
+      --aws.region=eu-west-1
+      --s3.bucket=${S3_BUCKET}
+      --s3.prefix.folder=${S3_PREFIX_FOLDER}
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

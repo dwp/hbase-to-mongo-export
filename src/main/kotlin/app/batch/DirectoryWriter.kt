@@ -31,6 +31,10 @@ class DirectoryWriter(private val keyService: KeyService,
 
     fun writeOutput() {
         if (batchSize > 0) {
+
+            val dataPath = outputPath(++currentOutputFileNumber)
+            logger.info("Processing file number '%06d' with batchSize='$batchSize'.".format(currentOutputFileNumber))
+
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
                 logger.info("dataKeyResult: '$dataKeyResult'.")
@@ -44,20 +48,24 @@ class DirectoryWriter(private val keyService: KeyService,
                         this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                                 byteArrayOutputStream.toByteArray())
 
-                Files.write(outputPath(++currentOutputFileNumber),
+                Files.write(dataPath,
                         encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
+                logger.info("Wrote dataPath: '$dataPath'.")
 
-                nextMetadata().use {
+                val metadataPath = metadataPath(currentOutputFileNumber)
+                BufferedWriter(OutputStreamWriter(Files.newOutputStream(metadataPath))).use {
                     val iv = encryptionResult.initialisationVector
                     val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
                     it.write("iv=$iv\n")
                     it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n")
                     it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n")
                 }
+                logger.info("Wrote metadataPath: '$metadataPath'.")
             } else {
-                bufferedOutputStream(Files.newOutputStream(outputPath(++currentOutputFileNumber))).use {
+                bufferedOutputStream(Files.newOutputStream(dataPath)).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
+                logger.info("Wrote dataPath: '$dataPath'.")
             }
 
             this.currentBatch = StringBuilder()
@@ -74,9 +82,8 @@ class DirectoryWriter(private val keyService: KeyService,
                 BufferedOutputStream(outputStream)
             }
 
-    private fun nextMetadata() = BufferedWriter(OutputStreamWriter(Files.newOutputStream(metadataPath())))
-    private fun metadataPath() =
-            Paths.get(outputDirectory, """$tableName-%04d.metadata""".format(currentOutputFileNumber))
+    private fun metadataPath(number: Int) =
+            Paths.get(outputDirectory, """$tableName-%06d.metadata""".format(number))
 
 
     private var currentBatch = StringBuilder()
@@ -85,7 +92,7 @@ class DirectoryWriter(private val keyService: KeyService,
     private fun outputPath(number: Int) = Paths.get(outputDirectory, outputName(number))
 
     private fun outputName(number: Int) =
-            """$tableName-%04d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
 

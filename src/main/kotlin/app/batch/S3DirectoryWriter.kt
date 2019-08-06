@@ -11,9 +11,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
@@ -43,6 +40,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
         if (batchSize > 0) {
 
             val dataFile = outputName(++currentOutputFileNumber)
+            logger.info("Processing file number '%06d' with batchSize='$batchSize'.".format(currentOutputFileNumber))
 
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
@@ -60,7 +58,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
                 val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
                 writeToS3(dataFile, dataBytes)
 
-                val metadataFile = metadataPath()
+                val metadataFile = metadataPath(currentOutputFileNumber)
                 val metadataByteArrayOutputStream = ByteArrayOutputStream()
                 val metadataStream: OutputStream = BufferedOutputStream(metadataByteArrayOutputStream)
                 metadataStream.use {
@@ -88,8 +86,10 @@ class S3DirectoryWriter(private val keyService: KeyService,
         }
     }
 
-    private fun writeToS3(fullLocalFilePath: String, fileBytes: ByteArray) {
+    private fun writeToS3(fullFilePath: String, fileBytes: ByteArray) {
         // See also https://github.com/aws/aws-sdk-java
+        val bytesSize = fileBytes.size.toLong()
+        logger.info("Writing file '$fullFilePath' of '$bytesSize' bytes.")
 
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
@@ -98,7 +98,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
-        val objKeyName: String = fullLocalFilePath.toString()
+        val objKeyName: String = fullFilePath.toString()
 
         try {
             //This code expects that you have AWS credentials set up per:
@@ -111,7 +111,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
             val metadata = ObjectMetadata()
             metadata.contentType = "binary/octetstream"
             metadata.addUserMetadata("x-amz-meta-title", objKeyName)
-            metadata.contentLength = fileBytes.size.toLong()
+            metadata.contentLength = bytesSize
             val request = PutObjectRequest(s3BucketName, objKeyName, bufferedInputStream, metadata)
 
             s3Client.putObject(request)
@@ -135,15 +135,15 @@ class S3DirectoryWriter(private val keyService: KeyService,
                 BufferedOutputStream(outputStream)
             }
 
-    private fun metadataPath() =
-              """$s3FolderPrefix/$tableName-%04d.metadata""".format(currentOutputFileNumber)
+    private fun metadataPath(number: Int) =
+              """$s3FolderPrefix/$tableName-%06d.metadata""".format(number)
 
 
     private var currentBatch = StringBuilder()
     private var batchSize = 0
 
     private fun outputName(number: Int) =
-            """$s3FolderPrefix/$tableName-%04d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$s3FolderPrefix/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
 

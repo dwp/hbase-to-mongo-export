@@ -9,24 +9,7 @@ mongo backup format, i.e. 1 json record per line.
 2. Docker
 3. docker-compose
 
-## Run locally
-
-### In an IDE or not containerized (with containerized hbase)
-
-This is slightly cumbersome as zookeeper gives the docker network name of the
-hbase host which can't be resolved outside of docker, however this can be remedied
-if the name given by zookeeper is then entered into the local ```/etc/hosts```
-file.
-
-1. Bring up the hbase container:
-
-    docker-compose up -d hbase hbase-populate
-
-2. Add hbase entry in local /etc/hosts file:
-
-    sudo ./scripts/hosts.sh
-
-It should now be possible to run code in an IDE against the local instance.
+## Configuration
 
 * The main class is
   ```app.HBaseToMongoExport```
@@ -36,7 +19,7 @@ It should now be possible to run code in an IDE against the local instance.
   | Parameter name           | Default Value         | Further info
   |--------------------------|-----------------------|--------------
   | compress.output          | false                 | Whether to compress the output.
-  | dataKeyServiceUrl        | http://localhost:8080 | Url of remote data key service.
+  | data.key.service.url     | http://localhost:8080 | Url of remote data key service.
   | directory.output         |                       | Directory to write output files to.
   | encrypt.output           | true                  | Whether to encrypt the output.
   | file.output              |                       | File to write output to - only needed if 'outputToFile' spring profile is active so not used in production.
@@ -68,13 +51,39 @@ It should now be possible to run code in an IDE against the local instance.
   | unitTest             | No                 | Use mock http client and psuedo random number generator (contrast with 'production').
 
 
-### Run locally containerized
-    HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
-        docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export
+## Run locally containerized
+
+
+### Stand up the hbase container and populate it, and execute sample exporters
+
+```
+    export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') \
+    docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-folder 
+```
 
 ### Additionally run the integration tests against local containerized setup
+```
     docker-compose build hbase-to-mongo-export-itest
     docker-compose run hbase-to-mongo-export-itest
+```
+
+## Run locally in IDE or as a jar
+
+### First, you must stand up the hbase container and populate it
+
+This is slightly cumbersome as zookeeper gives the docker network name of the
+hbase host which can't be resolved outside of docker, however this can be remedied
+if the name given by zookeeper is then entered into the local `/etc/hosts` file.
+
+1. Bring up the hbase container and poulate it with test data:
+
+    docker-compose up -d hbase hbase-populate
+
+2. Add hbase entry in local /etc/hosts file:
+
+    sudo ./scripts/hosts.sh
+
+It should now be possible to run code in an IDE against the local instance.
 
 ### Running locally in IDE
 Make a run configuration and add arguments like this:
