@@ -66,6 +66,7 @@ There are makefile commands for all your common actions;
  | `echo`                    | Echo the current version
  | `hbase-shell`             | Open an Hbase shell onto the running hbase container
  | `integration`             | Run the integration tests in a Docker container
+ | `export-to-s3`            | Bring up a sample s3-exporter service
  | `logs-directory-exporter` | Show the logs of the directory exporter
  | `logs-file-exporter`      | Show the logs of the file exporter
  | `logs-s3-exporter`        | Show the logs of the S3 exporter
@@ -100,7 +101,7 @@ can be updated in the `docker-compose` file
 ```
     make export-to-s3 aws_default_region=eu-west-2 \
                       aws_access_key_id=keykeykey \
-                      aws_session_token=tokentokentoken \
+                      aws_secret_access_key=tokentokentoken \
                       aws_default_profile=profile \
                       s3_bucket=9876543210 -
                       s3_prefix_folder=hbase-export/2019-07-11/ \

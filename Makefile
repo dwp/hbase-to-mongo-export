@@ -1,8 +1,7 @@
 hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-1
-aws_session_token=not_set
+aws_secret_access_key=not_set
 aws_access_key_id=not_set
-aws_default_profile=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
 data_key_service_url=http://localhost:8080
@@ -35,9 +34,8 @@ build-images: build ## Build the hbase, population, exporter images
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_SESSION_TOKEN=$(aws_session_token); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
@@ -49,9 +47,8 @@ up: build-images ## Bring up hbase, population, and sample exporter services
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_SESSION_TOKEN=$(aws_session_token); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
@@ -64,9 +61,8 @@ export-to-s3: ## Bring up a sample s3-exporter service
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_SESSION_TOKEN=$(aws_session_token); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
@@ -78,9 +74,8 @@ restart: ## Restart hbase and other services
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_SESSION_TOKEN=$(aws_session_token); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
@@ -92,9 +87,8 @@ down: ## Bring down the hbase and other services
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_SESSION_TOKEN=$(aws_session_token); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
@@ -111,9 +105,8 @@ integration: up ## Run the integration tests in a Docker container
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_SESSION_TOKEN=$(aws_session_token); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_DEFAULT_PROFILE=$(aws_default_profile); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
