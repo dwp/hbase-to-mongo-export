@@ -63,7 +63,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
                 val metadataStream: OutputStream = BufferedOutputStream(metadataByteArrayOutputStream)
                 metadataStream.use {
                     val iv = encryptionResult.initialisationVector
-                    val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
+                    //val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
                     it.write("iv=$iv\n".toByteArray(StandardCharsets.UTF_8))
                     it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n".toByteArray(StandardCharsets.UTF_8))
                     it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n".toByteArray(StandardCharsets.UTF_8))
