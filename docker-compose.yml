@@ -93,6 +93,8 @@ services:
       context: .
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
+    depends_on:
+      - hbase-to-mongo-export-file
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
