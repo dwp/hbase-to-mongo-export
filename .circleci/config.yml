@@ -69,7 +69,10 @@ jobs:
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
             docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest
-            docker-compose up -d hbase hbase-populate hbase-to-mongo-export-file
+            docker-compose up -d hbase hbase-populate
+            sleep 5
+            docker-compose up -d hbase-to-mongo-export-file
+            sleep 5
             docker-compose up hbase-to-mongo-export-itest
 
   publish-github-release:

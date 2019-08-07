@@ -1,5 +1,5 @@
 hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
-aws_default_region=eu-west-1
+aws_default_region=eu-west-2
 aws_secret_access_key=not_set
 aws_access_key_id=not_set
 s3_bucket=not_set
@@ -52,8 +52,10 @@ up: build-images ## Bring up hbase, population, and sample exporter services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory; \
-		make add-hbase-to-hosts; \
+		docker-compose up -d hbase hbase-populate; \
+		echo "Waiting for population"; \
+		sleep 5; \
+		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory; \
 	}
 
 .PHONY: export-to-s3
@@ -110,12 +112,18 @@ integration: up ## Run the integration tests in a Docker container
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up --build hbase-to-mongo-export-itest; \
+		echo "Waiting for exporters"; \
+		sleep 5; \
+		docker-compose up hbase-to-mongo-export-itest; \
 	}
 
 .PHONY: hbase-shell
 hbase-shell: ## Open an Hbase shell onto the running hbase container
 	docker-compose run --rm hbase shell
+
+.PHONY: logs-hbase-populate
+logs-hbase-populate: ## Show the logs of the hbase-populater. Update follow_flag as required.
+	docker logs $(follow_flag) hbase-populate
 
 .PHONY: logs-file-exporter
 logs-file-exporter: ## Show the logs of the file exporter. Update follow_flag as required.

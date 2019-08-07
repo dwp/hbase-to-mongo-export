@@ -25,7 +25,7 @@ class IntegrationTest extends Specification {
         when: "the table has been populated"
         and: "the process has run"
 
-        File outputFile = new File("data/output.txt")
+        File outputFile = new File("data/ucdata-file-output.txt")
         int attempts = 0
         log.info("${outputFile}: is file: ${outputFile.isFile()}")
         while (!outputFile.isFile() && ++attempts < 10) {
