@@ -61,9 +61,8 @@ jobs:
           name: "Run the integration test"
           command: |
             sudo pip3 install docker-compose
-            HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=') docker-compose up --build -d hbase hbase-populate hbase-to-mongo-export
-            docker-compose build hbase-to-mongo-export-itest
-            docker-compose run hbase-to-mongo-export-itest
+            make up
+            make integration
 
   publish-github-release:
     docker:
