@@ -20,7 +20,7 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "-d -c data/ready -o data/output.txt"
+    command: "--dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -31,13 +31,14 @@ services:
     container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
+      - hbase-populate
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
-      --file.output=data/output.txt
+      --file.output=data/ucdata-file-output.txt
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export

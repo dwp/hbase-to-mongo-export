@@ -18,6 +18,7 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
+
 def main():
     args = command_line_args()
     connected = False
@@ -143,6 +144,7 @@ def uc_object():
 def guid():
     return str(uuid.uuid4())
 
+
 def uniq_db_object():
     record = uc_object()
     record['_id']['declarationId'] = guid()
@@ -152,6 +154,7 @@ def uniq_db_object():
     record['processId'] = guid()
     return record
 
+
 def command_line_args():
     parser = argparse.ArgumentParser(description='Pre-populate hbase.')
     parser.add_argument('-c', '--completed-flag',
@@ -160,8 +163,8 @@ def command_line_args():
                         help='Dump table contents after inserts.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
-    parser.add_argument('-o', '--prepare-output-file',
-                        help='Prepare the output file.')
+    parser.add_argument('-o', '--remove-output-file',
+                        help='Remove the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
     parser.add_argument('-t', '--destination-table', default='ucdata',
@@ -172,15 +175,26 @@ def command_line_args():
                         help='File containing the sample data.')
     return parser.parse_args()
 
-def init(args):
-    if args.completed_flag and os.path.isdir(args.completed_flag):
-        print("Removing directory '{}'.".format(args.completed_flag))
-        os.removedirs(args.completed_flag)
 
-    if args.prepare_output_file:
-        if os.path.isfile(args.prepare_output_file):
-            print("Removing file '{}'.".format(args.prepare_output_file))
-            os.remove(args.prepare_output_file)
+def init(args):
+    if args.completed_flag:
+        if os.path.isdir(args.completed_flag):
+            print("Removing directory '{}'.".format(args.completed_flag))
+            os.removedirs(args.completed_flag)
+        elif os.path.isfile(args.completed_flag):
+            print("Removing file '{}'.".format(args.completed_flag))
+            os.remove(args.completed_flag)
+        else:
+            print("Argument --completed-flag  was set but no file or folder to remove")
+    else:
+        print("Argument --completed-flag not set, no file removed")
+
+    if args.remove_output_file:
+        if os.path.isfile(args.remove_output_file):
+            print("Removing file '{}'.".format(args.remove_output_file))
+            os.remove(args.remove_output_file)
+        else:
+            print("Argument --remove-output-file not set, no file removed")
 
 
 if __name__ == "__main__":
