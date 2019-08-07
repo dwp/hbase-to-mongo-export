@@ -28,19 +28,19 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
     override fun write(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
-            if (batchSize + item.length > maxBatchOutputSize) {
+            if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
             }
             currentBatch.append(item)
-            batchSize += item.length
+            batchSizeBytes += item.length
         }
     }
 
     fun writeOutput() {
-        if (batchSize > 0) {
+        if (batchSizeBytes > 0) {
 
             val dataFile = outputName(++currentOutputFileNumber)
-            logger.info("Processing file number '%06d' with batchSize='$batchSize'.".format(currentOutputFileNumber))
+            logger.info("Processing file number '%06d' with batchSizeBytes='$batchSizeBytes'.".format(currentOutputFileNumber))
 
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
@@ -82,14 +82,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
             }
 
             this.currentBatch = StringBuilder()
-            this.batchSize = 0
+            this.batchSizeBytes = 0
         }
     }
 
     private fun writeToS3(fullFilePath: String, fileBytes: ByteArray) {
         // See also https://github.com/aws/aws-sdk-java
         val bytesSize = fileBytes.size.toLong()
-        logger.info("Writing file '$fullFilePath' of '$bytesSize' bytes.")
+        logger.info("Writing file 's3://$s3BucketName/$fullFilePath' of '$bytesSize' bytes.")
 
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
@@ -142,17 +142,16 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
 
     private var currentBatch = StringBuilder()
-    private var batchSize = 0
+    private var batchSizeBytes = 0
 
     private fun outputName(number: Int) =
             """$s3PrefixFolder/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
-
     private var currentOutputFileNumber = 0
 
-    @Value("\${output.batch.size.max}")
-    private var maxBatchOutputSize: Int = 0
+    @Value("\${output.batch.size.max.bytes}")
+    private var maxBatchOutputSizeBytes: Int = 0
 
     @Value("\${aws.region}")
     private var region: String = "eu-west-1"

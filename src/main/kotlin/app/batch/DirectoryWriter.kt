@@ -98,7 +98,7 @@ class DirectoryWriter(private val keyService: KeyService,
 
     private var currentOutputFileNumber = 0
 
-    @Value("\${output.batch.size.max}")
+    @Value("\${output.batch.size.max.bytes}")
     private var maxBatchOutputSize: Int = 0
 
     @Value("\${directory.output}")

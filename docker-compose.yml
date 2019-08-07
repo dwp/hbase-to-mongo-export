@@ -57,7 +57,7 @@ services:
       --directory.output=data
       --encrypt.output=false
       --compress.output=false
-      --output.batch.size.max=2048
+      --output.batch.size.max.bytes=2048
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -76,7 +76,7 @@ services:
       --data.ready.flag.location=data/ready
       --encrypt.output=true
       --compress.output=true
-      --output.batch.size.max=2048
+      --output.batch.size.max.bytes=2048
       --data.key.service.url=${DATA_KEY_SERVICE_URL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
