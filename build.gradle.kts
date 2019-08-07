@@ -26,13 +26,21 @@ tasks.bootJar {
 
 
 release {
-   failOnPublishNeeded = false
+    failOnPublishNeeded = false
     with (propertyMissing("git") as GitAdapter.GitConfig) {
         requireBranch = ""
     }
 }
 
 dependencies {
+    // See https://github.com/aws/aws-sdk-java-v2
+    // See https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/java/example_code/s3/src/main/java/CopyObjectSingleOperation.java
+    //implementation("software.amazon.awssdk:aws-sdk-java:2.7.16")
+
+    // sdk v1
+    implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
+    implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
+
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

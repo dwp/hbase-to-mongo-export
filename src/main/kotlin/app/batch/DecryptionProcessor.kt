@@ -14,27 +14,27 @@ import org.springframework.stereotype.Component
 
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
-                          private val keyService: KeyService):
+                          private val keyService: KeyService) :
         ItemProcessor<SourceRecord, JsonObject> {
 
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): JsonObject? {
         try {
             logger.info("Processing '$item'.")
-            val decryptedKey = keyService.decryptKey(item.encryption.encryptionKeyId,
-                                                           item.encryption.encryptedEncryptionKey)
+            val decryptedKey = keyService.decryptKey(
+                    item.encryption.encryptionKeyId,
+                    item.encryption.encryptedEncryptionKey)
             val decrypted =
-                    cipherService.decrypt(decryptedKey,
-                                                item.encryption.initializationVector,
-                                                item.dbObject)
+                    cipherService.decrypt(
+                            decryptedKey,
+                            item.encryption.initializationVector,
+                            item.dbObject)
             val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)
             jsonObject.addProperty("timestamp", item.hbaseTimestamp)
             return jsonObject
-        }
-        catch (e: DataKeyServiceUnavailableException) {
+        } catch (e: DataKeyServiceUnavailableException) {
             throw e
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
             throw DecryptionFailureException(
                     "database",     // TODO: not sure where this will come from yet.

@@ -12,7 +12,9 @@ services:
 
   hbase-populate:
     image: hbase-populate
-    build: ./scripts
+    build:
+      context: scripts
+      dockerfile: Dockerfile_populate_hbase
     container_name: hbase-populate
     depends_on:
       - hbase
@@ -20,13 +22,13 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "-d -c data/ready -o data/output.txt"
 
-  hbase-to-mongo-export:
+  hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
     build:
       context: .
       args:
         - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export
+    container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
     volumes:
@@ -37,12 +39,62 @@ services:
       --data.ready.flag.location=data/ready
       --file.output=data/output.txt
 
+  hbase-to-mongo-export-directory:
+    image: hbase-to-mongo-export
+    build:
+      context: .
+      args:
+        - HBASE_TO_MONGO_EXPORT_VERSION
+    container_name: hbase-to-mongo-export-directory
+    depends_on:
+      - hbase
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    command: >-
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
+      --source.table.name=ucdata
+      --data.ready.flag.location=data/ready
+      --directory.output=data
+      --encrypt.output=false
+      --compress.output=false
+      --output.batch.size.max.bytes=2048
+
+  hbase-to-mongo-export-s3:
+    image: hbase-to-mongo-export
+    build:
+      context: .
+      args:
+        - HBASE_TO_MONGO_EXPORT_VERSION
+    container_name: hbase-to-mongo-export-s3
+    depends_on:
+      - hbase
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    command: >-
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
+      --source.table.name=ucdata
+      --data.ready.flag.location=data/ready
+      --encrypt.output=true
+      --compress.output=true
+      --output.batch.size.max.bytes=2048
+      --data.key.service.url=${DATA_KEY_SERVICE_URL}
+      --aws.region=${AWS_DEFAULT_REGION}
+      --s3.bucket=${S3_BUCKET}
+      --s3.prefix.folder=${S3_PREFIX_FOLDER}
+    environment:
+      - AWS_REGION=${AWS_DEFAULT_REGION}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
     build:
       context: .
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
+    depends_on:
+      - hbase-to-mongo-export-file
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 class PhoneyCipherService: CipherService {
 
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
-        TODO("not implemented")
+        return EncryptionResult(initialisationVector = "dummy-vector", encrypted = "dummy-encrypted-data")
     }
 
     override fun decrypt(key: String, initializationVector: String, encrypted: String) =

@@ -31,6 +31,10 @@ class DirectoryWriter(private val keyService: KeyService,
 
     fun writeOutput() {
         if (batchSize > 0) {
+
+            val dataPath = outputPath(++currentOutputFileNumber)
+            logger.info("Processing file number '%06d' with batchSize='$batchSize'.".format(currentOutputFileNumber))
+
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
                 logger.info("dataKeyResult: '$dataKeyResult'.")
@@ -44,21 +48,24 @@ class DirectoryWriter(private val keyService: KeyService,
                         this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                                 byteArrayOutputStream.toByteArray())
 
-                Files.write(outputPath(++currentOutputFileNumber),
+                Files.write(dataPath,
                         encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
+                logger.info("Wrote dataPath: '$dataPath'.")
 
-                nextMetadata().use {
+                val metadataPath = metadataPath(currentOutputFileNumber)
+                BufferedWriter(OutputStreamWriter(Files.newOutputStream(metadataPath))).use {
                     val iv = encryptionResult.initialisationVector
-                    val plaintext = dataKeyResult.plaintextDataKey
+                    //val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
                     it.write("iv=$iv\n")
                     it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n")
                     it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n")
                 }
-            }
-            else {
-                bufferedOutputStream(Files.newOutputStream(outputPath(++currentOutputFileNumber))).use {
+                logger.info("Wrote metadataPath: '$metadataPath'.")
+            } else {
+                bufferedOutputStream(Files.newOutputStream(dataPath)).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
+                logger.info("Wrote dataPath: '$dataPath'.")
             }
 
             this.currentBatch = StringBuilder()
@@ -71,14 +78,12 @@ class DirectoryWriter(private val keyService: KeyService,
             if (compressOutput) {
                 CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
                         BufferedOutputStream(outputStream))
-            }
-            else {
+            } else {
                 BufferedOutputStream(outputStream)
             }
 
-    private fun nextMetadata() = BufferedWriter(OutputStreamWriter(Files.newOutputStream(metadataPath())))
-    private fun metadataPath() =
-            Paths.get(outputDirectory, """$tableName-%04d.metadata""".format(currentOutputFileNumber))
+    private fun metadataPath(number: Int) =
+            Paths.get(outputDirectory, """$tableName-%06d.metadata""".format(number))
 
 
     private var currentBatch = StringBuilder()
@@ -87,13 +92,13 @@ class DirectoryWriter(private val keyService: KeyService,
     private fun outputPath(number: Int) = Paths.get(outputDirectory, outputName(number))
 
     private fun outputName(number: Int) =
-            """$tableName-%04d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
 
     private var currentOutputFileNumber = 0
 
-    @Value("\${output.batch.size.max}")
+    @Value("\${output.batch.size.max.bytes}")
     private var maxBatchOutputSize: Int = 0
 
     @Value("\${directory.output}")
@@ -103,43 +108,12 @@ class DirectoryWriter(private val keyService: KeyService,
     private lateinit var tableName: String
 
     @Value("\${compress.output:false}")
-    private var compressOutput: Boolean = false
+    private var compressOutput: Boolean = true
 
     @Value("\${encrypt.output:true}")
     private var encryptOutput: Boolean = true
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())
-    }
-}
-
-@Component
-@Profile("outputToConsole")
-class ConsoleWriter : ItemWriter<String> {
-    override fun write(items: MutableList<out String>) {
-        items.forEach {
-            println(it)
-        }
-    }
-}
-
-@Component
-@Profile("outputToFile")
-class FileSystemWriter : ItemWriter<String> {
-
-    override fun write(items: MutableList<out String>) {
-        logger.info("Appending to '$outputFile'.")
-        val fw = FileWriter(outputFile, true)
-        items.forEach {
-            fw.write("$it\n")
-        }
-        fw.close()
-    }
-
-    @Value("\${file.output}")
-    private lateinit var outputFile: String
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(FileSystemWriter::class.toString())
     }
 }

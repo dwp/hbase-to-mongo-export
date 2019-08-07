@@ -18,7 +18,7 @@ import java.io.File
 @SpringBootTest
 @TestPropertySource(properties = [
     "directory.output=ephemera",
-    "output.batch.size.max=100000",
+    "output.batch.size.max.bytes=100000",
     "source.table.name=ucdata",
     "compress.output=false",
     "encrypt.output=false"
