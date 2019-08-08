@@ -1,33 +1,5 @@
 [
   {
-    "kafka_message_id": "00000100",
-    "kafka_message_timestamp": "1",
-    "kafka_message_value": {
-      "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-      "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
-      "@type": "V4",
-      "message": {
-        "db": "claimant-advances",
-        "collection": "advanceDetails",
-        "_id": {
-          "advanceGroupId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
-        },
-        "_timeBasedHash": "hashhhhhhhhhh",
-        "@type": "MONGO_INSERT",
-        "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
-        "encryption": {
-          "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
-          "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
-          "initialisationVector": "kjGyvY67jhJHVdo2",
-          "keyEncryptionKeyId": "example-key_2019-12-14_01"
-        },
-        "dbObject": "YES"
-      },
-      "version": "core-4.master.9790",
-      "timestamp": "2019-07-04T07:27:35.104+0000"
-    }
-  },
-  {
     "kafka_message_id": "00000000",
     "kafka_message_timestamp": "10",
     "kafka_message_value": {
@@ -36,7 +8,7 @@
       "@type": "V4",
       "message": {
         "db": "core",
-        "collection": "declaration",
+        "collection": "addressDeclaration",
         "_id": {
           "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
         },
@@ -334,6 +306,36 @@
         "encryption": {
           "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
           "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
+          "initialisationVector": "PHONEYVECTOR",
+          "keyEncryptionKeyId": "example-key_2019-12-14_01"
+        },
+        "dbObject": "CORRUPT"
+      },
+      "version": "core-4.master.9790",
+      "timestamp": "2019-07-04T07:27:35.104+0000"
+    }
+  },
+
+
+  {
+    "kafka_message_id": "00000100",
+    "kafka_message_timestamp": "1",
+    "kafka_message_value": {
+      "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+      "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+      "@type": "V4",
+      "message": {
+        "db": "claimant-advances",
+        "collection": "advanceDetails",
+        "_id": {
+          "advanceGroupId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+        },
+        "_timeBasedHash": "hashhhhhhhhhh",
+        "@type": "MONGO_INSERT",
+        "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+        "encryption": {
+          "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
+          "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
           "initialisationVector": "kjGyvY67jhJHVdo2",
           "keyEncryptionKeyId": "example-key_2019-12-14_01"
         },
@@ -344,21 +346,55 @@
     }
   },
   {
-    "kafka_message_id": "00000007",
-    "kafka_message_timestamp": "10",
+    "kafka_message_id": "00000100",
+    "kafka_message_timestamp": "2",
     "kafka_message_value": {
       "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
       "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
       "@type": "V4",
       "message": {
-        "db": "core",
-        "collection": "addressDeclaration",
-        "id": "4ef43f6e-3246-4fa0-a0d7-e313b717f6c2",
-        "timestamp": "2019-07-03T09:57:42.214+0000",
+        "db": "claimant-advances",
+        "collection": "advanceDetails",
+        "_id": {
+          "advanceGroupId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+        },
+        "_timeBasedHash": "hashhhhhhhhhh",
+        "@type": "MONGO_INSERT",
+        "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
         "encryption": {
           "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
           "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
-          "initialisationVector": "PHONEYVECTOR",
+          "initialisationVector": "kjGyvY67jhJHVdo2",
+          "keyEncryptionKeyId": "example-key_2019-12-14_01"
+        },
+        "dbObject": "YES"
+      },
+      "version": "core-4.master.9790",
+      "timestamp": "2019-07-04T07:27:35.104+0000"
+    }
+  },
+
+
+  {
+    "kafka_message_id": "00000200",
+    "kafka_message_timestamp": "1",
+    "kafka_message_value": {
+      "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+      "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+      "@type": "V4",
+      "message": {
+        "db": "quartz",
+        "collection": "claimantEvent",
+        "_id": {
+          "claimantEventId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+        },
+        "_timeBasedHash": "hashhhhhhhhhh",
+        "@type": "MONGO_INSERT",
+        "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+        "encryption": {
+          "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
+          "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
+          "initialisationVector": "kjGyvY67jhJHVdo2",
           "keyEncryptionKeyId": "example-key_2019-12-14_01"
         },
         "dbObject": "YES"

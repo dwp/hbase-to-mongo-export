@@ -134,7 +134,7 @@ def encrypt(key, plaintext):
 def decrypted_db_object():
     return {
         "_id": {
-            "declarationId": "RANDOM_GUID"
+            "someId": "RANDOM_GUID"
         },
         "type": "addressDeclaration",
         "contractId": "RANDOM_GUID",
