@@ -30,10 +30,14 @@ def main():
             connection.open()
 
             if not args.skip_table_creation:
-                connection.create_table(args.destination_table,
-                                        {'cf': dict(max_versions=10)})
+                connection.create_table(args.topic_list_table,
+                                        {'cf': dict(max_versions=100)})
+                connection.create_table(args.data_table,
+                                        {'cf': dict(max_versions=100)})
 
-            table = connection.table(args.destination_table)
+
+            topic_list_table = connection.table(args.topic_list_table)
+            data_table = connection.table(args.data_table)
             connected = True
 
             if args.data_key_service:
@@ -46,17 +50,23 @@ def main():
                 master_key_id = "1234567890"
                 encrypted_key = "blahblah"
 
-            with (open(args.sample_data_file)) as file:
+            with (open(args.test_configuration_file)) as file:
                 data = json.load(file)
                 for datum in data:
-                    record_id = datum['id']
-                    timestamp = datum['cf:data']['timestamp']
-                    value = datum['cf:data']['value']
+                    record_id = datum['kafka_message_id']
+                    timestamp = datum['kafka_message_timestamp']
+                    db_name = datum['db']
+                    collection_name = datum['collection']
+                    topic_name = "db." + db_name + "." + collection_name
+
+                    value = datum['value']
+                    print("Creating record %s timestamp %s topic %s".format(record_id, timestamp, topic_name))
+
                     if 'dbObject' in value:
                         db_object = value['dbObject']
                         if db_object != "CORRUPT":
-                            del value['dbObject']
-                            record = uniq_db_object()
+                            value['dbObject'] = ""
+                            record = unique_decrypted_db_object()
                             record_string = json.dumps(record)
                             [iv, encrypted_record] = encrypt(encryption_key,
                                                              record_string)
@@ -75,11 +85,16 @@ def main():
                         else:
                             value['encryption']['initialisationVector'] = "PHONEYVECTOR"
 
-                        obj = {'cf:data': json.dumps(value)}
-                        table.put(record_id, obj, timestamp=int(timestamp))
+                        collumn_family = "topic:%s".format(topic_name)
+                        obj = {collumn_family: json.dumps(value)}
+                        data_table.put(record_id, obj, timestamp=int(timestamp))
+
+                        print("Saved record %s timestamp %s topic %s".format(record_id, timestamp, topic_name))
+                    else:
+                        print("Skipped record %s as dbObject was missing".format(record_id))
 
                 if args.dump_table_contents:
-                    for key, data in table.scan():
+                    for key, data in data_table.scan():
                         print(key, data)
 
                 if args.completed_flag:
@@ -103,24 +118,25 @@ def encrypt(key, plaintext):
     return (base64.b64encode(initialisation_vector),
             base64.b64encode(ciphertext))
 
-def uc_object():
+
+def decrypted_db_object():
     return {
         "_id": {
-            "declarationId": "aaaa1111-abcd-4567-1234-1234567890ab"
+            "declarationId": "RANDOM_GUID"
         },
         "type": "addressDeclaration",
-        "contractId": "aa16e682-fbd6-4fe3-880b-118ac09f992a",
+        "contractId": "RANDOM_GUID",
         "addressNumber": {
             "type": "AddressLine",
-            "cryptoId": "bd88a5f9-ab47-4ae0-80bf-e53908457b60"
+            "cryptoId": "RANDOM_GUID"
         },
         "addressLine2": None,
         "townCity": {
             "type": "AddressLine",
-            "cryptoId": "9ca3c63c-cbfc-452a-88fd-bb97f856fe60"
+            "cryptoId": "RANDOM_GUID"
         },
         "postcode": "SM5 2LE",
-        "processId": "3b313df5-96bc-40ff-8128-07d496379664",
+        "processId": "RANDOM_GUID",
         "effectiveDate": {
             "type": "SPECIFIC_EFFECTIVE_DATE",
             "date": 20150320,
@@ -145,8 +161,8 @@ def guid():
     return str(uuid.uuid4())
 
 
-def uniq_db_object():
-    record = uc_object()
+def unique_decrypted_db_object():
+    record = decrypted_db_object()
     record['_id']['declarationId'] = guid()
     record['contractId'] = guid()
     record['addressNumber']['cryptoId'] = guid()
@@ -171,7 +187,7 @@ def command_line_args():
                         help='The table to write the records to.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')
-    parser.add_argument('sample_data_file',
+    parser.add_argument('test_configuration_file',
                         help='File containing the sample data.')
     return parser.parse_args()
 
