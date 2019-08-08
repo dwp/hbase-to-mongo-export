@@ -89,7 +89,8 @@ class S3DirectoryWriter(private val keyService: KeyService,
     private fun writeToS3(fullFilePath: String, fileBytes: ByteArray) {
         // See also https://github.com/aws/aws-sdk-java
         val bytesSize = fileBytes.size.toLong()
-        logger.info("Writing file 's3://$s3BucketName/$fullFilePath' of '$bytesSize' bytes.")
+        val file = "s3://$s3BucketName/$fullFilePath"
+        logger.info("Writing file '$file' of '$bytesSize' bytes.")
 
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
@@ -121,12 +122,13 @@ class S3DirectoryWriter(private val keyService: KeyService,
             // The call was transmitted successfully, but Amazon S3 couldn't process
             // it, so it returned an error response.
             e.printStackTrace()
+            logger.error("Error Writing file '$file'", e)
         } catch (e: SdkClientException) {
             // Amazon S3 couldn't be contacted for a response, or the client
             // couldn't parse the response from Amazon S3.
             e.printStackTrace()
+            logger.error("Error Writing file '$file'", e)
         }
-
     }
 
     private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
