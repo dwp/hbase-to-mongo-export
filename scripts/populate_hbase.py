@@ -18,6 +18,11 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
+DATA_COLUMN_FAMILY = "topic"
+TOPIC_LIST_COLUMN_FAMILY = "c"
+TOPIC_LIST_COLUMN_QUALIFIER = "msg"
+TOPIC_LIST_COLUMN_FAMILY_QUALIFIER = TOPIC_LIST_COLUMN_FAMILY + ":" + TOPIC_LIST_COLUMN_QUALIFIER
+
 
 def main():
     args = command_line_args()
@@ -30,13 +35,12 @@ def main():
             connection.open()
 
             if not args.skip_table_creation:
-                connection.create_table(args.topic_list_table,
-                                        {'cf': dict(max_versions=100)})
+                connection.create_table(args.topics_table,
+                                        {'cf': {}})
                 connection.create_table(args.data_table,
-                                        {'cf': dict(max_versions=100)})
+                                        {'cf': dict(max_versions=10)})
 
-
-            topic_list_table = connection.table(args.topic_list_table)
+            topics_table = connection.table(args.topics_table)
             data_table = connection.table(args.data_table)
             connected = True
 
@@ -55,41 +59,49 @@ def main():
                 for datum in data:
                     record_id = datum['kafka_message_id']
                     timestamp = datum['kafka_message_timestamp']
-                    db_name = datum['db']
-                    collection_name = datum['collection']
+                    value = datum['kafka_message_value']
+
+                    db_name = value['message']['db']
+                    collection_name = value['message']['collection']
                     topic_name = "db." + db_name + "." + collection_name
 
-                    value = datum['value']
-                    print("Creating record %s timestamp %s topic %s".format(record_id, timestamp, topic_name))
+                    print("Creating record %s timestamp %s topic %s in table %s"
+                          .format(record_id, timestamp, topic_name, args.data_table))
 
-                    if 'dbObject' in value:
-                        db_object = value['dbObject']
+                    if 'dbObject' in value['message']:
+                        db_object = value['message']['dbObject']
                         if db_object != "CORRUPT":
-                            value['dbObject'] = ""
+                            value['message']['dbObject'] = ""
                             record = unique_decrypted_db_object()
                             record_string = json.dumps(record)
                             [iv, encrypted_record] = encrypt(encryption_key,
                                                              record_string)
-                            value['encryption']['initialisationVector'] \
+                            value['message']['encryption']['initialisationVector'] \
                                 = iv.decode('ascii')
 
                             if master_key_id:
-                                value['encryption']['keyEncryptionKeyId'] = \
+                                value['message']['encryption']['keyEncryptionKeyId'] = \
                                     master_key_id
 
                             if encrypted_key:
-                                value['encryption']['encryptedEncryptionKey'] = \
+                                value['message']['encryption']['encryptedEncryptionKey'] = \
                                     encrypted_key
 
-                            value['dbObject'] = encrypted_record.decode('ascii')
+                            value['message']['dbObject'] = encrypted_record.decode('ascii')
                         else:
-                            value['encryption']['initialisationVector'] = "PHONEYVECTOR"
+                            value['message']['encryption']['initialisationVector'] = "PHONEYVECTOR"
 
-                        collumn_family = "topic:%s".format(topic_name)
-                        obj = {collumn_family: json.dumps(value)}
+                        column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
+                        obj = {column_family_qualifier: json.dumps(value)}
                         data_table.put(record_id, obj, timestamp=int(timestamp))
+                        print("Saved record %s timestamp %s topic %s in table "
+                              .format(record_id, timestamp, topic_name, args.data_table))
 
-                        print("Saved record %s timestamp %s topic %s".format(record_id, timestamp, topic_name))
+                        topics_table.counter_inc(
+                            topic_name, TOPIC_LIST_COLUMN_FAMILY_QUALIFIER, 1)
+                        print("Updated count of topic %s in table "
+                              .format(topic_name, args.topics_table))
+
                     else:
                         print("Skipped record %s as dbObject was missing".format(record_id))
 
@@ -183,12 +195,14 @@ def command_line_args():
                         help='Remove the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
-    parser.add_argument('-t', '--destination-table', default='ucdata',
-                        help='The table to write the records to.')
+    parser.add_argument('-t', '--data-table', default='data',
+                        help='The data table to write the records to.')
+    parser.add_argument('-t', '--topics-table', default='topics',
+                        help='The table to write the list of topics to.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')
-    parser.add_argument('test_configuration_file',
-                        help='File containing the sample data.')
+    parser.add_argument('-f', '--test-configuration-file',
+                        help='File containing the test config for sample data.')
     return parser.parse_args()
 
 
