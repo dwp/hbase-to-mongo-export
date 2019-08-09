@@ -17,8 +17,8 @@ help:
 echo: ## Echo the current version
 	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
 
-.PHONY: build
-build: ## Build the hbase exporter jar file
+.PHONY: build-jar
+build-jar: ## Build the hbase exporter jar file
 	./gradlew build
 
 .PHONY: dist
@@ -29,8 +29,10 @@ dist: ## Assemble distribution files in build/dist
 add-hbase-to-hosts: ## Update laptop hosts file with reference to hbase container
 	./scripts/add-hbase-to-hosts.sh;
 
+build-all: build-jar build-images ## Build the jar file and then all docker images
+
 .PHONY: build-images
-build-images: build ## Build the hbase, population, exporter images
+build-images: ## Build the hbase, population, and exporter images
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -42,8 +44,8 @@ build-images: build ## Build the hbase, population, exporter images
 		docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
-.PHONY: up
-up: build-images ## Bring up hbase, population, and sample exporter services
+.PHONY: up-all
+up-all: ## Bring up hbase, population, and sample exporter services
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -59,7 +61,7 @@ up: build-images ## Bring up hbase, population, and sample exporter services
 	}
 
 .PHONY: export-to-s3
-export-to-s3: ## Bring up a sample s3-exporter service
+export-to-s3: ## Bring up a sample s3-exporter service exporting to dev AWS
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -102,8 +104,10 @@ destroy: down ## Bring down the hbase and other services then delete all volumes
 	docker network prune -f
 	docker volume prune -f
 
-.PHONY: integration
-integration: up ## Run the integration tests in a Docker container
+integration-all: build-all up-all integration-tests ## Build the jar and images, put up the containers, run the integration tests
+
+.PHONY: integration-tests
+integration-tests: ## (Re-)Run the integration tests in a Docker container
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -119,7 +123,16 @@ integration: up ## Run the integration tests in a Docker container
 
 .PHONY: hbase-shell
 hbase-shell: ## Open an Hbase shell onto the running hbase container
-	docker-compose run --rm hbase shell
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose run --rm hbase shell; \
+	}
 
 .PHONY: logs-hbase-populate
 logs-hbase-populate: ## Show the logs of the hbase-populater. Update follow_flag as required.
@@ -138,4 +151,4 @@ logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as req
 	docker logs $(follow_flag) hbase-to-mongo-export-s3
 
 .PHONY: reset-all
-reset-all: destroy up logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
+reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs

@@ -58,23 +58,24 @@ There are makefile commands for all your common actions;
 
  | Command                   | Description
  |---------------------------|--------------------
- | `add-hbase-to-hosts`      | Update laptop hosts file with reference to hbase container
- | `build-images`            | Build the hbase, population, exporter images
- | `build`                   | Build the hbase exporter jar file
- | `destroy`                 | Bring down the hbase and other services then delete all volumes
- | `dist`                    | Assemble distribution files in build/dist
- | `down`                    | Bring down the hbase and other services
- | `echo`                    | Echo the current version
- | `hbase-shell`             | Open an Hbase shell onto the running hbase container
- | `integration`             | Run the integration tests in a Docker container
- | `export-to-s3`            | Bring up a sample s3-exporter service
- | `logs-directory-exporter` | Show the logs of the directory exporter
- | `logs-file-exporter`      | Show the logs of the file exporter
- | `logs-s3-exporter`        | Show the logs of the S3 exporter
- | `reset-all`               | Destroy all, rebuild and up all, and check the export logs
- | `restart`                 | Restart hbase and other services
- | `up`                      | Bring up hbase, population, and sample exporter services
-
+ | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container
+ | `build-all`               |      Build the jar file and then all docker images
+ | `build-images`            |      Build the hbase, population, and exporter images
+ | `build-jar`               |      Build the hbase exporter jar file
+ | `destroy`                 |      Bring down the hbase and other services then delete all volumes
+ | `dist`                    |      Assemble distribution files in build/dist
+ | `down`                    |      Bring down the hbase and other services
+ | `echo`                    |      Echo the current version
+ | `hbase-shell`             |      Open an Hbase shell onto the running hbase container
+ | `integration-all`         |      Build the jar and images, put up the containers, run the integration tests
+ | `integration-tests`       |      (Re-)Run the integration tests in a Docker container
+ | `logs-directory-exporter` |      Show the logs of the directory exporter. Update follow_flag as required.
+ | `logs-file-exporter`      |      Show the logs of the file exporter. Update follow_flag as required.
+ | `logs-hbase-populate`     |      Show the logs of the hbase-populater. Update follow_flag as required.
+ | `reset-all`               |      Destroy all, rebuild and up all, and check the export logs
+ | `restart`                 |      Restart hbase and other services
+ | `up-all`                  |      Bring up hbase, population, and sample exporter services|
+ 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
 Create all:

@@ -57,7 +57,10 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
         if (scanner == null) {
             logger.info("Getting '$dataTableName' table from '$connection'.")
             val table = connection.getTable(TableName.valueOf(dataTableName))
-            val scan = Scan()
+            val scan = Scan().apply {
+                addColumn(columnFamily.toByteArray(), topicName.toByteArray())
+            }
+
             scanner = table.getScanner(scan)
         }
         return scanner!!
