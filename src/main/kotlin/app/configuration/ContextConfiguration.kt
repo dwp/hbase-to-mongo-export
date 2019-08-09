@@ -18,15 +18,15 @@ import java.security.SecureRandom
 class ContextConfiguration {
 
     @Bean
-    @Profile("production")
+    @Profile("strongRng")
     fun secureRandom() = SecureRandom.getInstanceStrong()
 
     @Bean
-    @Profile("production")
+    @Profile("realHttpClient")
     fun httpClient() = HttpClients.createDefault()
 
     @Bean
-    @Profile("localDataSource")
+    @Profile("realHbaseDataSource")
     fun localConnection(): Connection {
 
         if (dataReadyFlagLocation.isNotBlank()) {

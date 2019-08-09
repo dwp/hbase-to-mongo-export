@@ -26,6 +26,7 @@ services:
       --remove-output-file data/ucdata-file-output.txt
       --data-table ucfs-data
       --topics-table ucfs-topics
+      --test-configuration-file test-config.json
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -40,7 +41,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
       --data.table.name=ucfs-data
       --topics.table.name=ucfs-topics
       --data.ready.flag.location=data/ready
@@ -58,7 +59,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
       --data.table.name=ucfs-data
       --topics.table.name=ucfs-topics
       --data.ready.flag.location=data/ready
@@ -79,7 +80,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
       --data.table.name=ucfs-data
       --topics.table.name=ucfs-topics
       --data.ready.flag.location=data/ready
