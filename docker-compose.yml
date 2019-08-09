@@ -43,7 +43,7 @@ services:
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
       --data.table.name=ucfs-data
-      --topics.table.name=ucfs-topics
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --file.output=data/ucdata-file-output.txt
 
@@ -61,7 +61,7 @@ services:
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
       --data.table.name=ucfs-data
-      --topics.table.name=ucfs-topics
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --directory.output=data
       --encrypt.output=false
@@ -82,7 +82,7 @@ services:
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
       --data.table.name=ucfs-data
-      --topics.table.name=ucfs-topics
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --encrypt.output=true
       --compress.output=true
@@ -108,6 +108,10 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
+    environment:
+      - FILE_NAME=data/ucdata-file-output.txt
+      - EXPECTED_TIMESTAMP=10
+      - EXPECTED_LINE_COUNT=7
 
 volumes:
   shared-volume:
