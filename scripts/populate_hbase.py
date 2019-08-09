@@ -35,10 +35,21 @@ def main():
             connection.open()
 
             if not args.skip_table_creation:
-                connection.create_table(args.topics_table,
+                try:
+                    connection.create_table(args.topics_table,
                                         {TOPIC_LIST_COLUMN_FAMILY: {}})
-                connection.create_table(args.data_table,
+                    print("Created table '{}'".format(args.topics_table))
+                except Exception as e:
+                    print("Table '{}' already exists. {}".format(args.topics_table, e))
+                    pass
+
+                try:
+                    connection.create_table(args.data_table,
                                         {DATA_COLUMN_FAMILY: dict(max_versions=10)})
+                    print("Created table '{}'".format(args.data_table))
+                except Exception as e:
+                    print("Table '{}' already exists. {}".format(args.data_table, e))
+                    pass
 
             topics_table = connection.table(args.topics_table)
             data_table = connection.table(args.data_table)
@@ -215,7 +226,7 @@ def init(args):
             print("Removing file '{}'.".format(args.completed_flag))
             os.remove(args.completed_flag)
         else:
-            print("Argument --completed-flag  was set but no file or folder to remove")
+            print("Argument --completed-flag was set but no file or folder to remove")
     else:
         print("Argument --completed-flag not set, no file removed")
 
@@ -224,7 +235,9 @@ def init(args):
             print("Removing file '{}'.".format(args.remove_output_file))
             os.remove(args.remove_output_file)
         else:
-            print("Argument --remove-output-file not set, no file removed")
+            print("File '{}' not found, no file removed".format(args.remove_output_file))
+    else:
+        print("Argument --remove-output-file not set, no file removed")
 
 
 if __name__ == "__main__":
