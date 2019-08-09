@@ -20,27 +20,6 @@ import java.nio.file.Path
 abstract class Writer<String>(private val keyService: KeyService,
                               private val cipherService: CipherService) : ItemWriter<String> {
 
-    @Value("\${output.batch.size.max.bytes}")
-    protected var maxBatchOutputSizeBytes: Int = 0
-
-    @Value("\${compress.output:false}")
-    protected var compressOutput: Boolean = true
-
-    @Value("\${encrypt.output:true}")
-    protected var encryptOutput: Boolean = true
-
-    protected var currentBatch = StringBuilder()
-    protected var batchSizeBytes = 0
-
-    protected var currentOutputFileNumber = 0
-
-    @Value("\${directory.output}")
-    protected lateinit var outputDirectory: kotlin.String
-
-    @Value("\${source.table.name}")
-    protected lateinit var tableName: kotlin.String // i.e. "db.user.data"
-
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
     }
@@ -100,6 +79,27 @@ abstract class Writer<String>(private val keyService: KeyService,
         writeData(encryptionResult, dataKeyResult)
     }
 
-   abstract fun  writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
+    @Value("\${output.batch.size.max.bytes}")
+    protected var maxBatchOutputSizeBytes: Int = 0
+
+    @Value("\${compress.output:false}")
+    protected var compressOutput: Boolean = true
+
+    @Value("\${encrypt.output:true}")
+    protected var encryptOutput: Boolean = true
+
+    protected var currentBatch = StringBuilder()
+    protected var batchSizeBytes = 0
+
+    protected var currentOutputFileNumber = 0
+
+    @Value("\${directory.output}")
+    protected lateinit var outputDirectory: kotlin.String
+
+    @Value("\${source.table.name}")
+    protected lateinit var tableName: kotlin.String // i.e. "db.user.data"
+
+
+    abstract fun  writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
    abstract fun outputPath(number: Int) : Path
 }
