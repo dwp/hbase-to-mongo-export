@@ -30,21 +30,27 @@ def main():
             connection.open()
 
             if not args.skip_table_creation:
-                connection.create_table(args.destination_table,
-                                        {'cf': dict(max_versions=10)})
+                try:
+                    connection.create_table(args.destination_table,
+                                            {'cf': dict(max_versions=10)})
+                except Exception as e:
+                    print("Table may exist: {}".format(e))
 
             table = connection.table(args.destination_table)
             connected = True
 
-            if args.data_key_service_host:
-                content = requests.get(f'{args.data_key_service_host}/datakey').json()
+            print("data_key_service='{}'".format(args.data_key_service))
+            if args.data_key_service:
+                content = requests.get(args.data_key_service).json()
                 encryption_key = content['plaintextDataKey']
                 encrypted_key = content['ciphertextDataKey']
                 master_key_id = content['dataKeyEncryptionKeyId']
+                print("Got data from dks")
             else:
                 encryption_key = "czMQLgW/OrzBZwFV9u4EBA=="
                 master_key_id = "1234567890"
                 encrypted_key = "blahblah"
+                print("Using fake dks data")
 
             with (open(args.sample_data_file)) as file:
                 data = json.load(file)
