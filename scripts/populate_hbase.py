@@ -195,9 +195,9 @@ def command_line_args():
                         help='Remove the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
-    parser.add_argument('-t', '--data-table', default='data',
+    parser.add_argument('-dt', '--data-table', default='data',
                         help='The data table to write the records to.')
-    parser.add_argument('-t', '--topics-table', default='topics',
+    parser.add_argument('-tt', '--topics-table', default='topics',
                         help='The table to write the list of topics to.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')
