@@ -39,7 +39,7 @@ build-images: build ## Build the hbase, population, exporter, dks images
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build hbase hbase-populate dks-standalone hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase dks-standalone hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 .PHONY: up
@@ -52,7 +52,6 @@ up: build-images ## Bring up hbase, population, dks, and sample exporter service
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d dks-standalone; \
 		docker-compose up -d hbase dks-standalone hbase-populate; \
 		echo "Waiting for population"; \
 		sleep 5; \

@@ -10,6 +10,19 @@ services:
       - 16201:16201
     container_name: hbase
 
+  dks-standalone:
+    image: dks-standalone
+    ports:
+      - 8080:8080
+    build:
+      context: .
+      dockerfile: Dockerfile_dks
+    container_name: dks-standalone
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
+
   hbase-populate:
     image: hbase-populate
     build:
@@ -21,7 +34,7 @@ services:
       - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--data-key-service http://localhost:8080 --dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
+    command: "--data-key-service http://dks-standalone:8080 --dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -103,19 +116,6 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
-
-  dks-standalone:
-    image: dks-standalone
-    ports:
-      - 8080:8080
-    build:
-      context: .
-      dockerfile: Dockerfile_dks
-    container_name: dks-standalone
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
 volumes:
   shared-volume:
