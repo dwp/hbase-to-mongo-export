@@ -161,7 +161,7 @@ aws_secret_access_key=secretsecretsecret
 
 * Arguments:
 ```
---spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
+--spring.profiles.active=phoneyCipherService,httpDataKeyService,localDataSource,outputToS3,batchRun,strongRng
 --source.table.name=ucdata
 --hbase.zookeeper.quorum=localhost
 --aws.region=eu-west-1

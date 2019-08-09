@@ -18,9 +18,10 @@ services:
     container_name: hbase-populate
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
+    command: "--data-key-service http://localhost:8080 --dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -32,10 +33,11 @@ services:
     depends_on:
       - hbase
       - hbase-populate
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,httpDataKeyService,localDataSource,outputToFile,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
       --file.output=data/ucdata-file-output.txt
@@ -49,10 +51,11 @@ services:
     container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,httpDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
       --directory.output=data
@@ -69,10 +72,11 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,httpDataKeyService,localDataSource,outputToS3,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
       --encrypt.output=true
@@ -99,6 +103,19 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
+
+  dks-standalone:
+    image: dks-standalone
+    ports:
+      - 8080:8080
+    build:
+      context: .
+      dockerfile: Dockerfile_dks
+    container_name: dks-standalone
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
 volumes:
   shared-volume:

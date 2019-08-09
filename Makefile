@@ -30,7 +30,7 @@ add-hbase-to-hosts: ## Update laptop hosts file with reference to hbase containe
 	./scripts/add-hbase-to-hosts.sh;
 
 .PHONY: build-images
-build-images: build ## Build the hbase, population, exporter images
+build-images: build ## Build the hbase, population, exporter, dks images
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -39,11 +39,11 @@ build-images: build ## Build the hbase, population, exporter images
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase hbase-populate dks-standalone hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 .PHONY: up
-up: build-images ## Bring up hbase, population, and sample exporter services
+up: build-images ## Bring up hbase, population, dks, and sample exporter services
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -52,7 +52,8 @@ up: build-images ## Bring up hbase, population, and sample exporter services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d hbase hbase-populate; \
+		docker-compose up -d dks-standalone; \
+		docker-compose up -d hbase dks-standalone hbase-populate; \
 		echo "Waiting for population"; \
 		sleep 5; \
 		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory; \
