@@ -167,7 +167,7 @@ def command_line_args():
                         help='The flag to write on successful completion.')
     parser.add_argument('-d', '--dump-table-contents', action='store_true',
                         help='Dump table contents after inserts.')
-    parser.add_argument('-k', '--data-key-service',
+    parser.add_argument('-k', '--data-key-service-host',
                         help='Use the specified data key service.')
     parser.add_argument('-o', '--remove-output-file',
                         help='Remove the output file.')
