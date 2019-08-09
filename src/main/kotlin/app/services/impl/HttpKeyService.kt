@@ -81,7 +81,7 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
     private var decryptedKeyCache = mutableMapOf<String, String>()
 
     @Value("\${data.key.service.url}")
-    private var dataKeyServiceUrl: String = "http://localhost:8080"
+    private lateinit var dataKeyServiceUrl: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())

@@ -105,11 +105,11 @@ class DirectoryWriter(private val keyService: KeyService,
     @Value("\${topic.name}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
-    @Value("\${compress.output:false}")
+    @Value("\${compress.output:true}")
     private var compressOutput: Boolean = true
 
-    @Value("\${encrypt.output:true}")
-    private var encryptOutput: Boolean = true
+    @Value("\${encrypt.output:false}")
+    private var encryptOutput: Boolean = false
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())

@@ -156,7 +156,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
     private var maxBatchOutputSizeBytes: Int = 0
 
     @Value("\${aws.region}")
-    private var region: String = "eu-west-1"
+    private lateinit var region: String
 
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String // i.e. "1234567890"
