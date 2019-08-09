@@ -25,7 +25,7 @@ import java.nio.charset.Charset
 @RunWith(SpringRunner::class)
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["source.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b"])
+@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b"])
 class HBaseReaderTest {
 
     @Before
@@ -67,10 +67,10 @@ class HBaseReaderTest {
 
         given(current.timestamp).willReturn(10)
         given(result.current()).willReturn(current)
-        given(result.getValue("cf".toByteArray(), "data".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
+        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(TableName.valueOf("ucdata"))).willReturn(table)
+        given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
         val encryption = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(expectedId, 10, encryption, dbObject)
         val actual = hbaseReader.read()
@@ -108,10 +108,10 @@ class HBaseReaderTest {
 
         given(current.timestamp).willReturn(10)
         given(result.current()).willReturn(current)
-        given(result.getValue("cf".toByteArray(), "data".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
+        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(TableName.valueOf("ucdata"))).willReturn(table)
+        given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
         hbaseReader.read()
     }
 

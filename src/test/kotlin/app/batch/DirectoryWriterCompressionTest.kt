@@ -24,7 +24,7 @@ import java.nio.file.Paths
 @TestPropertySource(properties = [
     "directory.output=ephemera",
     "output.batch.size.max.bytes=100000",
-    "source.table.name=ucfs-data",
+    "data.table.name=ucfs-data",
     "compress.output=true",
     "encrypt.output=false",
     "column.family=topic",

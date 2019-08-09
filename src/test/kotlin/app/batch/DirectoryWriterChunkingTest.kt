@@ -19,7 +19,7 @@ import java.io.File
 @TestPropertySource(properties = [
     "directory.output=ephemera",
     "output.batch.size.max.bytes=100000",
-    "source.table.name=ucfs-data",
+    "data.table.name=ucfs-data",
     "compress.output=false",
     "encrypt.output=false",
     "column.family=topic",

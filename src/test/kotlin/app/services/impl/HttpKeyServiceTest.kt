@@ -31,7 +31,7 @@ import java.io.ByteArrayInputStream
 @ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
 @TestPropertySource(properties = [
-    "source.table.name=ucfs-data",
+    "data.table.name=ucfs-data",
     "data.key.service.url=dummy.com:8080",
     "column.family=topic",
     "topic.name=db.a.b"

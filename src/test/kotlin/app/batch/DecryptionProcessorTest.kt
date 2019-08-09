@@ -23,7 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 @ActiveProfiles("decryptionTest", "aesCipherService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["source.table.name=ucfs-data", "column.family=topic"])
+@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b"])
 class DecryptionProcessorTest {
 
 
@@ -42,7 +42,6 @@ class DecryptionProcessorTest {
         val sourceRecord = SourceRecord("00001", 10, encryptionBlock, "dbObject")
         decryptionProcessor.process(sourceRecord)
     }
-
 
     @Test(expected = DecryptionFailureException::class)
     fun testDataKeyDecryptionFailure() {
