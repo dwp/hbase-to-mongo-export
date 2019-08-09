@@ -30,17 +30,10 @@ class FileSystemWriter(private val keyService: KeyService,
     override fun writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult) {
         logger.info("Appending to '$outputFile'.")
         val fw = FileWriter(outputFile, true)
-        // items.forEach {
-        //fw.write("$it\n")
-
         fw.write(String(encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII), Charsets.UTF_8).toCharArray())
-        // }
         fw.close()
 
     }
-
-
-
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(FileSystemWriter::class.toString())

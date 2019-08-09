@@ -28,24 +28,6 @@ import java.nio.file.Paths
 class S3DirectoryWriter(private val keyService: KeyService,
                         private val cipherService: CipherService) : Writer<String>(keyService,cipherService){
 
-    @Value("\${aws.region}")
-    private var region: kotlin.String = "eu-west-1"
-
-    @Value("\${s3.bucket}")
-    private lateinit var s3BucketName: kotlin.String // i.e. "1234567890"
-
-    @Value("\${s3.prefix.folder}")
-    private lateinit var s3PrefixFolder: kotlin.String //i.e. "mongo-export-2019-06-23"
-
-    val updated_region = region.toUpperCase().replace("-", "_")
-    val clientRegion = Regions.valueOf(updated_region)
-
-
-    val s3Client = AmazonS3ClientBuilder.standard()
-            .withRegion(clientRegion)
-            .build()
-
-
     override fun writeData( encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult) {
         // See also https://github.com/aws/aws-sdk-java
         val fullFilePath = outputPath(++currentOutputFileNumber)
@@ -57,7 +39,8 @@ class S3DirectoryWriter(private val keyService: KeyService,
         val bufferedInputStream = BufferedInputStream(inputStream)
 
         // eu-west-1 -> EU_WEST_2 (i.e tf style to enum name)
-
+        val updatedRegion = region.toUpperCase().replace("-", "_")
+        val clientRegion = Regions.valueOf(updatedRegion)
 
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
@@ -66,6 +49,9 @@ class S3DirectoryWriter(private val keyService: KeyService,
         try {
             //This code expects that you have AWS credentials set up per:
             // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
+            val s3Client = AmazonS3ClientBuilder.standard()
+                    .withRegion(clientRegion)
+                    .build()
 
             // Upload a file as a new object with ContentType and title specified.
             val metadata = ObjectMetadata()
@@ -87,15 +73,21 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
     }
 
-
     override fun outputPath(number: Int): Path {
         return Paths.get("""$s3PrefixFolder/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                 .format(number))
     }
 
-
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriter::class.toString())
     }
+
+    @Value("\${aws.region}")
+    private var region: String = "eu-west-1"
+
+    @Value("\${s3.bucket}")
+    private lateinit var s3BucketName: String // i.e. "1234567890"
+
+    @Value("\${s3.prefix.folder}")
+    private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
 }
