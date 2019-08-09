@@ -34,7 +34,7 @@ services:
       - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--data-key-service-url ${DATA_KEY_SERVICE_URL} --dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
+    command: "--data-key-service-host ${DATA_KEY_SERVICE_HOST} --dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export

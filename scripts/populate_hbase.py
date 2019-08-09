@@ -36,8 +36,8 @@ def main():
             table = connection.table(args.destination_table)
             connected = True
 
-            if args.data_key_service_url:
-                content = requests.get(f'{args.data_key_service_url}/datakey').json()
+            if args.data_key_service_host:
+                content = requests.get(f'{args.data_key_service_host}/datakey').json()
                 encryption_key = content['plaintextDataKey']
                 encrypted_key = content['ciphertextDataKey']
                 master_key_id = content['dataKeyEncryptionKeyId']
@@ -161,7 +161,7 @@ def command_line_args():
                         help='The flag to write on successful completion.')
     parser.add_argument('-d', '--dump-table-contents', action='store_true',
                         help='Dump table contents after inserts.')
-    parser.add_argument('-k', '--data-key-service-url',
+    parser.add_argument('-k', '--data-key-service-host',
                         help='Use the specified data key service.')
     parser.add_argument('-o', '--remove-output-file',
                         help='Remove the output file.')
