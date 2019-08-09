@@ -1,6 +1,7 @@
 package app.configuration
 
 import app.batch.DirectoryWriter
+import app.batch.S3DirectoryWriter
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
@@ -12,6 +13,8 @@ class JobCompletionNotificationListener(private val writer: ItemWriter<String>):
 
     override fun afterJob(jobExecution: JobExecution) {
         if (writer is DirectoryWriter) {
+            writer.writeOutput()
+        } else if (writer is S3DirectoryWriter) {
             writer.writeOutput()
         }
         logger.info("Finished, status: '${jobExecution.status}'.")

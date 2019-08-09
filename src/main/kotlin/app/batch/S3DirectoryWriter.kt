@@ -140,14 +140,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
             }
 
     private fun metadataPath(number: Int) =
-              """$s3PrefixFolder/$tableName-%06d.metadata""".format(number)
+              """$s3PrefixFolder/$topicName-%06d.metadata""".format(number)
 
 
     private var currentBatch = StringBuilder()
     private var batchSizeBytes = 0
 
     private fun outputName(number: Int) =
-            """$s3PrefixFolder/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$s3PrefixFolder/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
 
     private var currentOutputFileNumber = 0
@@ -164,10 +164,10 @@ class S3DirectoryWriter(private val keyService: KeyService,
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
 
-    @Value("\${source.table.name}")
-    private lateinit var tableName: String // i.e. "db.user.data"
+    @Value("\${topic.name}")
+    private lateinit var topicName: String // i.e. "db.user.data"
 
-    @Value("\${compress.output:false}")
+    @Value("\${compress.output:true}")
     private var compressOutput: Boolean = true
 
     @Value("\${encrypt.output:true}")

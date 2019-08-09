@@ -21,7 +21,7 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
 
     override fun read(): SourceRecord? {
         return scanner().next()?.let { result ->
-            val value = result.getValue("cf".toByteArray(), "data".toByteArray())
+            val value = result.getValue(columnFamily.toByteArray(), topicName.toByteArray())
             result.advance()
             val current = result.current()
             val timestamp = current.timestamp
@@ -49,8 +49,8 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            logger.info("Getting '$tableName' table from '$connection'.")
-            val table = connection.getTable(TableName.valueOf(tableName))
+            logger.info("Getting '$dataTableName' table from '$connection'.")
+            val table = connection.getTable(TableName.valueOf(dataTableName))
             val scan = Scan()
             scanner = table.getScanner(scan)
         }
@@ -59,8 +59,14 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
 
     private var scanner: ResultScanner? = null
 
-    @Value("\${source.table.name}")
-    private var tableName: String = "ucdata"
+    @Value("\${column.family}")
+    private var columnFamily: String = "topic"// i.e. "topic"
+
+    @Value("\${topic.name}")
+    private lateinit var topicName: String // i.e. "db.user.data"
+
+    @Value("\${data.table.name}")
+    private var dataTableName: String = "k2hb:ingest"
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())

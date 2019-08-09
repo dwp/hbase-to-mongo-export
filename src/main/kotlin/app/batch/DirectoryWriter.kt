@@ -83,8 +83,7 @@ class DirectoryWriter(private val keyService: KeyService,
             }
 
     private fun metadataPath(number: Int) =
-            Paths.get(outputDirectory, """$tableName-%06d.metadata""".format(number))
-
+            Paths.get(outputDirectory, """$topicName-%06d.metadata""".format(number))
 
     private var currentBatch = StringBuilder()
     private var batchSize = 0
@@ -92,9 +91,8 @@ class DirectoryWriter(private val keyService: KeyService,
     private fun outputPath(number: Int) = Paths.get(outputDirectory, outputName(number))
 
     private fun outputName(number: Int) =
-            """$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            """$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
-
 
     private var currentOutputFileNumber = 0
 
@@ -104,8 +102,8 @@ class DirectoryWriter(private val keyService: KeyService,
     @Value("\${directory.output}")
     private lateinit var outputDirectory: String
 
-    @Value("\${source.table.name}")
-    private lateinit var tableName: String
+    @Value("\${topic.name}")
+    private lateinit var topicName: String // i.e. "db.user.data"
 
     @Value("\${compress.output:false}")
     private var compressOutput: Boolean = true

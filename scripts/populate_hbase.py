@@ -36,9 +36,9 @@ def main():
 
             if not args.skip_table_creation:
                 connection.create_table(args.topics_table,
-                                        {'cf': {}})
+                                        {TOPIC_LIST_COLUMN_FAMILY: {}})
                 connection.create_table(args.data_table,
-                                        {'cf': dict(max_versions=10)})
+                                        {DATA_COLUMN_FAMILY: dict(max_versions=10)})
 
             topics_table = connection.table(args.topics_table)
             data_table = connection.table(args.data_table)
