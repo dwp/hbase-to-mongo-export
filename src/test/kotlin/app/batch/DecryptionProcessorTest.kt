@@ -35,11 +35,11 @@ class DecryptionProcessorTest {
         given(dataKeyService.decryptKey(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .willThrow(DataKeyServiceUnavailableException::class.java)
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("encryptionKeyId",
+                EncryptionBlock("keyEncryptionKeyId",
                         "initialisationVector",
                         "encryptedEncryptionKey")
 
-        val sourceRecord = SourceRecord("00001", 10, encryptionBlock, "dbObject")
+        val sourceRecord = SourceRecord("00001".toByteArray(), 10, encryptionBlock, "dbObject")
         decryptionProcessor.process(sourceRecord)
     }
 
@@ -49,10 +49,10 @@ class DecryptionProcessorTest {
                 .willThrow(DataKeyDecryptionException::class.java)
 
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("encryptionKeyId",
+                EncryptionBlock("keyEncryptionKeyId",
                         "initialisationVector",
                         "encryptedEncryptionKey")
-        decryptionProcessor.process(SourceRecord("00001", 10, encryptionBlock, "dbObject"))
+        decryptionProcessor.process(SourceRecord("00001".toByteArray(), 10, encryptionBlock, "dbObject"))
     }
 
     @Autowired

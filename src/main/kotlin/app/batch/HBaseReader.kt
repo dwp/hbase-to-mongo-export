@@ -21,24 +21,30 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
 
     override fun read(): SourceRecord? {
         return scanner().next()?.let { result ->
+
+            val idBytes = result.row
+            result.advance() //move pointer to the first cell
+            val timestamp = result.current().timestamp
+
             val value = result.getValue(columnFamily.toByteArray(), topicName.toByteArray())
-            result.advance()
-            val current = result.current()
-            val timestamp = current.timestamp
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
-            val id = dataBlock.getAsJsonPrimitive("id").asString
-            val encryptionInfo = dataBlock.getAsJsonObject("encryption")
-            val encryptedKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
-            val encryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
+
+            val messageInfo = dataBlock.getAsJsonObject("message")
+            val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
+
+            val encryptionInfo = messageInfo.getAsJsonObject("encryption")
+            val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
+            val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
             val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
-            val encryptedDbObject = dataBlock.getAsJsonPrimitive("dbObject")?.asString
+
             if (encryptedDbObject.isNullOrEmpty()) {
-                logger.error("'$id' missing dbObject field, skipping this record.")
-                throw MissingFieldException(id, "dbObject")
+                logger.error("'$idBytes' missing dbObject field, skipping this record.")
+                throw MissingFieldException(idBytes, "dbObject")
             }
-            val encryptionBlock = EncryptionBlock(encryptionKeyId, initializationVector, encryptedKey)
-            return SourceRecord(id, timestamp, encryptionBlock, encryptedDbObject)
+
+            val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
+            return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject)
         }
     }
 

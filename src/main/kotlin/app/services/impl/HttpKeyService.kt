@@ -41,7 +41,7 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
     }
 
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
-        logger.info("Decrypting encryptedKey: '$encryptedKey', encryptionKeyId: '$encryptionKeyId'.")
+        logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         val idPart = encryptionKeyId.replace(Regex(".*/"), "")
         val cacheKey = "$encryptedKey/$idPart"
         return if (decryptedKeyCache.containsKey(cacheKey))  {
@@ -63,12 +63,12 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
                 response.statusLine.statusCode == 400 ->
                     throw DataKeyDecryptionException(
                             """Decrypting encryptedKey: '$encryptedKey' with 
-                            |encryptionKeyId: '$encryptionKeyId'
+                            |keyEncryptionKeyId: '$encryptionKeyId'
                             |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
                 else ->
                     throw DataKeyServiceUnavailableException(
                             """Decrypting encryptedKey: '$encryptedKey' with 
-                            |encryptionKeyId: '$encryptionKeyId'
+                            |keyEncryptionKeyId: '$encryptionKeyId'
                             |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
             }
         }

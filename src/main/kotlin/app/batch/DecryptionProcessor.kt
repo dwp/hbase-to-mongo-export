@@ -22,7 +22,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
         try {
             logger.info("Processing '$item'.")
             val decryptedKey = keyService.decryptKey(
-                    item.encryption.encryptionKeyId,
+                    item.encryption.keyEncryptionKeyId,
                     item.encryption.encryptedEncryptionKey)
             val decrypted =
                     cipherService.decrypt(
@@ -37,11 +37,11 @@ class DecryptionProcessor(private val cipherService: CipherService,
         } catch (e: Exception) {
             logger.error("Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
             throw DecryptionFailureException(
-                    "database",     // TODO: not sure where this will come from yet.
-                    "collection",   // TODO: not sure where this will come from yet.
-                    item.hbaseId,
+                    "database-unknown",
+                    "collection-unknown",
+                    item.hbaseRowId,
                     item.hbaseTimestamp,
-                    item.encryption.encryptionKeyId,
+                    item.encryption.keyEncryptionKeyId,
                     e)
         }
     }
