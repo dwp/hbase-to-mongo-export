@@ -30,7 +30,12 @@ import java.io.ByteArrayInputStream
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["source.table.name=ucdata", "data.key.service.url=dummy.com:8080"])
+@TestPropertySource(properties = [
+    "source.table.name=ucfs-data",
+    "data.key.service.url=dummy.com:8080",
+    "column.family=topic",
+    "topic.name=db.a.b"
+])
 class HttpKeyServiceTest {
 
     @Before

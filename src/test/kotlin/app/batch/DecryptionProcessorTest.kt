@@ -23,8 +23,9 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 @ActiveProfiles("decryptionTest", "aesCipherService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["source.table.name=ucdata"])
+@TestPropertySource(properties = ["source.table.name=ucfs-data", "column.family=topic"])
 class DecryptionProcessorTest {
+
 
     @Before
     fun init() = Mockito.reset(dataKeyService)

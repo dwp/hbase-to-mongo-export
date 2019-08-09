@@ -19,9 +19,11 @@ import java.io.File
 @TestPropertySource(properties = [
     "directory.output=ephemera",
     "output.batch.size.max.bytes=100000",
-    "source.table.name=ucdata",
+    "source.table.name=ucfs-data",
     "compress.output=false",
-    "encrypt.output=false"
+    "encrypt.output=false",
+    "column.family=topic",
+    "topic.name=db.a.b"
 ])
 class DirectoryWriterChunkingTest {
 
@@ -42,9 +44,9 @@ class DirectoryWriterChunkingTest {
         val listOfLists: MutableList<MutableList<String>> = mutableListOf()
         var total = 0
 
-        for (i in 1 .. 10) {
+        for (i in 1..10) {
             val list: MutableList<String> = mutableListOf()
-            for (j in 1 .. 10) {
+            for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
                 list.add(item)
@@ -99,13 +101,12 @@ class DirectoryWriterChunkingTest {
             logger.info("Checking $outputFile.")
             val match = filenameRegex.find(outputFile.name)
 
-            match?.groups?.get(1)?.value?.toInt().let {
-                fileNumber ->
-                    val expectedSize = expectedSizes[fileNumber]
-                    outputFile.length().toInt().also {actualSize ->
-                        logger.info("Checking that $outputFile actual size $actualSize is the expected size $expectedSize")
-                        assertEquals(expectedSize, actualSize)
-                    }
+            match?.groups?.get(1)?.value?.toInt().let { fileNumber ->
+                val expectedSize = expectedSizes[fileNumber]
+                outputFile.length().toInt().also { actualSize ->
+                    logger.info("Checking that $outputFile actual size $actualSize is the expected size $expectedSize")
+                    assertEquals(expectedSize, actualSize)
+                }
             }
 
         }
