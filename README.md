@@ -72,7 +72,7 @@ There are makefile commands for all your common actions;
  | `logs-s3-exporter`        | Show the logs of the S3 exporter
  | `reset-all`               | Destroy all, rebuild and up all, and check the export logs
  | `restart`                 | Restart hbase and other services
- | `up`                      | Bring up hbase, population, and sample exporter services
+ | `up`                      | Bring up hbase, dks, population, and sample exporter services
 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
