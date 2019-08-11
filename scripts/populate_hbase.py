@@ -8,8 +8,6 @@ import os
 import time
 import uuid
 
-from pprint import pprint
-
 import happybase
 import requests
 import thriftpy2
@@ -55,15 +53,18 @@ def main():
             data_table = connection.table(args.data_table)
             connected = True
 
+            print("data_key_service='{}'".format(args.data_key_service))
             if args.data_key_service:
-                content = requests.get(f'{args.data_key_service}/datakey').json()
+                content = requests.get(args.data_key_service).json()
                 encryption_key = content['plaintextDataKey']
                 encrypted_key = content['ciphertextDataKey']
                 master_key_id = content['dataKeyEncryptionKeyId']
+                print("Got data from dks")
             else:
                 encryption_key = "czMQLgW/OrzBZwFV9u4EBA=="
                 master_key_id = "1234567890"
                 encrypted_key = "blahblah"
+                print("Using fake dks data")
 
             with (open(args.test_configuration_file)) as file:
                 data = json.load(file)

@@ -74,7 +74,8 @@ There are makefile commands for all your common actions;
  | `logs-hbase-populate`     |      Show the logs of the hbase-populater. Update follow_flag as required.
  | `reset-all`               |      Destroy all, rebuild and up all, and check the export logs
  | `restart`                 |      Restart hbase and other services
- | `up-all`                  |      Bring up hbase, population, and sample exporter services|
+ | `up`                      |      Run `build-all` then start the services with `up-all`
+ | `up-all`                  |      Bring up hbase, population, and sample exporter services
  
 ### Stand up the hbase container and populate it, and execute sample exporters
 
@@ -146,7 +147,7 @@ See the makefile command `up` and the docker-compose file for `hbase-to-mongo-ex
 
 Make a run configuration and add arguments as per `export-to-s3`:
 ```
---spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToConsole,batchRun,strongRng
+--spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToConsole,batchRun,strongRng
 --source.table.name=ucdata
 --data.ready.flag.location=data/ready
 ```
@@ -165,7 +166,7 @@ aws_secret_access_key=secretsecretsecret
 
 * Arguments:
 ```
---spring.profiles.active=phoneyCipherService,phoneyDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+--spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
 --source.table.name=ucdata
 --hbase.zookeeper.quorum=localhost
 --aws.region=eu-west-1
