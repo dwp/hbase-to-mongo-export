@@ -70,9 +70,9 @@ services:
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --directory.output=ephemera
-      --encrypt.output=false
-      --compress.output=false
+      --directory.output=data
+      --encrypt.output=true
+      --compress.output=true
       --output.batch.size.max.bytes=2048
       --data.key.service.url=http://dks-standalone:8080
 
@@ -116,7 +116,6 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - shared-volume:/opt/hbase-to-mongo-export/build/test-results
     command: "integration"
     environment:
       - FILE_NAME=data/ucdata-file-output.txt

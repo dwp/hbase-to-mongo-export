@@ -40,13 +40,15 @@ abstract class Writer<String>(private val keyService: KeyService,
 
     fun writeOutput() {
         if (batchSizeBytes > 0) {
-            val dataPath = outputPath(++currentOutputFileNumber)
+            //moved the output path call from here to below
             val byteArrayOutputStream = ByteArrayOutputStream()
 
             if (encryptOutput) {
                 compressIfApplicable(byteArrayOutputStream)
                 encryptData(byteArrayOutputStream)
             } else {
+                //TODO this must be a call to writeData, which must be common
+                val dataPath = outputPath(++currentOutputFileNumber)
                 compressIfApplicable(Files.newOutputStream(dataPath)).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
@@ -72,13 +74,14 @@ abstract class Writer<String>(private val keyService: KeyService,
             this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                 byteArrayOutputStream.toByteArray())
 
+        //TODO this probably should not be hidden in here
         writeData(encryptionResult, dataKeyResult)
     }
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
 
-    @Value("\${compress.output:false}")
+    @Value("\${compress.output:true}")
     protected var compressOutput: Boolean = true
 
     @Value("\${encrypt.output:true}")
