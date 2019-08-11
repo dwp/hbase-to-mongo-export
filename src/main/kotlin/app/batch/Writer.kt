@@ -1,7 +1,5 @@
 package app.batch
 
-import app.domain.DataKeyResult
-import app.domain.EncryptionResult
 import app.services.CipherService
 import app.services.KeyService
 import org.apache.commons.compress.compressors.CompressorStreamFactory
@@ -13,20 +11,17 @@ import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
 
 
-abstract class Writer<String>(private val keyService: KeyService,
+abstract class Writer(private val keyService: KeyService,
                               private val cipherService: CipherService) : ItemWriter<String> {
 
     override fun write(items: MutableList<out String>) {
         chunkData(items)
     }
 
-    abstract fun writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
-
-    abstract fun outputPath(number: Int): Path
+    abstract fun outputLocation(): String
+    abstract fun writeToTarget(filePath: String, fileBytes: ByteArray)
 
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
@@ -40,16 +35,45 @@ abstract class Writer<String>(private val keyService: KeyService,
 
     fun writeOutput() {
         if (batchSizeBytes > 0) {
-            val dataPath = outputPath(++currentOutputFileNumber)
-            val byteArrayOutputStream = ByteArrayOutputStream()
+
+            val dataFile = outputName(++currentOutputFileNumber)
+            S3DirectoryWriter.logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
 
             if (encryptOutput) {
-                compressIfApplicable(byteArrayOutputStream)
-                encryptData(byteArrayOutputStream)
-            } else {
-                compressIfApplicable(Files.newOutputStream(dataPath)).use {
+                val dataKeyResult = keyService.batchDataKey()
+                S3DirectoryWriter.logger.info("dataKeyResult: '$dataKeyResult'.")
+                val byteArrayOutputStream = ByteArrayOutputStream()
+
+                bufferedOutputStream(byteArrayOutputStream).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
+
+                val encryptionResult =
+                    this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
+                        byteArrayOutputStream.toByteArray())
+
+                val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
+                writeToTarget(dataFile, dataBytes)
+
+                val metadataFile = metadataPath(currentOutputFileNumber)
+                val metadataByteArrayOutputStream = ByteArrayOutputStream()
+                val metadataStream: OutputStream = BufferedOutputStream(metadataByteArrayOutputStream)
+                metadataStream.use {
+                    val iv = encryptionResult.initialisationVector
+                    it.write("iv=$iv\n".toByteArray(StandardCharsets.UTF_8))
+                    it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n".toByteArray(StandardCharsets.UTF_8))
+                    it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n".toByteArray(StandardCharsets.UTF_8))
+                }
+                val metadataBytes = metadataByteArrayOutputStream.toByteArray()
+                writeToTarget(metadataFile, metadataBytes)
+
+            } else {
+                //no encryption
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bufferedOutputStream(byteArrayOutputStream).use {
+                    it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
+                }
+                writeToTarget(dataFile, byteArrayOutputStream.toByteArray())
             }
 
             this.currentBatch = StringBuilder()
@@ -57,7 +81,7 @@ abstract class Writer<String>(private val keyService: KeyService,
         }
     }
 
-    private fun compressIfApplicable(outputStream: OutputStream): OutputStream =
+    private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
         if (compressOutput) {
             CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
                 BufferedOutputStream(outputStream))
@@ -65,20 +89,17 @@ abstract class Writer<String>(private val keyService: KeyService,
             BufferedOutputStream(outputStream)
         }
 
-    private fun encryptData(byteArrayOutputStream: ByteArrayOutputStream) {
-        val dataKeyResult = keyService.batchDataKey()
-        logger.info("dataKeyResult: '$dataKeyResult'.")
-        val encryptionResult =
-            this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
-                byteArrayOutputStream.toByteArray())
+    private fun metadataPath(number: Int): kotlin.String =
+        "${outputLocation()}/$topicName-%06d.metadata".format(number)
 
-        writeData(encryptionResult, dataKeyResult)
-    }
+    private fun outputName(number: Int): kotlin.String =
+        """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            .format(number)
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
 
-    @Value("\${compress.output:false}")
+    @Value("\${compress.output:true}")
     protected var compressOutput: Boolean = true
 
     @Value("\${encrypt.output:true}")
@@ -88,9 +109,7 @@ abstract class Writer<String>(private val keyService: KeyService,
     protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
 
     protected var currentBatch = StringBuilder()
-
     protected var batchSizeBytes = 0
-
     protected var currentOutputFileNumber = 0
 
     companion object {
