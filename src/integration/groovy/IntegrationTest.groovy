@@ -51,8 +51,12 @@ class IntegrationTest extends Specification {
             println(object.getClass())
             def timestamp = object.get('timestamp')
             lineCount++
+            log.info("lineCount = " + lineCount)
+            log.info("timestamp = " + timestamp)
+            log.info("Checking timestamp = " + expectedTimestamp)
             assert timestamp == expectedTimestamp
         }
+        log.info("Checking lineCount = " + expectedLineCount)
         lineCount == expectedLineCount
     }
 }
