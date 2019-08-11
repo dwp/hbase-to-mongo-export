@@ -18,29 +18,21 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import java.nio.file.Path
+import java.nio.file.Paths
 
 // See also https://github.com/aws/aws-sdk-java
 
 @Component
 @Profile("outputToS3")
 class S3DirectoryWriter(private val keyService: KeyService,
-                        private val cipherService: CipherService) : ItemWriter<String> {
+                        private val cipherService: CipherService) : Writer<String>(keyService, cipherService) {
 
-    override fun write(items: MutableList<out String>) {
-        items.map { "$it\n" }.forEach { item ->
-            if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
-                writeOutput()
-            }
-            currentBatch.append(item)
-            batchSizeBytes += item.length
-        }
-    }
-
-    fun writeOutput() {
+    override fun writeOutput() {
         if (batchSizeBytes > 0) {
 
-            val dataFile = outputName(++currentOutputFileNumber)
-            logger.info("Processing file number '%06d' with batchSizeBytes='$batchSizeBytes'.".format(currentOutputFileNumber))
+            val dataFile = outputPath(++currentOutputFileNumber).toString()
+            logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
 
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
@@ -129,29 +121,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
     }
 
-    private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
-        if (compressOutput) {
-            CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-                BufferedOutputStream(outputStream))
-        } else {
-            BufferedOutputStream(outputStream)
-        }
-
     private fun metadataPath(number: Int) =
         """$s3PrefixFolder/$topicName-%06d.metadata""".format(number)
 
-
-    private var currentBatch = StringBuilder()
-    private var batchSizeBytes = 0
+    override fun outputPath(number: Int): Path = Paths.get(s3PrefixFolder, outputName(number))
 
     private fun outputName(number: Int) =
-        """$s3PrefixFolder/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+        """$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
             .format(number)
-
-    private var currentOutputFileNumber = 0
-
-    @Value("\${output.batch.size.max.bytes}")
-    private var maxBatchOutputSizeBytes: Int = 0
 
     @Value("\${aws.region}")
     private var region: String = "eu-west-2"
@@ -161,15 +138,6 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
-
-    @Value("\${topic.name}")
-    protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
-
-    @Value("\${compress.output:true}")
-    private var compressOutput: Boolean = true
-
-    @Value("\${encrypt.output:true}")
-    private var encryptOutput: Boolean = true
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())

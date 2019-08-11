@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import java.io.BufferedOutputStream
-import java.io.ByteArrayOutputStream
 import java.io.OutputStream
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import java.nio.file.Path
 
 
@@ -24,7 +21,7 @@ abstract class Writer<String>(private val keyService: KeyService,
         chunkData(items)
     }
 
-    abstract fun writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
+    abstract fun writeOutput()
 
     abstract fun outputPath(number: Int): Path
 
@@ -38,45 +35,13 @@ abstract class Writer<String>(private val keyService: KeyService,
         }
     }
 
-    fun writeOutput() {
-        if (batchSizeBytes > 0) {
-            //moved the output path call from here to below
-            val byteArrayOutputStream = ByteArrayOutputStream()
-
-            if (encryptOutput) {
-                compressIfApplicable(byteArrayOutputStream)
-                encryptData(byteArrayOutputStream)
-            } else {
-                //TODO this must be a call to writeData, which must be common
-                val dataPath = outputPath(++currentOutputFileNumber)
-                compressIfApplicable(Files.newOutputStream(dataPath)).use {
-                    it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
-                }
-            }
-
-            this.currentBatch = StringBuilder()
-            this.batchSizeBytes = 0
-        }
-    }
-
-    private fun compressIfApplicable(outputStream: OutputStream): OutputStream =
+    protected fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
         if (compressOutput) {
             CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
                 BufferedOutputStream(outputStream))
         } else {
             BufferedOutputStream(outputStream)
         }
-
-    private fun encryptData(byteArrayOutputStream: ByteArrayOutputStream) {
-        val dataKeyResult = keyService.batchDataKey()
-        logger.info("dataKeyResult: '$dataKeyResult'.")
-        val encryptionResult =
-            this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
-                byteArrayOutputStream.toByteArray())
-
-        //TODO this probably should not be hidden in here
-        writeData(encryptionResult, dataKeyResult)
-    }
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
@@ -91,9 +56,7 @@ abstract class Writer<String>(private val keyService: KeyService,
     protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
 
     protected var currentBatch = StringBuilder()
-
     protected var batchSizeBytes = 0
-
     protected var currentOutputFileNumber = 0
 
     companion object {

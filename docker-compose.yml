@@ -99,7 +99,7 @@ services:
       --data.key.service.url=${DATA_KEY_SERVICE_URL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
-      --s3.prefix.folder=${S3_PREFIX_FOLDER}/db.core.addressDeclaration
+      --s3.prefix.folder=${S3_PREFIX_FOLDER}
     environment:
       - AWS_REGION=${AWS_DEFAULT_REGION}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}

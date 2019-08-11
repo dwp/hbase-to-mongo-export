@@ -12,28 +12,19 @@ import org.springframework.stereotype.Component
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 @Component
 @Profile("outputToDirectory")
 class DirectoryWriter(private val keyService: KeyService,
-                      private val cipherService: CipherService) : ItemWriter<String> {
+                      private val cipherService: CipherService) : Writer<String>(keyService, cipherService) {
 
-    override fun write(items: MutableList<out String>) {
-        items.map { "$it\n" }.forEach { item ->
-            if (batchSize + item.length > maxBatchOutputSize) {
-                writeOutput()
-            }
-            currentBatch.append(item)
-            batchSize += item.length
-        }
-    }
-
-    fun writeOutput() {
-        if (batchSize > 0) {
+    override fun writeOutput() {
+        if (batchSizeBytes > 0) {
 
             val dataPath = outputPath(++currentOutputFileNumber)
-            logger.info("Processing file %s with batchSize='$batchSize'.".format(dataPath))
+            logger.info("Processing file $dataPath with batchSizeBytes='$batchSizeBytes'.".format(dataPath))
 
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
@@ -69,49 +60,22 @@ class DirectoryWriter(private val keyService: KeyService,
             }
 
             this.currentBatch = StringBuilder()
-            this.batchSize = 0
+            this.batchSizeBytes = 0
         }
     }
 
 
-    private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
-        if (compressOutput) {
-            CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-                BufferedOutputStream(outputStream))
-        } else {
-            BufferedOutputStream(outputStream)
-        }
-
     private fun metadataPath(number: Int) =
         Paths.get(outputDirectory, """$topicName-%06d.metadata""".format(number))
 
-
-    private var currentBatch = StringBuilder()
-    private var batchSize = 0
-
-    private fun outputPath(number: Int) = Paths.get(outputDirectory, outputName(number))
+    override fun outputPath(number: Int): Path = Paths.get(outputDirectory, outputName(number))
 
     private fun outputName(number: Int) =
         """$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
             .format(number)
 
-
-    private var currentOutputFileNumber = 0
-
-    @Value("\${output.batch.size.max.bytes}")
-    private var maxBatchOutputSize: Int = 0
-
     @Value("\${directory.output}")
     private lateinit var outputDirectory: String
-
-    @Value("\${topic.name}")
-    protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
-
-    @Value("\${compress.output:false}")
-    private var compressOutput: Boolean = true
-
-    @Value("\${encrypt.output:true}")
-    private var encryptOutput: Boolean = true
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())
