@@ -25,8 +25,16 @@ import java.nio.charset.Charset
 @RunWith(SpringRunner::class)
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["source.table.name=ucdata"])
+@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b"])
 class HBaseReaderTest {
+
+    private val rowId = "EXPECTED_ID"
+    private val timestamp = "EXPECTED_TIMESTAMP"
+    private val encryptionKeyId = "EXPECTED_ENCRYPTION_KEY_ID"
+    private val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
+    private val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
+    private val dbObject = "EXPECTED_DB_OBJECT"
+    private val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
 
     @Before
     fun reset() {
@@ -43,38 +51,48 @@ class HBaseReaderTest {
 
         hbaseReader.resetScanner()
 
-        val expectedId = "EXPECTED_ID"
-        val timestamp = "EXPECTED_TIMESTAMP"
-        val topic = "EXPECTED_TOPIC"
-        val encryptionKeyId = "EXPECTED_ENCRYPTION_KEY_ID"
-        val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
-        val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
-        val dbObject = "EXPECTED_DB_OBJECT"
-        val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
-
-        val cell = """{
-            |    "id": "$expectedId", 
-            |     "timestamp": "$timestamp", 
-            |     "topic": "$topic", 
-            |     "encryption": {
-            |       "encryptionKeyId": "$encryptionKeyId", 
-            |       "encryptedEncryptionKey": "$encryptedEncryptionKey", 
-            |       "initialisationVector": "$initialisationVector", 
-            |       "keyEncryptionKeyId": "$keyEncryptionKeyId"
-            |    }, 
+        val cellData = """
+            |{
+            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+            |  "@type": "V4",
+            |  "message": {
+            |    "db": "core",
+            |    "collection": "addressDeclaration",
+            |    "_id": {
+            |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+            |    },
+            |    "_timeBasedHash": "hashhhhhhhhhh",
+            |    "@type": "MONGO_INSERT",
+            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |    "encryption": {
+            |      "encryptionKeyId": "$encryptionKeyId",
+            |      "encryptedEncryptionKey": "$encryptedEncryptionKey",
+            |      "initialisationVector": "$initialisationVector",
+            |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
+            |    },
             |    "dbObject": "$dbObject"
+            |  },
+            |  "version": "core-4.master.9790",
+            |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
         given(current.timestamp).willReturn(10)
+        given(result.row).willReturn(rowId.toByteArray())
         given(result.current()).willReturn(current)
-        given(result.getValue("cf".toByteArray(), "data".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
+        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(TableName.valueOf("ucdata"))).willReturn(table)
-        val encryption = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(expectedId, 10, encryption, dbObject)
+        given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
+
+        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
+        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject)
+
         val actual = hbaseReader.read()
-        assertEquals(expected, actual)
+
+        assertEquals(expected.dbObject, actual?.dbObject)
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+            expected.toString(), actual.toString())
     }
 
     @Test(expected = MissingFieldException::class)
@@ -86,32 +104,39 @@ class HBaseReaderTest {
 
         hbaseReader.resetScanner()
 
-        val expectedId = "ID"
-        val timestamp = "TIMESTAMP"
-        val topic = "TOPIC"
-        val encryptionKeyId = "ENCRYPTION_KEY_ID"
-        val encryptedEncryptionKey = "ENCRYPTED_ENCRYPTION_KEY"
-        val keyEncryptionKeyId = "KEY_ENCRYPTION_KEY_ID"
-        val initialisationVector = "INITIALISATION_VECTOR"
-
-        val cell = """{
-            |    "id": "$expectedId", 
-            |     "timestamp": "$timestamp", 
-            |     "topic": "$topic", 
-            |     "encryption": {
-            |       "encryptionKeyId": timestamp.toLong()"$encryptionKeyId", 
-            |       "encryptedEncryptionKey": "$encryptedEncryptionKey", 
-            |       "initialisationVector": "$initialisationVector", 
-            |       "keyEncryptionKeyId": "$keyEncryptionKeyId"
-            |    } 
+        val cellData = """
+            |{
+            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+            |  "@type": "V4",
+            |  "message": {
+            |    "db": "core",
+            |    "collection": "addressDeclaration",
+            |    "_id": {
+            |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+            |    },
+            |    "_timeBasedHash": "hashhhhhhhhhh",
+            |    "@type": "MONGO_INSERT",
+            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |    "encryption": {
+            |      "encryptionKeyId": "$encryptionKeyId",
+            |      "encryptedEncryptionKey": "$encryptedEncryptionKey",
+            |      "initialisationVector": "$initialisationVector",
+            |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
+            |    }
+            |  },
+            |  "version": "core-4.master.9790",
+            |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
         given(current.timestamp).willReturn(10)
+        given(result.row).willReturn(rowId.toByteArray())
         given(result.current()).willReturn(current)
-        given(result.getValue("cf".toByteArray(), "data".toByteArray())).willReturn(cell.toByteArray(Charset.defaultCharset()))
+        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(TableName.valueOf("ucdata"))).willReturn(table)
+        given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
+
         hbaseReader.read()
     }
 

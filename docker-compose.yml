@@ -26,6 +26,9 @@ services:
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
+      --data-table ucfs-data
+      --topics-table ucfs-topics
+      --test-configuration-file test-config.json
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -40,11 +43,14 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,httpDataKeyService,localDataSource,outputToFile,batchRun,strongRng
-      --source.table.name=ucdata
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --data.key.service.url=http://dks-standalone:8080
       --file.output=data/ucdata-file-output.txt
+      --output.batch.size.max.bytes=2048
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -59,8 +65,10 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,httpDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
-      --source.table.name=ucdata
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --directory.output=ephemera
       --encrypt.output=false
@@ -81,16 +89,17 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,httpDataKeyService,localDataSource,outputToS3,batchRun,strongRng
-      --source.table.name=ucdata
-      --data.ready.flag.location=data/ready
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
       --data.key.service.url=${DATA_KEY_SERVICE_URL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
-      --s3.prefix.folder=${S3_PREFIX_FOLDER}
+      --s3.prefix.folder=${S3_PREFIX_FOLDER}/db.core.addressDeclaration
     environment:
       - AWS_REGION=${AWS_DEFAULT_REGION}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
@@ -103,9 +112,16 @@ services:
       context: .
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
+    depends_on:
+      - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/opt/hbase-to-mongo-export/build/test-results
     command: "integration"
+    environment:
+      - FILE_NAME=data/ucdata-file-output.txt
+      - EXPECTED_TIMESTAMP=10
+      - EXPECTED_LINE_COUNT=7
 
   dks-standalone:
     image: dks-standalone

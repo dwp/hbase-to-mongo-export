@@ -20,17 +20,13 @@ import java.nio.file.Path
 abstract class Writer<String>(private val keyService: KeyService,
                               private val cipherService: CipherService) : ItemWriter<String> {
 
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
-    }
-
     override fun write(items: MutableList<out String>) {
         chunkData(items)
     }
 
-    abstract fun  writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
+    abstract fun writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
 
-    abstract fun outputPath(number: Int) : Path
+    abstract fun outputPath(number: Int): Path
 
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
@@ -42,7 +38,7 @@ abstract class Writer<String>(private val keyService: KeyService,
         }
     }
 
-     fun writeOutput() {
+    fun writeOutput() {
         if (batchSizeBytes > 0) {
             val dataPath = outputPath(++currentOutputFileNumber)
             val byteArrayOutputStream = ByteArrayOutputStream()
@@ -50,8 +46,7 @@ abstract class Writer<String>(private val keyService: KeyService,
             if (encryptOutput) {
                 compressIfApplicable(byteArrayOutputStream)
                 encryptData(byteArrayOutputStream)
-            }
-            else {
+            } else {
                 compressIfApplicable(Files.newOutputStream(dataPath)).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
@@ -62,10 +57,10 @@ abstract class Writer<String>(private val keyService: KeyService,
         }
     }
 
-    private fun compressIfApplicable(outputStream: OutputStream) :OutputStream =
+    private fun compressIfApplicable(outputStream: OutputStream): OutputStream =
         if (compressOutput) {
             CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-                    BufferedOutputStream(outputStream))
+                BufferedOutputStream(outputStream))
         } else {
             BufferedOutputStream(outputStream)
         }
@@ -74,8 +69,8 @@ abstract class Writer<String>(private val keyService: KeyService,
         val dataKeyResult = keyService.batchDataKey()
         logger.info("dataKeyResult: '$dataKeyResult'.")
         val encryptionResult =
-                this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
-                        byteArrayOutputStream.toByteArray())
+            this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
+                byteArrayOutputStream.toByteArray())
 
         writeData(encryptionResult, dataKeyResult)
     }
@@ -89,15 +84,16 @@ abstract class Writer<String>(private val keyService: KeyService,
     @Value("\${encrypt.output:true}")
     protected var encryptOutput: Boolean = true
 
+    @Value("\${topic.name}")
+    protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
+
     protected var currentBatch = StringBuilder()
+
     protected var batchSizeBytes = 0
 
     protected var currentOutputFileNumber = 0
 
-    @Value("\${directory.output}")
-    protected lateinit var outputDirectory: kotlin.String
-
-    @Value("\${source.table.name}")
-    protected lateinit var tableName: kotlin.String // i.e. "db.user.data"
-
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
+    }
 }

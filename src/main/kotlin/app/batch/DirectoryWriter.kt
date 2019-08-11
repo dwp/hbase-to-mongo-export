@@ -6,9 +6,11 @@ import app.services.CipherService
 import app.services.KeyService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import java.io.*
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -16,15 +18,14 @@ import java.nio.file.Paths
 @Component
 @Profile("outputToDirectory")
 class DirectoryWriter(private val keyService: KeyService,
-                      private val cipherService: CipherService) : Writer<String>(keyService,cipherService){
+                      private val cipherService: CipherService) : Writer<String>(keyService, cipherService) {
 
-    override fun writeData(encryptionResult: EncryptionResult,dataKeyResult: DataKeyResult) {
+    override fun writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult) {
         val dataPath = outputPath(++currentOutputFileNumber)
         logger.info("Processing file number '%06d' with batchSize='$batchSizeBytes'.".format(currentOutputFileNumber))
         Files.write(dataPath,
-                encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
+            encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
         logger.info("Wrote dataPath: '$dataPath'.")
-
 
         val metadataPath = metadataPath(currentOutputFileNumber)
         BufferedWriter(OutputStreamWriter(Files.newOutputStream(metadataPath))).use {
@@ -35,18 +36,19 @@ class DirectoryWriter(private val keyService: KeyService,
             it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n")
         }
         logger.info("Wrote metadataPath: '$metadataPath'.")
-
-
     }
 
     private fun metadataPath(number: Int) =
-            Paths.get(outputDirectory, """$tableName-%06d.metadata""".format(number))
+        Paths.get(outputDirectory, """$topicName-%06d.metadata""".format(number))
 
     override fun outputPath(number: Int) = Paths.get(outputDirectory, outputName(number))
 
     private fun outputName(number: Int) =
-            """$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
-                    .format(number)
+        """$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            .format(number)
+
+    @Value("\${directory.output}")
+    protected lateinit var outputDirectory: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())

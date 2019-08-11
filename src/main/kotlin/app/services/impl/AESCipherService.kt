@@ -25,7 +25,7 @@ class AESCipherService(private val secureRandom: SecureRandom): CipherService {
     }
 
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
-        var initialisationVector = ByteArray(16).apply {
+        val initialisationVector = ByteArray(16).apply {
             secureRandom.nextBytes(this)
         }
 
@@ -53,7 +53,6 @@ class AESCipherService(private val secureRandom: SecureRandom): CipherService {
 
     @Value("\${source.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var sourceCipherAlgorithm: String
-
 
     @Value("\${target.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var targetCipherAlgorithm: String
