@@ -43,7 +43,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -65,7 +65,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -89,7 +89,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
