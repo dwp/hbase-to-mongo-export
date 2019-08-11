@@ -21,9 +21,9 @@ abstract class Writer<String>(private val keyService: KeyService,
         chunkData(items)
     }
 
+    abstract fun outputLocation(): String
     abstract fun writeOutput()
-
-    abstract fun outputPath(number: Int): Path
+    abstract fun writeToTarget(filePath: kotlin.String, fileBytes: ByteArray)
 
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
@@ -42,6 +42,13 @@ abstract class Writer<String>(private val keyService: KeyService,
         } else {
             BufferedOutputStream(outputStream)
         }
+
+    protected fun metadataPath(number: Int): kotlin.String =
+        "${outputLocation()}/$topicName-%06d.metadata".format(number)
+
+    protected fun outputName(number: Int): kotlin.String =
+        """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            .format(number)
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0

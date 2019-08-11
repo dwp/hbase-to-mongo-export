@@ -2,17 +2,16 @@ package app.batch
 
 import app.services.CipherService
 import app.services.KeyService
-import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import java.io.*
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 @Component
@@ -23,7 +22,7 @@ class DirectoryWriter(private val keyService: KeyService,
     override fun writeOutput() {
         if (batchSizeBytes > 0) {
 
-            val dataPath = outputPath(++currentOutputFileNumber)
+            val dataPath = outputName(++currentOutputFileNumber)
             logger.info("Processing file $dataPath with batchSizeBytes='$batchSizeBytes'.".format(dataPath))
 
             if (encryptOutput) {
@@ -39,23 +38,28 @@ class DirectoryWriter(private val keyService: KeyService,
                     this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                         byteArrayOutputStream.toByteArray())
 
-                Files.write(dataPath,
+                writeToTarget(dataPath,
                     encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII))
                 logger.info("Wrote dataPath: '$dataPath'.")
 
-                val metadataPath = metadataPath(currentOutputFileNumber)
-                BufferedWriter(OutputStreamWriter(Files.newOutputStream(metadataPath))).use {
+                val metadataFile = metadataPath(currentOutputFileNumber)
+                val metadataByteArrayOutputStream = ByteArrayOutputStream()
+                val metadataStream: OutputStream = BufferedOutputStream(metadataByteArrayOutputStream)
+                metadataStream.use {
                     val iv = encryptionResult.initialisationVector
-                    //val plaintext = dataKeyResult.plaintextDataKey //TODO ask Dan C about this
-                    it.write("iv=$iv\n")
-                    it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n")
-                    it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n")
+                    it.write("iv=$iv\n".toByteArray(StandardCharsets.UTF_8))
+                    it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n".toByteArray(StandardCharsets.UTF_8))
+                    it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n".toByteArray(StandardCharsets.UTF_8))
                 }
-                logger.info("Wrote metadataPath: '$metadataPath'.")
+                val metadataBytes = metadataByteArrayOutputStream.toByteArray()
+                writeToTarget(metadataFile, metadataBytes)
+                logger.info("Wrote metadataPath: '$metadataFile'.")
             } else {
-                bufferedOutputStream(Files.newOutputStream(dataPath)).use {
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bufferedOutputStream(byteArrayOutputStream).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
+                writeToTarget(dataPath, byteArrayOutputStream.toByteArray())
                 logger.info("Wrote dataPath: '$dataPath'.")
             }
 
@@ -64,15 +68,11 @@ class DirectoryWriter(private val keyService: KeyService,
         }
     }
 
+    override fun outputLocation(): String = outputDirectory
 
-    private fun metadataPath(number: Int) =
-        Paths.get(outputDirectory, """$topicName-%06d.metadata""".format(number))
-
-    override fun outputPath(number: Int): Path = Paths.get(outputDirectory, outputName(number))
-
-    private fun outputName(number: Int) =
-        """$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
-            .format(number)
+    override fun writeToTarget(filePath: String, fileBytes: ByteArray) {
+        Files.write(Paths.get(filePath), fileBytes)
+    }
 
     @Value("\${directory.output}")
     private lateinit var outputDirectory: String
