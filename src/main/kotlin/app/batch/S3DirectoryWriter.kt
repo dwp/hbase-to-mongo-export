@@ -86,12 +86,14 @@ class S3DirectoryWriter(private val keyService: KeyService,
             // The call was transmitted successfully, but Amazon S3 couldn't process
             // it, so it returned an error response.
             e.printStackTrace()
-            logger.error("Error Writing file '$s3Key'", e)
+            logger.error(
+                "AWS Service Exception: Error Writing file '$s3Key': " +
+                    "Call transmitted but failed to process:", e)
         } catch (e: SdkClientException) {
             // Amazon S3 couldn't be contacted for a response, or the client
             // couldn't parse the response from Amazon S3.
             e.printStackTrace()
-            logger.error("Error Writing file '$s3Key'", e)
+            logger.error("AWS SDK Client error: Error Writing file '$s3Key':", e)
         }
     }
 
