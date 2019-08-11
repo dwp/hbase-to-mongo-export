@@ -111,6 +111,7 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/opt/hbase-to-mongo-export/build/test-results
     command: "integration"
     environment:
       - FILE_NAME=data/ucdata-file-output.txt
