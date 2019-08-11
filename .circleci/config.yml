@@ -62,16 +62,17 @@ jobs:
           command: |
             sudo pip3 install docker-compose
             export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=')
-            export DATA_KEY_SERVICE_URL=dummy.com
+            export DATA_KEY_SERVICE_URL=http://localhost:8080
+            export DATA_KEY_SERVICE_HOST=localhost:8080
             export S3_BUCKET=dummy-bucket
             export S3_PREFIX_FOLDER=dummy-folder
             export AWS_DEFAULT_REGION=dummy-region
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
-            docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest
+            docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone
             docker-compose up -d hbase hbase-populate
             sleep 5
-            docker-compose up -d hbase-to-mongo-export-file
+            docker-compose up -d hbase-to-mongo-export-file dks-standalone
             sleep 5
             docker-compose up hbase-to-mongo-export-itest
 

@@ -18,9 +18,14 @@ services:
     container_name: hbase-populate
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
+    command: >-
+      --data-key-service http://dks-standalone:8080/datakey
+      --dump-table-contents
+      --completed-flag data/ready
+      --remove-output-file data/ucdata-file-output.txt
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -31,13 +36,14 @@ services:
     container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
-      - hbase-populate
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=production,phoneyCipherService,httpDataKeyService,localDataSource,outputToFile,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
+      --data.key.service.url=http://dks-standalone:8080
       --file.output=data/ucdata-file-output.txt
 
   hbase-to-mongo-export-directory:
@@ -49,16 +55,18 @@ services:
     container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=production,phoneyCipherService,httpDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
-      --directory.output=data
+      --directory.output=ephemera
       --encrypt.output=false
       --compress.output=false
       --output.batch.size.max.bytes=2048
+      --data.key.service.url=http://dks-standalone:8080
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -69,10 +77,11 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,httpDataKeyService,localDataSource,outputToS3,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
       --encrypt.output=true
@@ -94,11 +103,22 @@ services:
       context: .
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
-    depends_on:
-      - hbase-to-mongo-export-file
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
+
+  dks-standalone:
+    image: dks-standalone
+    ports:
+      - 8080:8080
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile_dks
+    container_name: dks-standalone
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
 volumes:
   shared-volume:

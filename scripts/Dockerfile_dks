@@ -1,0 +1,19 @@
+FROM centos
+
+EXPOSE 8080
+
+RUN mkdir /opt/data-key-service
+
+RUN yum -y upgrade
+RUN yum install -y epel-release
+RUN yum install -y java-1.8.0-openjdk wget jq
+ENV JAVA_HOME /etc/alternatives/jre
+
+WORKDIR /opt/data-key-service
+
+RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
+    | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document dks-latest.jar
+
+RUN ls -la *.jar
+
+CMD ["sh", "-c", "java -jar dks-latest.jar"]
