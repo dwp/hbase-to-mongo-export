@@ -90,15 +90,14 @@ jobs:
             for jar in ./artifacts/*.jar; do
               mv -v $jar ${jar/-SNAPSHOT/}
             done
-            VERSION=$(ls ./artifacts/*.jar | head -n1 | sed -e 's/\.jar$// ' | sed -e 's/\.\/artifacts\/hbase-to-mongo-export-//')
-            echo VERSION: \'${VERSION}\'.
-            PREVIOUS_VERSION=$(echo $VERSION | awk -F. '{$NF = $NF - 1;} 1' | sed 's/ /./g')
-            echo PREVIOUS_VERSION: \'$PREVIOUS_VERSION\'.
+            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
             ghr \
               -t ${GITHUB_TOKEN} \
               -u ${CIRCLE_PROJECT_USERNAME} \
               -r ${CIRCLE_PROJECT_REPONAME} \
-              -c ${CIRCLE_SHA1} -recreate \
+              -c ${CIRCLE_SHA1} -delete \
               ${VERSION} ./artifacts/
 
 
