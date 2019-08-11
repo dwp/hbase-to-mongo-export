@@ -20,10 +20,6 @@ import java.nio.file.Path
 abstract class Writer<String>(private val keyService: KeyService,
                               private val cipherService: CipherService) : ItemWriter<String> {
 
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
-    }
-
     override fun write(items: MutableList<out String>) {
         chunkData(items)
     }
@@ -88,14 +84,16 @@ abstract class Writer<String>(private val keyService: KeyService,
     @Value("\${encrypt.output:true}")
     protected var encryptOutput: Boolean = true
 
+    @Value("\${topic.name}")
+    protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
+
     protected var currentBatch = StringBuilder()
+
     protected var batchSizeBytes = 0
 
     protected var currentOutputFileNumber = 0
 
-    @Value("\${directory.output}")
-    protected lateinit var outputDirectory: kotlin.String
-
-    @Value("\${topic.name}")
-    protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
+    }
 }

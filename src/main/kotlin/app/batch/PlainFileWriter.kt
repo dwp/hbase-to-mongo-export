@@ -12,14 +12,15 @@ import org.springframework.stereotype.Component
 import java.io.FileWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
+import java.nio.file.Paths
 
 @Component
 @Profile("outputToFile")
-class FileSystemWriter(keyService: KeyService,
-                       cipherService: CipherService) : Writer<String>(keyService, cipherService) {
+class PlainFileWriter(keyService: KeyService,
+                      cipherService: CipherService) : Writer<String>(keyService, cipherService) {
 
     override fun outputPath(number: Int): Path {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Paths.get(outputFile)
     }
 
     @Value("\${file.output}")
@@ -33,6 +34,6 @@ class FileSystemWriter(keyService: KeyService,
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(FileSystemWriter::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(PlainFileWriter::class.toString())
     }
 }

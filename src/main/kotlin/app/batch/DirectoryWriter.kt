@@ -6,6 +6,7 @@ import app.services.CipherService
 import app.services.KeyService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.BufferedWriter
@@ -45,6 +46,9 @@ class DirectoryWriter(private val keyService: KeyService,
     private fun outputName(number: Int) =
         """$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
             .format(number)
+
+    @Value("\${directory.output}")
+    protected lateinit var outputDirectory: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())
