@@ -40,6 +40,7 @@ build-images: ## Build the hbase, population, and exporter images
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		docker-compose build hbase dks-standalone hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
@@ -54,6 +55,7 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		docker-compose up -d hbase dks-standalone hbase-populate; \
 		echo "Waiting for population"; \
 		sleep 5; \
