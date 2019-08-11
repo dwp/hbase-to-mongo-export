@@ -23,7 +23,6 @@ class FileSystemWriter(private val keyService: KeyService,
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-
     @Value("\${file.output}")
     private lateinit var outputFile: String
 

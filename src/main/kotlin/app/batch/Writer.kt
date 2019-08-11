@@ -31,7 +31,7 @@ abstract class Writer<String>(private val keyService: KeyService,
     abstract fun  writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
 
     abstract fun outputPath(number: Int) : Path
-    
+
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
@@ -41,7 +41,6 @@ abstract class Writer<String>(private val keyService: KeyService,
             batchSizeBytes += item.length
         }
     }
-
 
      fun writeOutput() {
         if (batchSizeBytes > 0) {

@@ -18,9 +18,6 @@ import java.nio.file.Paths
 class DirectoryWriter(private val keyService: KeyService,
                       private val cipherService: CipherService) : Writer<String>(keyService,cipherService){
 
-
-
-
     override fun writeData(encryptionResult: EncryptionResult,dataKeyResult: DataKeyResult) {
         val dataPath = outputPath(++currentOutputFileNumber)
         logger.info("Processing file number '%06d' with batchSize='$batchSizeBytes'.".format(currentOutputFileNumber))
@@ -42,23 +39,14 @@ class DirectoryWriter(private val keyService: KeyService,
 
     }
 
-
-
-
     private fun metadataPath(number: Int) =
             Paths.get(outputDirectory, """$tableName-%06d.metadata""".format(number))
-
-
-
 
     override fun outputPath(number: Int) = Paths.get(outputDirectory, outputName(number))
 
     private fun outputName(number: Int) =
             """$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
                     .format(number)
-
-
-
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())
