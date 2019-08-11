@@ -92,9 +92,9 @@ Check the logs:
 ### Run the integration tests against local containerized setup.
 
 ```
-    make integration
+    make integration-all
 ```
-...this also executes `build` and `up`.
+...this also executes `build-all` and `up-all`.
 
 ### Run the s3 exporter
 
@@ -108,9 +108,9 @@ can be updated in the `docker-compose` file
                       aws_access_key_id=keykeykey \
                       aws_secret_access_key=tokentokentoken \
                       aws_default_profile=profile \
-                      s3_bucket=9876543210 -
+                      s3_bucket=9876543210 \
                       s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=dummy.com:8080
+                      data_key_service_url=http://dks-standalone:8080
 ```
 then check the logs
 ```
@@ -147,7 +147,7 @@ See the makefile command `up` and the docker-compose file for `hbase-to-mongo-ex
 
 Make a run configuration and add arguments as per `export-to-s3`:
 ```
---spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToConsole,batchRun,strongRng
+--spring.profiles.active=phoneyCipherService,phonyDataKeyService,realHbaseDataSource,outputToConsole,batchRun,strongRng
 --source.table.name=ucdata
 --data.ready.flag.location=data/ready
 ```
