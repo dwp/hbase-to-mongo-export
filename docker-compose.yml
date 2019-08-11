@@ -47,6 +47,7 @@ services:
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --file.output=data/ucdata-file-output.txt
+      --output.batch.size.max.bytes=2048
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export

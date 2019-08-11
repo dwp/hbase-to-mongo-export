@@ -54,7 +54,7 @@ class S3DirectoryWriter(private val keyService: KeyService,
         val s3Client = AmazonS3ClientBuilder.standard()
             .withRegion(clientRegion)
             .build()!!
-        
+
         writeS3File(dataKeyName, dataInputStream, dataBytesSize, s3Client)
 
         val metadataPath = metadataPath(currentOutputFileNumber)

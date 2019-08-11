@@ -6,19 +6,18 @@ import app.services.CipherService
 import app.services.KeyService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import java.io.*
-import java.nio.charset.Charset
+import java.io.FileWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 @Component
 @Profile("outputToFile")
-class FileSystemWriter(private val keyService: KeyService,
-                       private val cipherService: CipherService) : Writer<String>(keyService, cipherService) {
+class FileSystemWriter(keyService: KeyService,
+                       cipherService: CipherService) : Writer<String>(keyService, cipherService) {
+
     override fun outputPath(number: Int): Path {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -31,7 +30,6 @@ class FileSystemWriter(private val keyService: KeyService,
         val fw = FileWriter(outputFile, true)
         fw.write(String(encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII), Charsets.UTF_8).toCharArray())
         fw.close()
-
     }
 
     companion object {
