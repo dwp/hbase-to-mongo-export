@@ -28,6 +28,10 @@ abstract class Writer<String>(private val keyService: KeyService,
         chunkData(items)
     }
 
+    abstract fun  writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
+
+    abstract fun outputPath(number: Int) : Path
+    
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
@@ -74,8 +78,6 @@ abstract class Writer<String>(private val keyService: KeyService,
                 this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
                         byteArrayOutputStream.toByteArray())
 
-
-
         writeData(encryptionResult, dataKeyResult)
     }
 
@@ -99,7 +101,4 @@ abstract class Writer<String>(private val keyService: KeyService,
     @Value("\${source.table.name}")
     protected lateinit var tableName: kotlin.String // i.e. "db.user.data"
 
-
-    abstract fun  writeData(encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult)
-   abstract fun outputPath(number: Int) : Path
 }
