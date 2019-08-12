@@ -58,14 +58,14 @@ There are makefile commands for all your common actions;
 
  | Command                   | Description
  |---------------------------|--------------------
- | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container
+ | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container (http://local-hbase:8080) and dks-standalone container (http://local-dks:8090 and https://local-dks:8091 )
  | `build-all`               |      Build the jar file and then all docker images
  | `build-images`            |      Build the hbase, population, and exporter images
  | `build-jar`               |      Build the hbase exporter jar file
  | `destroy`                 |      Bring down the hbase and other services then delete all volumes
  | `dist`                    |      Assemble distribution files in build/dist
  | `down`                    |      Bring down the hbase and other services
- | `echo`                    |      Echo the current version
+ | `echo-version`            |      Echo the current version Jar version from Gradle settings
  | `hbase-shell`             |      Open an Hbase shell onto the running hbase container
  | `integration-all`         |      Build the jar and images, put up the containers, run the integration tests
  | `integration-tests`       |      (Re-)Run the integration tests in a Docker container
@@ -110,7 +110,7 @@ can be updated in the `docker-compose` file
                       aws_default_profile=profile \
                       s3_bucket=9876543210 \
                       s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=http://dks-standalone:8080
+                      data_key_service_url=http://dks-standalone:8090
 ```
 then check the logs
 ```
@@ -131,10 +131,10 @@ if the name given by zookeeper is then entered into the local `/etc/hosts` file.
    make up
 ```
 
-2. Add hbase entry in local /etc/hosts file:
-
+2. Add hbase and dks-standalone entry in local /etc/hosts file:
+See Make targets above for the names this puts in
 ```
-    make add-hbase-to-hosts
+    make add-containers-to-hosts
 ```
 
 It should now be possible to run code in an IDE against the local instance.

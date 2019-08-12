@@ -22,7 +22,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --data-key-service http://dks-standalone:8080/datakey
+      --data-key-service http://dks-standalone:8090/datakey
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
@@ -44,11 +44,12 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=http://dks-standalone:8080
+      --data.key.service.url=http://dks-standalone:8090
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
 
@@ -66,6 +67,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -74,7 +76,7 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=http://dks-standalone:8080
+      --data.key.service.url=http://dks-standalone:8090
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -90,6 +92,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -122,10 +125,25 @@ services:
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 
-  dks-standalone:
+  dks-standalone-https:
     image: dks-standalone
     ports:
-      - 8080:8080
+      - 8090:8080
+      - 8091:443
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile_dks
+    container_name: dks-standalone
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
+
+  dks-standalone-http:
+    image: dks-standalone
+    ports:
+      - 8093:8080
+      - 8093:443
     build:
       context: .
       dockerfile: scripts/Dockerfile_dks

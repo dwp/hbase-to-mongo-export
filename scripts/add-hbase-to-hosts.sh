@@ -10,7 +10,7 @@ if [[ -n "$hbase_name" ]]; then
     temp_file=$(mktemp)
     (
         cat /etc/hosts | grep -v 'added by hbase-to-mongo-export.$'
-        echo ${hbase_name} \# added by hbase-to-mongo-export.
+        echo ${hbase_name} local-hbase \# added by hbase-to-mongo-export.
     ) > $temp_file
 
     sudo mv $temp_file /etc/hosts

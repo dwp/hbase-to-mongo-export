@@ -10,7 +10,7 @@ if [[ -n "$dks_name" ]]; then
     temp_file=$(mktemp)
     (
         cat /etc/hosts | grep -v 'added by dks-to-mongo-export.$'
-        echo ${dks_name} \# added by dks-to-mongo-export.
+        echo ${dks_name} local-dks \# added by dks-to-mongo-export.
     ) > $temp_file
 
     sudo mv $temp_file /etc/hosts
