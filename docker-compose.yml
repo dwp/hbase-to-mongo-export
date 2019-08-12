@@ -112,7 +112,7 @@ services:
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
     build:
-      context: .
+      context: scripts
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
     depends_on:
@@ -125,28 +125,14 @@ services:
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 
-  dks-standalone-https:
+  dks-standalone:
     image: dks-standalone
     ports:
       - 8090:8080
       - 8091:443
     build:
-      context: .
-      dockerfile: scripts/Dockerfile_dks
-    container_name: dks-standalone
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
-
-  dks-standalone-http:
-    image: dks-standalone
-    ports:
-      - 8093:8080
-      - 8093:443
-    build:
-      context: .
-      dockerfile: scripts/Dockerfile_dks
+      context: scripts
+      dockerfile: Dockerfile_dks
     container_name: dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data

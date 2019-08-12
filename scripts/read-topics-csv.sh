@@ -15,6 +15,8 @@ HBASE_TO_MONGO_VERSION=$(cat ../gradle.properties | cut -f2 -d'=')
 S3_FOLDER="${S3_PREFIX_FOLDER}/${TODAY}"
 JAR_FILE="../build/libs/hbase-to-mongo-export-${HBASE_TO_MONGO_VERSION}.jar"
 
+echo ""
+
 if [[ -f ${JAR_FILE} ]]; then
   echo "Found jar file at  ${JAR_FILE}"
 else
@@ -44,3 +46,6 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --s3_bucket="${S3_BUCKET}" \
       --s3_prefix_folder="${S3_FOLDER}";
   done
+
+echo "Finished topics csv file ${TOPICS_CSV_FILE}"
+echo ""

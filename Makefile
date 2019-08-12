@@ -159,7 +159,6 @@ reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebui
 .PHONY: local-all-collections-test
 local-all-collections-test: build-jar up add-containers-to-hosts ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
