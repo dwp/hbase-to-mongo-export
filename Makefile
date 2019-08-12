@@ -141,7 +141,7 @@ hbase-shell: ## Open an Hbase shell onto the running hbase container
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose run --rm hbase shell; \
+		docker exec -it hbase hbase shell; \
 	}
 
 .PHONY: logs-hbase-populate

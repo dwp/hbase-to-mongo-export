@@ -34,7 +34,13 @@ import java.io.ByteArrayInputStream
     "data.table.name=ucfs-data",
     "data.key.service.url=dummy.com:8080",
     "column.family=topic",
-    "topic.name=db.a.b"
+    "topic.name=db.a.b",
+    "identity.keystore=resources/identity.jks",
+    "trust.keystore=resources/truststore.jks",
+    "identity.store.password=changeit",
+    "identity.key.password=changeit",
+    "trust.store.password=changeit",
+    "identity.store.alias=cid"
 ])
 class HttpKeyServiceTest {
 

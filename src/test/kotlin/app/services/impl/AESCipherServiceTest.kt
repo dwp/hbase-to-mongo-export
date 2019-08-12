@@ -16,7 +16,17 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b"])
+@TestPropertySource(properties = [
+    "data.table.name=ucfs-data",
+    "column.family=topic",
+    "topic.name=db.a.b",
+    "identity.keystore=resources/identity.jks",
+    "trust.keystore=resources/truststore.jks",
+    "identity.store.password=changeit",
+    "identity.key.password=changeit",
+    "trust.store.password=changeit",
+    "identity.store.alias=cid"
+])
 class AESCipherServiceTest {
 
     @Test

@@ -8,8 +8,10 @@ import com.google.gson.Gson
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
+import org.apache.http.ssl.SSLContexts
 import org.apache.http.util.EntityUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,11 +19,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.client.CloseableHttpClient
+import org.bouncycastle.crypto.tls.ConnectionEnd.client
 
 @Service
 @Profile("httpDataKeyService")
-class HttpKeyService(private val httpClient: HttpClient): KeyService {
+class HttpKeyService(private val httpClient: HttpClient) : KeyService {
 
     override fun batchDataKey(): DataKeyResult {
         val response = httpClient.execute(HttpGet("$dataKeyServiceUrl/datakey"))
@@ -29,12 +35,12 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
             val entity = response.entity
             val result = BufferedReader(InputStreamReader(entity.content))
                     .use(BufferedReader::readText).let {
-                Gson().fromJson(it, DataKeyResult::class.java)
-            }
+                        Gson().fromJson(it, DataKeyResult::class.java)
+                    }
             EntityUtils.consume(entity)
             result
         }
-        else  {
+        else {
             throw DataKeyServiceUnavailableException(
                     "DataKeyService returned status code '${response.statusLine.statusCode}'.")
         }
@@ -44,11 +50,11 @@ class HttpKeyService(private val httpClient: HttpClient): KeyService {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         val idPart = encryptionKeyId.replace(Regex(".*/"), "")
         val cacheKey = "$encryptedKey/$idPart"
-        return if (decryptedKeyCache.containsKey(cacheKey))  {
+        return if (decryptedKeyCache.containsKey(cacheKey)) {
             decryptedKeyCache.get(cacheKey)!!
         }
         else {
-           val httpPost = HttpPost("$dataKeyServiceUrl/datakey/actions/decrypt?keyId=$idPart")
+            val httpPost = HttpPost("$dataKeyServiceUrl/datakey/actions/decrypt?keyId=$idPart")
             httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
             val response = httpClient.execute(httpPost)
             return when {

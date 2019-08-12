@@ -23,7 +23,13 @@ import java.io.File
     "compress.output=false",
     "encrypt.output=false",
     "column.family=topic",
-    "topic.name=db.a.b"
+    "topic.name=db.a.b",
+    "identity.keystore=resources/identity.jks",
+    "trust.keystore=resources/truststore.jks",
+    "identity.store.password=changeit",
+    "identity.key.password=changeit",
+    "trust.store.password=changeit",
+    "identity.store.alias=cid"
 ])
 class DirectoryWriterChunkingTest {
 
