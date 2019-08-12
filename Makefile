@@ -157,7 +157,7 @@ logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as req
 reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
 
 .PHONY: local-all-collections-test
-local-all-collections-test: build-jar up add-hbase-to-hosts ## Build a local jar, then run it repeat times for each configured collection
+local-all-collections-test: build-jar up add-containers-to-hosts ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -165,7 +165,6 @@ local-all-collections-test: build-jar up add-hbase-to-hosts ## Build a local jar
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		pushd scripts; \
 		./read-topics-csv.sh \
 			topics-test.csv \
@@ -175,6 +174,7 @@ local-all-collections-test: build-jar up add-hbase-to-hosts ## Build a local jar
 			$(s3_prefix_folder) \
 			$(aws_default_region) \
 			default \
-			http://localhost:8090 ;\
+			http://local-hbase:8080 \
+			http://local-dks:8090 ;\
 		popd ;\
 	}
