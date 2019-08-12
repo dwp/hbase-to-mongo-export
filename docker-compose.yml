@@ -22,6 +22,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --zookeeper-quorum hbase
       --data-key-service http://dks-standalone:8090/datakey
       --dump-table-contents
       --completed-flag data/ready

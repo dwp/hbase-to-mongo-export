@@ -7,7 +7,7 @@ AWS_SECRET_ACCESS_KEY=$4
 S3_PREFIX_FOLDER=${5:-"test-exporter"}
 AWS_DEFAULT_REGION=${6:-"eu-west-2"}
 AWS_DEFAULT_PROFILE=${7:-"default"}
-HBASE_URL=${8:-"http://local-hbase:8090"}
+HBASE_URL=${8:-"http://local-hbase:9090"}
 DATA_KEY_SERVICE_URL=${9:-"http://local-dks:8090"}
 
 TODAY=$(date +"%Y-%m-%d")

@@ -173,7 +173,7 @@ local-all-collections-test: build-jar up add-containers-to-hosts ## Build a loca
 			$(s3_prefix_folder) \
 			$(aws_default_region) \
 			default \
-			http://local-hbase:8080 \
+			http://local-hbase \
 			http://local-dks:8090 ;\
 		popd ;\
 	}

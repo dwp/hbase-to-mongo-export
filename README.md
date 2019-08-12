@@ -20,13 +20,13 @@ mongo backup format, i.e. 1 json record per line.
   |-------------------------------|-----------------------|--------------
   | `compress.output`             | true                  | Whether to compress the output.
   | `encrypt.output`              | true                  | Whether to encrypt the output.
-  | `data.key.service.url`        | http://localhost:8080 | Url of remote data key service.
+  | `data.key.service.url`        | http://local-dks:8090 | Url of remote data key service. (set this to `http://local-dks:8090` to run from IDE).
   | `directory.output`            | mongo-export/2019080  | Directory to write output files to.
   | `file.output`                 | export20190808.txt    | File to write output to - only needed if `outputToFile` spring profile is active so not used in production.
   | `aws.region`                  | eu-west-2             | AWS Region to use for client auth - required when `outputToS3` is used
   | `s3.bucket`                   | a1b2c3d               | S3 bucket to write output to - required when `outputToS3` spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
   | `s3.folder`                   | mongo-export/2019080  | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
-  | `hbase.zookeeper.quorum`      | hbase                 | Name of the hbase host (set this to `localhost` to run from IDE).
+  | `hbase.zookeeper.quorum`      | http://local-hbase    | Name of the hbase host (set this to `local-hbase` to run from IDE).
   | `output.batch.size.max.bytes` | 100000                | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
   | `source.cipher.algorithm`     | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
   | `source.table.name`           | k2hb:ingest           | Table in hbase to read data from.
@@ -167,7 +167,7 @@ aws_secret_access_key=secretsecretsecret
 * Arguments:
 ```
 --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---hbase.zookeeper.quorum=http://local-hbase:8080
+--hbase.zookeeper.quorum=http://local-hbase
 --data.key.service.url=http://local-dks:8090
 --data.table.name=ucfs-data
 --column.family=topic
