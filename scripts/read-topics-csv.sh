@@ -45,7 +45,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
       --data.key.service.url="${DATA_KEY_SERVICE_URL}" \
-      --aws.regionn="${AWS_DEFAULT_REGION}" \
+      --aws.region="${AWS_DEFAULT_REGION}" \
       --s3.bucket="${S3_BUCKET}" \
       --s3.prefix.folder="${S3_FOLDER}" \
       --data.table.name=ucfs-data \
