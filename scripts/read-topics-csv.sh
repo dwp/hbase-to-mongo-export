@@ -35,17 +35,17 @@ fi
 cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
   do
     echo "Processing: ${TOPIC_NAME} into folder ${S3_FOLDER}"
-    exit 1
+
+    export AWS_DEFAULT_PROFILE="${AWS_DEFAULT_PROFILE}"
+    export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
+    export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
     java -jar "${JAR_FILE}" \
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
-      --data_key_service_url="${DATA_KEY_SERVICE_URL}" \
-      --aws_default_region="${AWS_DEFAULT_REGION}" \
-      --aws_access_key_id="${AWS_ACCESS_KEY_ID}" \
-      --aws_secret_access_key="${AWS_SECRET_ACCESS_KEY}" \
-      --aws_default_profile="${AWS_DEFAULT_PROFILE}" \
-      --s3_bucket="${S3_BUCKET}" \
-      --s3_prefix_folder="${S3_FOLDER}";
+      --data.key.service.rl="${DATA_KEY_SERVICE_URL}" \
+      --aws.default.region="${AWS_DEFAULT_REGION}" \
+      --s3.bucket="${S3_BUCKET}" \
+      --s3.prefix.folder="${S3_FOLDER}";
   done
 
 echo "Finished topics csv file ${TOPICS_CSV_FILE}"

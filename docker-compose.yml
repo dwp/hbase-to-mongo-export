@@ -44,7 +44,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -67,7 +67,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
