@@ -9,5 +9,5 @@
 !/settings.gradle.kts
 !/gradle/
 !/entrypoint.sh
-!/resources/dks/
+!/resources/certs/dks/
 !/scripts/application_dks.properties

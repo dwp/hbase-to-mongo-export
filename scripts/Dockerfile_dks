@@ -1,6 +1,6 @@
 FROM centos
 
-EXPOSE 8080
+EXPOSE 8080, 8443
 
 RUN mkdir /opt/data-key-service
 
@@ -10,9 +10,8 @@ RUN yum install -y java-1.8.0-openjdk wget jq
 ENV JAVA_HOME /etc/alternatives/jre
 
 WORKDIR /opt/data-key-service
-
-COPY ../resources/dks/* .
-COPY application_dks.properties .
+COPY scripts/application_dks.properties ./
+COPY resources/certs/dks/* ./
 
 RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
     | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document dks-latest.jar
