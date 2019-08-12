@@ -42,7 +42,7 @@ services:
       - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
+      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: >-
       --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
       --data.table.name=ucfs-data
@@ -65,7 +65,7 @@ services:
       - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
+      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: >-
       --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
       --data.table.name=ucfs-data
@@ -90,7 +90,7 @@ services:
       - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
+      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: >-
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
       --data.table.name=ucfs-data
@@ -119,7 +119,7 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
+      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "integration"
     environment:
       - FILE_NAME=data/ucdata-file-output.txt
