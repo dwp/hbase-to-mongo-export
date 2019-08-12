@@ -18,9 +18,17 @@ services:
     container_name: hbase-populate
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-    command: "--dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
+    command: >-
+      --data-key-service http://dks-standalone:8080/datakey
+      --dump-table-contents
+      --completed-flag data/ready
+      --remove-output-file data/ucdata-file-output.txt
+      --data-table ucfs-data
+      --topics-table ucfs-topics
+      --test-configuration-file test-config.json
 
   hbase-to-mongo-export-file:
     image: hbase-to-mongo-export
@@ -31,14 +39,18 @@ services:
     container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
-      - hbase-populate
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
-      --source.table.name=ucdata
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
+      --data.key.service.url=http://dks-standalone:8080
       --file.output=data/ucdata-file-output.txt
+      --output.batch.size.max.bytes=2048
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -49,16 +61,20 @@ services:
     container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
-      --source.table.name=ucdata
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
       --directory.output=data
-      --encrypt.output=false
-      --compress.output=false
+      --encrypt.output=true
+      --compress.output=true
       --output.batch.size.max.bytes=2048
+      --data.key.service.url=http://dks-standalone:8080
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -69,12 +85,14 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
+      - dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
-      --source.table.name=ucdata
-      --data.ready.flag.location=data/ready
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+      --data.table.name=ucfs-data
+      --column.family=topic
+      --topic.name=db.core.addressDeclaration
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
@@ -95,10 +113,27 @@ services:
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
     depends_on:
-      - hbase-to-mongo-export-file
+      - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: "integration"
+    environment:
+      - FILE_NAME=data/ucdata-file-output.txt
+      - EXPECTED_TIMESTAMP=10
+      - EXPECTED_LINE_COUNT=7
+
+  dks-standalone:
+    image: dks-standalone
+    ports:
+      - 8080:8080
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile_dks
+    container_name: dks-standalone
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
 volumes:
   shared-volume:

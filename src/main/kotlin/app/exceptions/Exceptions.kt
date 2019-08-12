@@ -1,11 +1,11 @@
 package app.exceptions
 
-class MissingFieldException(id: String, field: String):
+class MissingFieldException(id: ByteArray, field: String):
         Exception("Missing field '$field' in record '$id'.")
 
 class DecryptionFailureException (database: String,
                                   collection: String,
-                                  id: String,
+                                  id: ByteArray,
                                   timestamp: Long,
                                   masterKeyId: String,
                                   cause: Throwable): Exception("""
