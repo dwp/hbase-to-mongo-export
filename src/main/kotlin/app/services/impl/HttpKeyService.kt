@@ -8,10 +8,8 @@ import com.google.gson.Gson
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
-import org.apache.http.ssl.SSLContexts
 import org.apache.http.util.EntityUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,11 +17,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.impl.client.CloseableHttpClient
-import org.bouncycastle.crypto.tls.ConnectionEnd.client
+import java.net.URLEncoder
 
 @Service
 @Profile("httpDataKeyService")
@@ -48,13 +43,14 @@ class HttpKeyService(private val httpClient: HttpClient) : KeyService {
 
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
-        val idPart = encryptionKeyId.replace(Regex(".*/"), "")
-        val cacheKey = "$encryptedKey/$idPart"
+        val cacheKey = "$encryptedKey/$encryptionKeyId"
         return if (decryptedKeyCache.containsKey(cacheKey)) {
-            decryptedKeyCache.get(cacheKey)!!
+            decryptedKeyCache[cacheKey]!!
         }
         else {
-            val httpPost = HttpPost("$dataKeyServiceUrl/datakey/actions/decrypt?keyId=$idPart")
+            val url = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
+            logger.info("url: '$url'.")
+            val httpPost = HttpPost(url)
             httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
             val response = httpClient.execute(httpPost)
             return when {
@@ -63,7 +59,7 @@ class HttpKeyService(private val httpClient: HttpClient) : KeyService {
                     val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
                     EntityUtils.consume(entity)
                     val dataKeyResult = Gson().fromJson(text, DataKeyResult::class.java)
-                    decryptedKeyCache.put(cacheKey, dataKeyResult.plaintextDataKey)
+                    decryptedKeyCache[cacheKey] = dataKeyResult.plaintextDataKey
                     dataKeyResult.plaintextDataKey
                 }
                 response.statusLine.statusCode == 400 ->

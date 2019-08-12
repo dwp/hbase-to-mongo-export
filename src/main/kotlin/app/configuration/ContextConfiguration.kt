@@ -1,6 +1,5 @@
 package app.configuration
 
-import app.services.impl.HttpKeyService
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
@@ -26,7 +25,7 @@ class ContextConfiguration {
     @Profile("secureHttpClient")
     fun secureHttpClient() = HttpClients.custom()
             .setSSLSocketFactory(connectionFactory())
-            .build()
+            .build()!!
 
     fun connectionFactory() = SSLConnectionSocketFactory(
                 sslContext(),
@@ -45,11 +44,11 @@ class ContextConfiguration {
 
     @Bean
     @Profile("strongRng")
-    fun secureRandom() = SecureRandom.getInstanceStrong()
+    fun secureRandom() = SecureRandom.getInstanceStrong()!!
 
     @Bean
     @Profile("insecureHttpClient")
-    fun insecureHttpClient() = HttpClients.createDefault()
+    fun insecureHttpClient() = HttpClients.createDefault()!!
 
     @Bean
     @Profile("realHbaseDataSource")

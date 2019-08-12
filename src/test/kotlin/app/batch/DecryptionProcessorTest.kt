@@ -72,6 +72,5 @@ class DecryptionProcessorTest {
     private lateinit var decryptionProcessor: DecryptionProcessor
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DirectoryWriterChunkingTest::class.toString())
     }
 }
