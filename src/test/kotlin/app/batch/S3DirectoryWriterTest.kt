@@ -30,6 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner
     "s3.bucket=not_set",
     "s3.prefix.folder=not_set"
 ])
+
 class S3DirectoryWriterTest {
 
     @Test
@@ -38,9 +39,9 @@ class S3DirectoryWriterTest {
         val listOfLists: MutableList<MutableList<String>> = mutableListOf()
         var total = 0
 
-        for (i in 1 .. 10) {
+        for (i in 1..10) {
             val list: MutableList<String> = mutableListOf()
-            for (j in 1 .. 10) {
+            for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
                 list.add(item)

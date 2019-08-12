@@ -25,7 +25,7 @@ class S3DirectoryWriter(keyService: KeyService,
                         cipherService: CipherService) : Writer(keyService, cipherService) {
 
     @Autowired
-    private  lateinit var s3Client: AmazonS3Client
+    private lateinit var s3Client: AmazonS3Client
 
     override fun writeToTarget(filePath: String, fileBytes: ByteArray) {
         // See also https://github.com/aws/aws-sdk-java
