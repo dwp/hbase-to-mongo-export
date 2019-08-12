@@ -36,7 +36,9 @@ fi
 cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
   do
     echo "Processing: ${TOPIC_NAME} into folder ${S3_FOLDER}"
+    echo ""
 
+    export AWS_REGION="${AWS_DEFAULT_REGION}"
     export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}"
     export AWS_DEFAULT_PROFILE="${AWS_DEFAULT_PROFILE}"
     export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
@@ -54,8 +56,8 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --encrypt.output=true \
       --compress.output=true \
       --output.batch.size.max.bytes=2048 ;
-    exit 1
   done
 
+echo ""
 echo "Finished topics csv file ${TOPICS_CSV_FILE}"
 echo ""
