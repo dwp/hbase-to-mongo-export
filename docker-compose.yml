@@ -112,7 +112,7 @@ services:
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
     build:
-      context: scripts
+      context: .
       dockerfile: Dockerfile_itests
     container_name: hbase-to-mongo-export-itests
     depends_on:
