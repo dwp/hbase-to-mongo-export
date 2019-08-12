@@ -110,7 +110,7 @@ can be updated in the `docker-compose` file
                       aws_default_profile=profile \
                       s3_bucket=9876543210 \
                       s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=http://dks-standalone-http:8090
+                      data_key_service_url=http://dks-standalone-https:8091
 ```
 then check the logs
 ```

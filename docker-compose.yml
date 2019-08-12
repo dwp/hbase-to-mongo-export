@@ -39,16 +39,17 @@ services:
     container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
-      - dks-standalone-http
+      - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
     command: >-
       --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=http://dks-standalone-http:8090
+      --data.key.service.url=http://dks-standalone-https:8091
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
 
@@ -61,9 +62,10 @@ services:
     container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
-      - dks-standalone-http
+      - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
     command: >-
       --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
       --data.table.name=ucfs-data
@@ -74,7 +76,7 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=http://dks-standalone-http:8090
+      --data.key.service.url=http://dks-standalone-https:8091
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -85,9 +87,10 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
-      - dks-standalone-http
+      - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
     command: >-
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
       --data.table.name=ucfs-data
@@ -96,7 +99,7 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=${DATA_KEY_SERVICE_URL}
+      --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
@@ -116,6 +119,7 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - /opt/hbase-to-mongo-export/certs:/resources/certs/htme
     command: "integration"
     environment:
       - FILE_NAME=data/ucdata-file-output.txt
