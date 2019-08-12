@@ -23,6 +23,9 @@ import org.springframework.test.context.junit4.SpringRunner
     "source.table.name=ucdata",
     "compress.output=true",
     "encrypt.output=true",
+    "data.table.name=ucfs-data",
+    "column.family=topic",
+    "topic.name=db.a.b",
     "aws.region=eu-west-1",
     "s3.bucket=not_set",
     "s3.prefix.folder=not_set"
@@ -50,7 +53,7 @@ class S3DirectoryWriterTest {
         }
 
         s3DirectoryWriter.writeOutput()
-        Mockito.verify(s3Client, Mockito.times(4))
+        Mockito.verify(s3Client, Mockito.times(8))
                 .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
     }
 
