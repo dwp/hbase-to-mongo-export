@@ -23,7 +23,8 @@ import java.io.File
     "compress.output=false",
     "encrypt.output=false",
     "column.family=topic",
-    "topic.name=db.a.b"
+    "topic.name=db.a.b",
+    "hbase.zookeeper.quorum=hbase"
 ])
 class DirectoryWriterChunkingTest {
 

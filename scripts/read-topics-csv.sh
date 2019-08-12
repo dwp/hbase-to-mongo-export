@@ -36,11 +36,11 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
     exit 1
     java -jar "${JAR_FILE}" \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
-      --ws_default_region="${AWS_DEFAULT_REGION}" \
-      --ws_access_key_id="${AWS_ACCESS_KEY_ID}" \
-      --ws_secret_access_key="${AWS_SECRET_ACCESS_KEY}" \
-      --ws_default_profile="${AWS_DEFAULT_PROFILE}" \
-      --3_bucket="${S3_BUCKET}" \
-      --3_prefix_folder="${S3_FOLDER}" \
-      --ata_key_service_url="${DATA_KEY_SERVICE_URL}"
+      --data_key_service_url="${DATA_KEY_SERVICE_URL}" \
+      --aws_default_region="${AWS_DEFAULT_REGION}" \
+      --aws_access_key_id="${AWS_ACCESS_KEY_ID}" \
+      --aws_secret_access_key="${AWS_SECRET_ACCESS_KEY}" \
+      --aws_default_profile="${AWS_DEFAULT_PROFILE}" \
+      --s3_bucket="${S3_BUCKET}" \
+      --s3_prefix_folder="${S3_FOLDER}";
   done

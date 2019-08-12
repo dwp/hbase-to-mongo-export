@@ -34,7 +34,8 @@ import java.io.ByteArrayInputStream
     "data.table.name=ucfs-data",
     "data.key.service.url=dummy.com:8080",
     "column.family=topic",
-    "topic.name=db.a.b"
+    "topic.name=db.a.b",
+    "hbase.zookeeper.quorum=hbase"
 ])
 class HttpKeyServiceTest {
 
