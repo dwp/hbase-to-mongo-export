@@ -57,7 +57,7 @@ class ContextConfiguration {
         })
     }
 
-    @Value("\${hbase.zookeeper.quorum:hbase}")
+    @Value("\${hbase.zookeeper.quorum}")
     private lateinit var hbaseZookeeperQuorum: String
 
     @Value("\${data.ready.flag.location:}")

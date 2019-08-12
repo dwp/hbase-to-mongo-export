@@ -25,7 +25,7 @@ import java.nio.charset.Charset
 @RunWith(SpringRunner::class)
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b"])
+@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b", "hbase.zookeeper.quorum=hbase"])
 class HBaseReaderTest {
 
     private val rowId = "EXPECTED_ID"
