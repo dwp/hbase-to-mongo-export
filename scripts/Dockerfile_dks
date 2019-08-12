@@ -1,6 +1,7 @@
 FROM centos
 
-EXPOSE 8080, 8443
+EXPOSE 8080
+EXPOSE 8443
 
 RUN mkdir /opt/data-key-service
 
