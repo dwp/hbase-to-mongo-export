@@ -1,5 +1,6 @@
 # Ignore everything
-**
+# **
+# Not sure why this ignore file is  ignoring everything
 
 # Allow specifics
 !/src

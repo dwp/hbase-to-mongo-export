@@ -10,6 +10,35 @@ services:
       - 16201:16201
     container_name: hbase
 
+  s3:
+    image: localstack/localstack:latest
+    ports:
+      - '4563-4584:4563-4584'
+      - '8055:8080'
+    container_name: s3
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - '/var:/tmp/localstack'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+
+  s3-bucket-provision:
+    image: s3-bucket-provision
+    build:
+      context: scripts
+      dockerfile: Dockerfile-s3-bucket-provision
+    container_name: s3-bucket-provision
+    depends_on:
+      - s3
+    environment:
+      - AWS_REGION=${AWS_DEFAULT_REGION}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+
+
   hbase-populate:
     image: hbase-populate
     build:
@@ -19,7 +48,7 @@ services:
     depends_on:
       - hbase
     volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/tmp/hbase-to-mongo-export/data
     command: "--dump-table-contents --completed-flag data/ready --remove-output-file data/ucdata-file-output.txt"
 
   hbase-to-mongo-export-file:
@@ -33,7 +62,7 @@ services:
       - hbase
       - hbase-populate
     volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/tmp/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToFile,batchRun,strongRng
       --source.table.name=ucdata
@@ -50,7 +79,7 @@ services:
     depends_on:
       - hbase
     volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/tmp/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToDirectory,batchRun,strongRng
       --source.table.name=ucdata
@@ -69,12 +98,14 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
+      - s3-bucket-provision
     volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/tmp/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=phoneyCipherService,phoneyDataKeyService,localDataSource,outputToS3,batchRun,strongRng
       --source.table.name=ucdata
       --data.ready.flag.location=data/ready
+      --directory.output=ephemera
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
@@ -97,7 +128,7 @@ services:
     depends_on:
       - hbase-to-mongo-export-file
     volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
+      - shared-volume:/tmp/hbase-to-mongo-export/data
     command: "integration"
 
 volumes:
