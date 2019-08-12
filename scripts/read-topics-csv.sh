@@ -7,7 +7,7 @@ AWS_SECRET_ACCESS_KEY=$4
 S3_PREFIX_FOLDER=${5:-"test-exporter"}
 AWS_DEFAULT_REGION=${6:-"eu-west-2"}
 AWS_DEFAULT_PROFILE=${7:-"default"}
-HBASE_URL=${8:-"http://local-hbase:9090"}
+HBASE_URL=${8:-"http://local-hbase"}
 DATA_KEY_SERVICE_URL=${9:-"http://local-dks:8090"}
 
 TODAY=$(date +"%Y-%m-%d")
@@ -36,6 +36,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
   do
     echo "Processing: ${TOPIC_NAME} into folder ${S3_FOLDER}"
 
+    export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}"
     export AWS_DEFAULT_PROFILE="${AWS_DEFAULT_PROFILE}"
     export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
     export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
@@ -43,9 +44,15 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
       --data.key.service.rl="${DATA_KEY_SERVICE_URL}" \
-      --aws.default.region="${AWS_DEFAULT_REGION}" \
+      --aws.regionn="${AWS_DEFAULT_REGION}" \
       --s3.bucket="${S3_BUCKET}" \
-      --s3.prefix.folder="${S3_FOLDER}";
+      --s3.prefix.folder="${S3_FOLDER}" \
+      --data.table.name=ucfs-data \
+      --column.family=topic \
+      --topic.name="${TOPIC_NAME}" \
+      --encrypt.output=true \
+      --compress.output=true \
+      --output.batch.size.max.bytes=2048 ;
   done
 
 echo "Finished topics csv file ${TOPICS_CSV_FILE}"

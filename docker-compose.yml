@@ -23,7 +23,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --zookeeper-quorum hbase
-      --data-key-service http://dks-standalone:8090/datakey
+      --data-key-service http://dks-standalone:8080/datakey
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
@@ -50,7 +50,7 @@ services:
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=http://dks-standalone:8090
+      --data.key.service.url=http://dks-standalone:8080
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
 
@@ -77,7 +77,7 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=http://dks-standalone:8090
+      --data.key.service.url=http://dks-standalone:8080
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export

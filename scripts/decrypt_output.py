@@ -29,7 +29,7 @@ def main():
         ciphertext = config['ciphertext']
         master_key_id = regex.sub(r'^.*?/', '', config['dataKeyEncryptionKeyId'])
         result = \
-            requests.post(f"http://localhost:8080/datakey/actions/decrypt?keyId={master_key_id}",
+            requests.post(f"http://local-dks:8090/datakey/actions/decrypt?keyId={master_key_id}",
                           data=ciphertext)
         content = result.json()
         plaintext = content['plaintextDataKey']
