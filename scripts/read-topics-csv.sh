@@ -7,10 +7,11 @@ AWS_SECRET_ACCESS_KEY=$4
 S3_PREFIX_FOLDER=${5:-"test-exporter"}
 AWS_DEFAULT_REGION=${6:-"eu-west-2"}
 AWS_DEFAULT_PROFILE=${7:-"default"}
-HBASE_URL=${8:-"http://local-hbase"}
+HBASE_URL=${8:-"local-hbase"}
 DATA_KEY_SERVICE_URL=${9:-"http://local-dks:8090"}
 
 TODAY=$(date +"%Y-%m-%d")
+# shellcheck disable=SC2002
 HBASE_TO_MONGO_VERSION=$(cat ../gradle.properties | cut -f2 -d'=')
 S3_FOLDER="${S3_PREFIX_FOLDER}/${TODAY}"
 JAR_FILE="../build/libs/hbase-to-mongo-export-${HBASE_TO_MONGO_VERSION}.jar"

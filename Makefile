@@ -5,6 +5,8 @@ aws_access_key_id=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
 data_key_service_url=http://dks-standalone:8080
+local_hbase_url=local-hbase
+local_dks_url=http://local-dks:8090
 follow_flag=--follow
 
 default: help
@@ -157,7 +159,7 @@ logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as req
 reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
 
 .PHONY: local-all-collections-test
-local-all-collections-test: build-jar up add-containers-to-hosts ## Build a local jar, then run it repeat times for each configured collection
+local-all-collections-test: ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
@@ -173,7 +175,7 @@ local-all-collections-test: build-jar up add-containers-to-hosts ## Build a loca
 			$(s3_prefix_folder) \
 			$(aws_default_region) \
 			default \
-			http://local-hbase \
-			http://local-dks:8090 ;\
+			$(local_hbase_url) \
+			$(local_dks_url) ;\
 		popd ;\
 	}
