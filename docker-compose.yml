@@ -18,11 +18,11 @@ services:
     container_name: hbase-populate
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --data-key-service http://dks-standalone:8080/datakey
+      --data-key-service http://dks-standalone-http:8090/datakey
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
@@ -39,7 +39,7 @@ services:
     container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
@@ -48,7 +48,7 @@ services:
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=http://dks-standalone:8080
+      --data.key.service.url=http://dks-standalone-http:8090
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
 
@@ -61,7 +61,7 @@ services:
     container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
@@ -74,7 +74,7 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=http://dks-standalone:8080
+      --data.key.service.url=http://dks-standalone-http:8090
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -85,7 +85,7 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
@@ -122,18 +122,31 @@ services:
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 
-  dks-standalone:
-    image: dks-standalone
+  dks-standalone-http:
+    image: dks-standalone-http
     ports:
-      - 8080:8080
+      - 8090:8080
     build:
       context: .
       dockerfile: scripts/Dockerfile_dks
-    container_name: dks-standalone
+    container_name: dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
+
+  dks-standalone-https:
+    image: dks-standalone-https
+    ports:
+      - 8091:8443
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile_dks
+    container_name: dks-standalone-https
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_CONFIG_LOCATION=application_dks.properties
 
 volumes:
   shared-volume:

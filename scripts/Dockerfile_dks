@@ -11,6 +11,9 @@ ENV JAVA_HOME /etc/alternatives/jre
 
 WORKDIR /opt/data-key-service
 
+COPY resources/dks/* .
+COPY /scripts/application_dks.properties .
+
 RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
     | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document dks-latest.jar
 

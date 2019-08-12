@@ -4,7 +4,7 @@ aws_secret_access_key=not_set
 aws_access_key_id=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
-data_key_service_url=http://dks-standalone:8080
+data_key_service_url=http://dks-standalone-http:8090
 follow_flag=--follow
 
 default: help
@@ -41,7 +41,7 @@ build-images: ## Build the hbase, population, and exporter images
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build hbase dks-standalone hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
@@ -56,7 +56,7 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d hbase dks-standalone hbase-populate; \
+		docker-compose up -d hbase dks-standalone-http dks-standalone-https hbase-populate; \
 		echo "Waiting for population"; \
 		sleep 5; \
 		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory; \

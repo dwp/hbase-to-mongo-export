@@ -20,7 +20,7 @@ mongo backup format, i.e. 1 json record per line.
   |-------------------------------|-----------------------|--------------
   | `compress.output`             | true                  | Whether to compress the output.
   | `encrypt.output`              | true                  | Whether to encrypt the output.
-  | `data.key.service.url`        | http://localhost:8080 | Url of remote data key service.
+  | `data.key.service.url`        | http://localhost:8090 | Url of remote data key service.
   | `directory.output`            | mongo-export/2019080  | Directory to write output files to.
   | `file.output`                 | export20190808.txt    | File to write output to - only needed if `outputToFile` spring profile is active so not used in production.
   | `aws.region`                  | eu-west-2             | AWS Region to use for client auth - required when `outputToS3` is used
@@ -110,7 +110,7 @@ can be updated in the `docker-compose` file
                       aws_default_profile=profile \
                       s3_bucket=9876543210 \
                       s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=http://dks-standalone:8080
+                      data_key_service_url=http://dks-standalone-http:8090
 ```
 then check the logs
 ```
