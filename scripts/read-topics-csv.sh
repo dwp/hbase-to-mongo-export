@@ -44,7 +44,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
     java -jar "${JAR_FILE}" \
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
-      --data.key.service.rl="${DATA_KEY_SERVICE_URL}" \
+      --data.key.service.url="${DATA_KEY_SERVICE_URL}" \
       --aws.regionn="${AWS_DEFAULT_REGION}" \
       --s3.bucket="${S3_BUCKET}" \
       --s3.prefix.folder="${S3_FOLDER}" \
@@ -54,6 +54,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --encrypt.output=true \
       --compress.output=true \
       --output.batch.size.max.bytes=2048 ;
+    exit 1
   done
 
 echo "Finished topics csv file ${TOPICS_CSV_FILE}"
