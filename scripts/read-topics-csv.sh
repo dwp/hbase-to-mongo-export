@@ -37,6 +37,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
     echo "Processing: ${TOPIC_NAME} into folder ${S3_FOLDER}"
     exit 1
     java -jar "${JAR_FILE}" \
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
       --data_key_service_url="${DATA_KEY_SERVICE_URL}" \
       --aws_default_region="${AWS_DEFAULT_REGION}" \

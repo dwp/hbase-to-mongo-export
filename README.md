@@ -166,9 +166,15 @@ aws_secret_access_key=secretsecretsecret
 
 * Arguments:
 ```
---spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---source.table.name=ucdata
---hbase.zookeeper.quorum=localhost
+--spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+--hbase.zookeeper.quorum=http://local-hbase:8080
+--data.key.service.url=http://local-dks:8090
+--data.table.name=ucfs-data
+--column.family=topic
+--topic.name=db.core.addressDeclaration
+--encrypt.output=true
+--compress.output=true
+--output.batch.size.max.bytes=2048
 --aws.region=eu-west-1
 --s3.bucket=9876543210
 --s3.folder=test/businessdata/mongo/ucdata
