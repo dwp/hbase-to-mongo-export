@@ -1,43 +1,32 @@
 package app.batch
 
-import app.domain.DataKeyResult
-import app.domain.EncryptionResult
 import app.services.CipherService
 import app.services.KeyService
+import com.amazonaws.AmazonServiceException
+import com.amazonaws.SdkClientException
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import java.io.*
-
-import com.amazonaws.AmazonServiceException
-import com.amazonaws.SdkClientException
-import com.amazonaws.regions.Regions
-import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.PutObjectRequest
-import org.springframework.beans.factory.annotation.Autowired
-import java.nio.charset.StandardCharsets
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 
 // See also https://github.com/aws/aws-sdk-java
 
 @Component
 @Profile("outputToS3")
-class S3DirectoryWriter(private val keyService: KeyService,
-                        private val cipherService: CipherService) : Writer<String>(keyService,cipherService){
+class S3DirectoryWriter(keyService: KeyService,
+                        cipherService: CipherService) : Writer(keyService, cipherService) {
 
-    @Autowired
-    private  lateinit var s3Client: AmazonS3Client
-
-    override fun writeData( encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult) {
+    override fun writeToTarget(filePath: String, fileBytes: ByteArray) {
         // See also https://github.com/aws/aws-sdk-java
-        val fullFilePath = outputPath(++currentOutputFileNumber)
-        val fileBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
         val bytesSize = fileBytes.size.toLong()
-        logger.info("Writing file 's3://$s3BucketName/$fullFilePath' of '$bytesSize' bytes.")
+        logger.info("Writing file 's3://$s3BucketName/$filePath' of '$bytesSize' bytes.")
 
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
@@ -48,9 +37,15 @@ class S3DirectoryWriter(private val keyService: KeyService,
 
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
-        val objKeyName: String = fullFilePath.toString()
+        val objKeyName: String = filePath
 
         try {
+            //This code expects that you have AWS credentials set up per:
+            // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
+            val s3Client = AmazonS3ClientBuilder.standard()
+                .withRegion(clientRegion)
+                .build()
+
             // Upload a file as a new object with ContentType and title specified.
             val metadata = ObjectMetadata()
             metadata.contentType = "binary/octetstream"
@@ -68,24 +63,20 @@ class S3DirectoryWriter(private val keyService: KeyService,
             // couldn't parse the response from Amazon S3.
             e.printStackTrace()
         }
-
     }
 
-    override fun outputPath(number: Int): Path {
-        return Paths.get("""$s3PrefixFolder/$tableName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
-                .format(number))
-    }
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriter::class.toString())
-    }
+    override fun outputLocation(): String = s3PrefixFolder
 
     @Value("\${aws.region}")
-    private var region: String = "eu-west-1"
+    private var region: String = "eu-west-2"
 
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String // i.e. "1234567890"
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())
+    }
 }
