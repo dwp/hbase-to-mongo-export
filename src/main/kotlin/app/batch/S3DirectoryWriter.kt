@@ -14,9 +14,10 @@ import java.io.*
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import org.springframework.beans.factory.annotation.Autowired
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -27,6 +28,9 @@ import java.nio.file.Paths
 @Profile("outputToS3")
 class S3DirectoryWriter(private val keyService: KeyService,
                         private val cipherService: CipherService) : Writer<String>(keyService,cipherService){
+
+    @Autowired
+    private  lateinit var s3Client: AmazonS3Client
 
     override fun writeData( encryptionResult: EncryptionResult, dataKeyResult: DataKeyResult) {
         // See also https://github.com/aws/aws-sdk-java
@@ -47,12 +51,6 @@ class S3DirectoryWriter(private val keyService: KeyService,
         val objKeyName: String = fullFilePath.toString()
 
         try {
-            //This code expects that you have AWS credentials set up per:
-            // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
-            val s3Client = AmazonS3ClientBuilder.standard()
-                    .withRegion(clientRegion)
-                    .build()
-
             // Upload a file as a new object with ContentType and title specified.
             val metadata = ObjectMetadata()
             metadata.contentType = "binary/octetstream"
