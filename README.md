@@ -20,13 +20,13 @@ mongo backup format, i.e. 1 json record per line.
   |-------------------------------|-----------------------|--------------
   | `compress.output`             | true                  | Whether to compress the output.
   | `encrypt.output`              | true                  | Whether to encrypt the output.
-  | `data.key.service.url`        | http://localhost:8080 | Url of remote data key service.
+  | `data.key.service.url`        | http://local-dks:8090 | Url of remote data key service. (set this to `http://local-dks:8090` to run from IDE).
   | `directory.output`            | mongo-export/2019080  | Directory to write output files to.
   | `file.output`                 | export20190808.txt    | File to write output to - only needed if `outputToFile` spring profile is active so not used in production.
   | `aws.region`                  | eu-west-2             | AWS Region to use for client auth - required when `outputToS3` is used
   | `s3.bucket`                   | a1b2c3d               | S3 bucket to write output to - required when `outputToS3` spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
   | `s3.folder`                   | mongo-export/2019080  | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
-  | `hbase.zookeeper.quorum`      | hbase                 | Name of the hbase host (set this to `localhost` to run from IDE).
+  | `hbase.zookeeper.quorum`      | http://local-hbase    | Name of the hbase host (set this to `local-hbase` to run from IDE).
   | `output.batch.size.max.bytes` | 100000                | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
   | `source.cipher.algorithm`     | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
   | `source.table.name`           | k2hb:ingest           | Table in hbase to read data from.
@@ -58,14 +58,14 @@ There are makefile commands for all your common actions;
 
  | Command                   | Description
  |---------------------------|--------------------
- | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container
+ | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container (http://local-hbase:8080) and dks-standalone container (http://local-dks:8090 and https://local-dks:8091 )
  | `build-all`               |      Build the jar file and then all docker images
  | `build-images`            |      Build the hbase, population, and exporter images
  | `build-jar`               |      Build the hbase exporter jar file
  | `destroy`                 |      Bring down the hbase and other services then delete all volumes
  | `dist`                    |      Assemble distribution files in build/dist
  | `down`                    |      Bring down the hbase and other services
- | `echo`                    |      Echo the current version
+ | `echo-version`            |      Echo the current version Jar version from Gradle settings
  | `hbase-shell`             |      Open an Hbase shell onto the running hbase container
  | `integration-all`         |      Build the jar and images, put up the containers, run the integration tests
  | `integration-tests`       |      (Re-)Run the integration tests in a Docker container
@@ -131,10 +131,10 @@ if the name given by zookeeper is then entered into the local `/etc/hosts` file.
    make up
 ```
 
-2. Add hbase entry in local /etc/hosts file:
-
+2. Add hbase and dks-standalone entry in local /etc/hosts file:
+See Make targets above for the names this puts in
 ```
-    make add-hbase-to-hosts
+    make add-containers-to-hosts
 ```
 
 It should now be possible to run code in an IDE against the local instance.
@@ -166,9 +166,15 @@ aws_secret_access_key=secretsecretsecret
 
 * Arguments:
 ```
---spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---source.table.name=ucdata
---hbase.zookeeper.quorum=localhost
+--spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+--hbase.zookeeper.quorum=http://local-hbase
+--data.key.service.url=http://local-dks:8090
+--data.table.name=ucfs-data
+--column.family=topic
+--topic.name=db.core.addressDeclaration
+--encrypt.output=true
+--compress.output=true
+--output.batch.size.max.bytes=2048
 --aws.region=eu-west-1
 --s3.bucket=9876543210
 --s3.folder=test/businessdata/mongo/ucdata

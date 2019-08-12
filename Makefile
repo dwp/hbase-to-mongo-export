@@ -5,6 +5,8 @@ aws_access_key_id=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
 data_key_service_url=http://dks-standalone:8080
+local_hbase_url=local-hbase
+local_dks_url=http://local-dks:8090
 follow_flag=--follow
 
 default: help
@@ -13,8 +15,8 @@ default: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: echo
-echo: ## Echo the current version
+.PHONY: echo-version
+echo-version: ## Echo the current version
 	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
 
 .PHONY: build-jar
@@ -25,9 +27,10 @@ build-jar: ## Build the hbase exporter jar file
 dist: ## Assemble distribution files in build/dist
 	./gradlew assembleDist
 
-.PHONY: add-hbase-to-hosts
-add-hbase-to-hosts: ## Update laptop hosts file with reference to hbase container
+.PHONY: add-containers-to-hosts
+add-containers-to-hosts: ## Update laptop hosts file with reference to hbase and dks-standalone containers
 	./scripts/add-hbase-to-hosts.sh;
+	./scripts/add-dks-to-hosts.sh;
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
@@ -158,35 +161,24 @@ logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as req
 .PHONY: reset-all
 reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
 
-.PHONY: build-s3
-build-s3: build ## Build the hbase, population, exporter images
+.PHONY: local-all-collections-test
+local-all-collections-test: ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build s3 s3-bucket-provision; \
+		pushd scripts; \
+		./read-topics-csv.sh \
+			topics-test.csv \
+			$(s3_bucket) \
+			$(aws_access_key_id) \
+			$(aws_secret_access_key) \
+			$(s3_prefix_folder) \
+			$(aws_default_region) \
+			default \
+			$(local_hbase_url) \
+			$(local_dks_url) ;\
+		popd ;\
 	}
-
-.PHONY: up-s3
-up-s3: ## Bring up a sample s3-exporter service
-	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
-		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
-		export S3_BUCKET=$(s3_bucket); \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up --build -d s3 s3-bucket-provision; \
-	}
-
-
-
-
-
-
-

@@ -50,6 +50,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --zookeeper-quorum hbase
       --data-key-service http://dks-standalone:8080/datakey
       --dump-table-contents
       --completed-flag data/ready
@@ -71,7 +72,8 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -93,7 +95,8 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -118,6 +121,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,realS3DataStore,outputToS3,batchRun,strongRng
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -153,10 +157,11 @@ services:
   dks-standalone:
     image: dks-standalone
     ports:
-      - 8080:8080
+      - 8090:8080
+      - 8091:443
     build:
-      context: .
-      dockerfile: scripts/Dockerfile_dks
+      context: scripts
+      dockerfile: Dockerfile_dks
     container_name: dks-standalone
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data

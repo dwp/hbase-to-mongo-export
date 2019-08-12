@@ -32,9 +32,10 @@ import java.io.ByteArrayInputStream
 @SpringBootTest
 @TestPropertySource(properties = [
     "data.table.name=ucfs-data",
-    "data.key.service.url=dummy.com:8080",
+    "data.key.service.url=dummy.com:8090",
     "column.family=topic",
-    "topic.name=db.a.b"
+    "topic.name=db.a.b",
+    "hbase.zookeeper.quorum=hbase"
 ])
 class HttpKeyServiceTest {
 

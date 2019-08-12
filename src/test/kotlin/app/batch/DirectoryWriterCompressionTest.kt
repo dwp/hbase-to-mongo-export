@@ -28,7 +28,8 @@ import java.nio.file.Paths
     "compress.output=true",
     "encrypt.output=false",
     "column.family=topic",
-    "topic.name=db.a.b"
+    "topic.name=db.a.b",
+    "hbase.zookeeper.quorum=hbase"
 ])
 class DirectoryWriterCompressionTest {
 
