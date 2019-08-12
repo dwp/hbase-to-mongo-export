@@ -8,7 +8,7 @@ import os
 import time
 import uuid
 
-import happybase
+import happybase 
 import requests
 import thriftpy2
 
