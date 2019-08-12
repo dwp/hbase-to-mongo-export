@@ -1,5 +1,6 @@
 package app.batch
 
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.junit.Test
@@ -23,10 +24,14 @@ import org.springframework.test.context.junit4.SpringRunner
     "source.table.name=ucdata",
     "compress.output=true",
     "encrypt.output=true",
+    "data.table.name=ucfs-data",
+    "column.family=topic",
+    "topic.name=db.a.b",
     "aws.region=eu-west-1",
     "s3.bucket=not_set",
     "s3.prefix.folder=not_set"
 ])
+
 class S3DirectoryWriterTest {
 
     @Test
@@ -35,9 +40,9 @@ class S3DirectoryWriterTest {
         val listOfLists: MutableList<MutableList<String>> = mutableListOf()
         var total = 0
 
-        for (i in 1 .. 10) {
+        for (i in 1..10) {
             val list: MutableList<String> = mutableListOf()
-            for (j in 1 .. 10) {
+            for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
                 list.add(item)
@@ -50,7 +55,7 @@ class S3DirectoryWriterTest {
         }
 
         s3DirectoryWriter.writeOutput()
-        Mockito.verify(s3Client, Mockito.times(4))
+        Mockito.verify(s3Client, Mockito.times(8))
                 .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
     }
 
@@ -58,7 +63,7 @@ class S3DirectoryWriterTest {
     private lateinit var s3DirectoryWriter: S3DirectoryWriter
 
     @Autowired
-    private lateinit var s3Client: AmazonS3Client
+    private lateinit var s3Client: AmazonS3
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriterTest::class.toString())

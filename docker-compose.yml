@@ -117,7 +117,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,realS3DataStore,outputToS3,batchRun,strongRng
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration

@@ -1,5 +1,8 @@
 package app.configuration
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
@@ -46,6 +49,16 @@ class ContextConfiguration {
 
         addShutdownHook(connection)
         return connection
+    }
+
+    @Bean
+    @Profile("realS3DataStore")
+    fun amazonS3(): AmazonS3 {
+        //This code expects that you have AWS credentials set up per:
+        // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
+        return AmazonS3ClientBuilder.standard()
+                .withCredentials(DefaultAWSCredentialsProviderChain())
+                .build()
     }
 
     private fun addShutdownHook(connection: Connection) {
