@@ -35,7 +35,8 @@ import java.io.ByteArrayInputStream
     "data.key.service.url=dummy.com:8090",
     "column.family=topic",
     "topic.name=db.a.b",
-    "hbase.zookeeper.quorum=hbase"
+    "hbase.zookeeper.quorum=hbase",
+    "aws.region=eu-west-2"
 ])
 class HttpKeyServiceTest {
 

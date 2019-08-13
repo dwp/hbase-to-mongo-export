@@ -167,8 +167,8 @@ aws_secret_access_key=secretsecretsecret
 * Arguments:
 ```
 --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---hbase.zookeeper.quorum=http://local-hbase
---data.key.service.url=http://local-dks:8090
+--hbase.zookeeper.quorum=local-hbase
+--data.key.service.url=http://local-dks:8080
 --data.table.name=ucfs-data
 --column.family=topic
 --topic.name=db.core.addressDeclaration

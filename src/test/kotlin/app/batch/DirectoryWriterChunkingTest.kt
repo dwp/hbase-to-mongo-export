@@ -24,7 +24,8 @@ import java.io.File
     "encrypt.output=false",
     "column.family=topic",
     "topic.name=db.a.b",
-    "hbase.zookeeper.quorum=hbase"
+    "hbase.zookeeper.quorum=hbase",
+    "aws.region=eu-west-2"
 ])
 class DirectoryWriterChunkingTest {
 

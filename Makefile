@@ -2,7 +2,7 @@ hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-2
 aws_secret_access_key=not_set
 aws_access_key_id=not_set
-s3_bucket=not_set
+s3_bucket=demobucket
 s3_prefix_folder=not_set
 data_key_service_url=http://dks-standalone:8080
 local_hbase_url=local-hbase
@@ -78,7 +78,7 @@ export-to-s3: ## Bring up a sample s3-exporter service exporting to dev AWS
 		docker-compose up -d hbase dks-standalone hbase-populate s3 s3-bucket-provision; \
         echo "Waiting for population"; \
         sleep 5; \
-		docker-compose up --build -d hbase-to-mongo-export-s3; \
+		docker-compose up hbase-to-mongo-export-s3; \
 	}
 
 .PHONY: restart

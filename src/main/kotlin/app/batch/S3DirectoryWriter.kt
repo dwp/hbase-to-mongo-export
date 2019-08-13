@@ -35,10 +35,6 @@ class S3DirectoryWriter(keyService: KeyService,
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
 
-        // eu-west-1 -> EU_WEST_2 (i.e tf style to enum name)
-        val updatedRegion = region.toUpperCase().replace("-", "_")
-        val clientRegion = Regions.valueOf(updatedRegion)
-
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
         val objKeyName: String = filePath
@@ -64,9 +60,6 @@ class S3DirectoryWriter(keyService: KeyService,
     }
 
     override fun outputLocation(): String = s3PrefixFolder
-
-    @Value("\${aws.region}")
-    private var region: String = "eu-west-2"
 
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String // i.e. "1234567890"

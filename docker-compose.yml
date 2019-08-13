@@ -137,6 +137,7 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - S3_BUCKET=${S3_BUCKET}
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

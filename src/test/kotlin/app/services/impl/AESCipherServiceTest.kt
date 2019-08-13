@@ -16,7 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b", "hbase.zookeeper.quorum=hbase"])
+@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b", "hbase.zookeeper.quorum=hbase", "aws.region=eu-west-2"])
 class AESCipherServiceTest {
 
     @Test
