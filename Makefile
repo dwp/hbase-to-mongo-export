@@ -4,8 +4,8 @@ aws_secret_access_key=not_set
 aws_access_key_id=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
-data_key_service_url=http://dks-standalone-http:8090
-data_key_service_url_ssl=https://dks-standalone-https:8091
+data_key_service_url=http://dks-standalone-http:8080
+data_key_service_url_ssl=https://dks-standalone-https:8443
 follow_flag=--follow
 
 default: help

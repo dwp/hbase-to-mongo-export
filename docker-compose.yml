@@ -43,15 +43,15 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient
+      --spring.profiles.active=production,aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=https://dks-standalone-https:8091
+      --data.key.service.url=https://dks-standalone-https:8443
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/identity.jks
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
@@ -71,7 +71,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient
+      --spring.profiles.active=production,aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -80,8 +80,8 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=https://dks-standalone-https:8091
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/identity.jks
+      --data.key.service.url=https://dks-standalone-https:8443
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
@@ -101,14 +101,14 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng,secureHttpClient
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng,secureHttpClient
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/identity.jks
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
