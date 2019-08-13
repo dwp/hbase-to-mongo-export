@@ -16,7 +16,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -35,6 +34,12 @@ import java.io.ByteArrayInputStream
     "data.key.service.url=dummy.com:8090",
     "column.family=topic",
     "topic.name=db.a.b",
+    "identity.keystore=resources/identity.jks",
+    "trust.keystore=resources/truststore.jks",
+    "identity.store.password=changeit",
+    "identity.key.password=changeit",
+    "trust.store.password=changeit",
+    "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase"
 ])
 class HttpKeyServiceTest {

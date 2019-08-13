@@ -16,7 +16,18 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
-@TestPropertySource(properties = ["data.table.name=ucfs-data", "column.family=topic", "topic.name=db.a.b", "hbase.zookeeper.quorum=hbase"])
+@TestPropertySource(properties = [
+    "data.table.name=ucfs-data",
+    "column.family=topic",
+    "topic.name=db.a.b",
+    "identity.keystore=resources/identity.jks",
+    "trust.keystore=resources/truststore.jks",
+    "identity.store.password=changeit",
+    "identity.key.password=changeit",
+    "trust.store.password=changeit",
+    "identity.store.alias=cid",
+    "hbase.zookeeper.quorum=hbase"
+])
 class AESCipherServiceTest {
 
     @Test
@@ -42,7 +53,7 @@ class AESCipherServiceTest {
         val key = "czMQLgW/OrzBZwFV9u4EBA=="
         val original = "Original unencrypted text that should come out of decrypt."
         val (initialisationVector, encrypted) = cipherService.encrypt(key, original.toByteArray())
-        val firstChar = initialisationVector.get(0)
+        val firstChar = initialisationVector[0]
         val decrypted =
                 cipherService.decrypt(key, initialisationVector.replace(firstChar, firstChar + 1), encrypted)
         assertNotEquals(original, decrypted)

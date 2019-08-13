@@ -70,7 +70,7 @@ application {
 }
 
 tasks.getByName<BootRun>("bootRun") {
-    main = "app.HBaseCrownExportKt"
+    main = "app.HBaseToMongoExportKt"
     systemProperties = properties
 }
 

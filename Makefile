@@ -4,7 +4,8 @@ aws_secret_access_key=not_set
 aws_access_key_id=not_set
 s3_bucket=not_set
 s3_prefix_folder=not_set
-data_key_service_url=http://dks-standalone:8080
+data_key_service_url=http://dks-standalone-http:8080
+data_key_service_url_ssl=https://dks-standalone-https:8443
 local_hbase_url=local-hbase
 local_dks_url=http://local-dks:8090
 follow_flag=--follow
@@ -44,7 +45,8 @@ build-images: ## Build the hbase, population, and exporter images
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build hbase dks-standalone hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
+		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
@@ -59,7 +61,8 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d hbase dks-standalone hbase-populate; \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
+		docker-compose up -d hbase dks-standalone-http dks-standalone-https hbase-populate; \
 		echo "Waiting for population"; \
 		sleep 5; \
 		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory; \
@@ -75,6 +78,7 @@ export-to-s3: ## Bring up a sample s3-exporter service exporting to dev AWS
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		docker-compose up --build -d hbase-to-mongo-export-s3; \
 	}
 
@@ -88,6 +92,7 @@ restart: ## Restart hbase and other services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		docker-compose restart; \
 	}
 
@@ -101,6 +106,7 @@ down: ## Bring down the hbase and other services
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		docker-compose down; \
 	}
 
@@ -121,6 +127,7 @@ integration-tests: ## (Re-)Run the integration tests in a Docker container
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		echo "Waiting for exporters"; \
 		sleep 5; \
 		docker-compose up hbase-to-mongo-export-itest; \
@@ -136,7 +143,8 @@ hbase-shell: ## Open an Hbase shell onto the running hbase container
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose run --rm hbase shell; \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
+		docker exec -it hbase hbase shell; \
 	}
 
 .PHONY: logs-hbase-populate

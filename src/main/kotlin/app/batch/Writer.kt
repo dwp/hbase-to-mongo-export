@@ -89,10 +89,10 @@ abstract class Writer(private val keyService: KeyService,
             BufferedOutputStream(outputStream)
         }
 
-    private fun metadataPath(number: Int): kotlin.String =
+    private fun metadataPath(number: Int): String =
         "${outputLocation()}/$topicName-%06d.metadata".format(number)
 
-    private fun outputName(number: Int): kotlin.String =
+    private fun outputName(number: Int): String =
         """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
             .format(number)
 
@@ -106,11 +106,11 @@ abstract class Writer(private val keyService: KeyService,
     protected var encryptOutput: Boolean = true
 
     @Value("\${topic.name}")
-    protected lateinit var topicName: kotlin.String // i.e. "db.user.data"
+    protected lateinit var topicName: String // i.e. "db.user.data"
 
-    protected var currentBatch = StringBuilder()
-    protected var batchSizeBytes = 0
-    protected var currentOutputFileNumber = 0
+    private var currentBatch = StringBuilder()
+    private var batchSizeBytes = 0
+    private var currentOutputFileNumber = 0
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
