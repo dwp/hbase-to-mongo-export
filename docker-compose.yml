@@ -22,7 +22,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --data-key-service http://dks-standalone-http:8090/datakey
+      --data-key-service http://dks-standalone-http:8080/datakey
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
@@ -42,16 +42,21 @@ services:
       - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=s-standalone-https:8091
+      --data.key.service.url=https://dks-standalone-https:8091
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/identity.jks
+      --identity.store.password=changeit
+      --identity.key.password=changeit
+      --identity.store.alias=cid
+      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.store.password=changeit
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -65,9 +70,8 @@ services:
       - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: >-
-      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=production,phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -77,6 +81,12 @@ services:
       --compress.output=true
       --output.batch.size.max.bytes=2048
       --data.key.service.url=https://dks-standalone-https:8091
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/identity.jks
+      --identity.store.password=changeit
+      --identity.key.password=changeit
+      --identity.store.alias=cid
+      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.store.password=changeit
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -90,15 +100,20 @@ services:
       - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
-      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: >-
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng,secureHttpClient
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/identity.jks
+      --identity.store.password=changeit
+      --identity.key.password=changeit
+      --identity.store.alias=cid
+      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.store.password=changeit
       --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
