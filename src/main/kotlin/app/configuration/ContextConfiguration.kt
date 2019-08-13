@@ -81,7 +81,6 @@ class ContextConfiguration {
             }
         })
     }
-
     @Value("\${identity.keystore}")
     private lateinit var identityStore: String
 
@@ -99,8 +98,8 @@ class ContextConfiguration {
 
     @Value("\${trust.store.password}")
     private lateinit var trustStorePassword: String
-
-    @Value("\${hbase.zookeeper.quorum:hbase}")
+  
+    @Value("\${hbase.zookeeper.quorum}")
     private lateinit var hbaseZookeeperQuorum: String
 
     @Value("\${data.ready.flag.location:}")

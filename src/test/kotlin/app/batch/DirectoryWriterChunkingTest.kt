@@ -29,7 +29,8 @@ import java.io.File
     "identity.store.password=changeit",
     "identity.key.password=changeit",
     "trust.store.password=changeit",
-    "identity.store.alias=cid"
+    "identity.store.alias=cid",
+    "hbase.zookeeper.quorum=hbase"
 ])
 class DirectoryWriterChunkingTest {
 

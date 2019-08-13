@@ -67,14 +67,14 @@ There are makefile commands for all your common actions;
 
  | Command                   | Description
  |---------------------------|--------------------
- | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container
+ | `add-hbase-to-hosts`      |      Update laptop hosts file with reference to hbase container (http://local-hbase:8080) and dks-standalone container (http://local-dks:8090 and https://local-dks:8091 )
  | `build-all`               |      Build the jar file and then all docker images
  | `build-images`            |      Build the hbase, population, and exporter images
  | `build-jar`               |      Build the hbase exporter jar file
  | `destroy`                 |      Bring down the hbase and other services then delete all volumes
  | `dist`                    |      Assemble distribution files in build/dist
  | `down`                    |      Bring down the hbase and other services
- | `echo`                    |      Echo the current version
+ | `echo-version`            |      Echo the current version Jar version from Gradle settings
  | `hbase-shell`             |      Open an Hbase shell onto the running hbase container
  | `integration-all`         |      Build the jar and images, put up the containers, run the integration tests
  | `integration-tests`       |      (Re-)Run the integration tests in a Docker container
@@ -140,10 +140,10 @@ if the name given by zookeeper is then entered into the local `/etc/hosts` file.
    make up
 ```
 
-2. Add hbase entry in local /etc/hosts file:
-
+2. Add hbase and dks-standalone entry in local /etc/hosts file:
+See Make targets above for the names this puts in
 ```
-    make add-hbase-to-hosts
+    make add-containers-to-hosts
 ```
 
 It should now be possible to run code in an IDE against the local instance.
@@ -181,9 +181,15 @@ aws_secret_access_key=secretsecretsecret
 
 * Arguments:
 ```
---spring.profiles.active=phoneyCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---source.table.name=ucdata
---hbase.zookeeper.quorum=localhost
+--spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
+--hbase.zookeeper.quorum=http://local-hbase
+--data.key.service.url=http://local-dks:8090
+--data.table.name=ucfs-data
+--column.family=topic
+--topic.name=db.core.addressDeclaration
+--encrypt.output=true
+--compress.output=true
+--output.batch.size.max.bytes=2048
 --aws.region=eu-west-1
 --s3.bucket=9876543210
 --s3.folder=test/businessdata/mongo/ucdata

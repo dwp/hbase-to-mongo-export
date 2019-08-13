@@ -23,6 +23,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --data-key-service http://dks-standalone-http:8080/datakey
+      --zookeeper-quorum hbase
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
@@ -44,6 +45,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=production,aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -72,6 +74,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=production,aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
@@ -102,6 +105,7 @@ services:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng,secureHttpClient
+      --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
