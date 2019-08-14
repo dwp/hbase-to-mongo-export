@@ -1,9 +1,9 @@
 hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-2
-aws_secret_access_key=not_set
-aws_access_key_id=not_set
+aws_secret_access_key=DummyKey
+aws_access_key_id=DummyKey
 s3_bucket=demobucket
-s3_prefix_folder=not_set
+s3_prefix_folder=test-exporter
 data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
 local_hbase_url=local-hbase
@@ -62,38 +62,15 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose up -d hbase dks-standalone-http dks-standalone-https hbase-populate; \
-		echo "Waiting for population"; \
+		docker-compose up -d hbase s3 dks-standalone-http dks-standalone-https; \
+		echo "Waiting for hbase and s3"; \
 		sleep 5; \
-		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory; \
+		docker-compose up -d s3-bucket-provision hbase-populate; \
+		echo "Waiting for s3 bucket create and hbase population"; \
+		sleep 5; \
+		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3; \
 	}
 
-.PHONY: export-to-s3
-export-to-s3: build-jar ## Bring up a sample s3-exporter service exporting to local AWS S3 container. Depends on running `up-all` first
-	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
-		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
-		export S3_BUCKET=$(s3_bucket); \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose up --build -d s3 s3-bucket-provision hbase-to-mongo-export-s3; \
-	}
-
-.PHONY: s3-provision
-s3-provision: ## Bring up a sample s3-exporter service exporting to dev AWS
-	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
-		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
-		export S3_BUCKET=$(s3_bucket); \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up --build s3-bucket-provision; \
-	}
 .PHONY: restart
 restart: ## Restart hbase and other services
 	@{ \
@@ -159,6 +136,10 @@ hbase-shell: ## Open an Hbase shell onto the running hbase container
 		docker exec -it hbase hbase shell; \
 	}
 
+.PHONY: logs-s3-provision
+logs-s3-provision: ## Show the logs of the s3 bucket provision. Update follow_flag as required.
+	docker logs $(follow_flag) s3-bucket-provision
+
 .PHONY: logs-hbase-populate
 logs-hbase-populate: ## Show the logs of the hbase-populater. Update follow_flag as required.
 	docker logs $(follow_flag) hbase-populate
@@ -179,7 +160,7 @@ logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as req
 reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
 
 .PHONY: local-all-collections-test
-local-all-collections-test: ## Build a local jar, then run it repeat times for each configured collection
+local-all-collections-test: build-jar ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
