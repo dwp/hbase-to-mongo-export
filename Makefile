@@ -44,7 +44,8 @@ build-images: ## Build the hbase, population, and exporter images
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose build hbase dks-standalone hbase-populate s3 s3-bucket-provision hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
+		docker-compose build hbase hbase-populate s3 s3-bucket-provision; \
 	}
 
 up: build-all up-all
@@ -75,12 +76,21 @@ export-to-s3: ## Bring up a sample s3-exporter service exporting to dev AWS
 		export S3_BUCKET=$(s3_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		docker-compose up -d hbase dks-standalone hbase-populate s3 s3-bucket-provision; \
-        echo "Waiting for population"; \
-        sleep 5; \
-		docker-compose up hbase-to-mongo-export-s3; \
+		docker-compose up -d hbase hbase-populate s3 s3-bucket-provision; \
 	}
 
+.PHONY: s3-provision
+s3-provision: ## Bring up a sample s3-exporter service exporting to dev AWS
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose up --build s3-bucket-provision; \
+	}
 .PHONY: restart
 restart: ## Restart hbase and other services
 	@{ \
@@ -175,10 +185,4 @@ local-all-collections-test: ## Build a local jar, then run it repeat times for e
 			$(s3_bucket) \
 			$(aws_access_key_id) \
 			$(aws_secret_access_key) \
-			$(s3_prefix_folder) \
-			$(aws_default_region) \
-			default \
-			$(local_hbase_url) \
-			$(local_dks_url) ;\
-		popd ;\
-	}
+			$(s3_prefix_folder
