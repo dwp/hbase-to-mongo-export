@@ -1,9 +1,5 @@
 package app.configuration
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.regions.Regions
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
@@ -63,7 +59,7 @@ class ContextConfiguration {
             val path = Paths.get(dataReadyFlagLocation)
             while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < 100) {
                 logger.info("Waiting for data: '$path', attempt no. $attempts.")
-                Thread.sleep(3_000)
+                Thread.sleep(1000)
             }
         }
 
@@ -75,22 +71,6 @@ class ContextConfiguration {
 
         addShutdownHook(connection)
         return connection
-    }
-
-    @Bean
-    @Profile("S3Client")
-    fun amazonS3(): AmazonS3 {
-
-        // eu-west-1 -> EU_WEST_2 (i.e tf style to enum name)
-        val updatedRegion = region.toUpperCase().replace("-", "_")
-        val clientRegion = Regions.valueOf(updatedRegion)
-
-        //This code expects that you have AWS credentials set up per:
-        // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
-        return AmazonS3ClientBuilder.standard()
-                .withCredentials(DefaultAWSCredentialsProviderChain())
-                .withRegion(clientRegion)
-                .build()
     }
 
     private fun addShutdownHook(connection: Connection) {
@@ -124,9 +104,6 @@ class ContextConfiguration {
 
     @Value("\${data.ready.flag.location:}")
     private lateinit var dataReadyFlagLocation: String
-
-    @Value("\${aws.region}")
-    private lateinit var region: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(ContextConfiguration::class.toString())
