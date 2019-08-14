@@ -69,7 +69,7 @@ up-all: ## Bring up hbase, population, and sample exporter services
 	}
 
 .PHONY: export-to-s3
-export-to-s3: ## Bring up a sample s3-exporter service exporting to dev AWS
+export-to-s3: build-jar ## Bring up a sample s3-exporter service exporting to local AWS S3 container. Depends on running `up-all` first
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \

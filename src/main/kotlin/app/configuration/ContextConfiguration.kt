@@ -59,7 +59,7 @@ class ContextConfiguration {
             val path = Paths.get(dataReadyFlagLocation)
             while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < 100) {
                 logger.info("Waiting for data: '$path', attempt no. $attempts.")
-                Thread.sleep(3_000)
+                Thread.sleep(1000)
             }
         }
 

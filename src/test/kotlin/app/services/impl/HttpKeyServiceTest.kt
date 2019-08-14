@@ -40,7 +40,8 @@ import java.io.ByteArrayInputStream
     "identity.key.password=changeit",
     "trust.store.password=changeit",
     "identity.store.alias=cid",
-    "hbase.zookeeper.quorum=hbase"
+    "hbase.zookeeper.quorum=hbase",
+    "aws.region=eu-west-2"
 ])
 class HttpKeyServiceTest {
 
