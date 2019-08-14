@@ -16,15 +16,15 @@ class TestContextConfiguration {
 
     @Bean
     @Profile("unitTest")
-    fun secureRandom() = SecureRandom.getInstance("SHA1PRNG")
+    fun secureRandom() = SecureRandom.getInstance("SHA1PRNG")!!
 
     @Bean
     @Profile("unitTest")
-    fun connection()= Mockito.mock(Connection::class.java)
+    fun connection()= Mockito.mock(Connection::class.java)!!
 
     @Bean
     @Profile("unitTest")
-    fun httpClient()= Mockito.mock(HttpClient::class.java)
+    fun httpClient()= Mockito.mock(HttpClient::class.java)!!
 
     @Bean
     @Profile("decryptionTest")

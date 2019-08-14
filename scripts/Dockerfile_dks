@@ -1,6 +1,7 @@
 FROM centos
 
 EXPOSE 8080
+EXPOSE 8443
 
 RUN mkdir /opt/data-key-service
 
@@ -15,5 +16,8 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-s
     | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document dks-latest.jar
 
 RUN ls -la *.jar
+
+COPY scripts/application_dks.properties ./
+COPY resources/certs/dks/* ./
 
 CMD ["sh", "-c", "java -jar dks-latest.jar"]

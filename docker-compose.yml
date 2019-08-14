@@ -46,12 +46,12 @@ services:
     container_name: hbase-populate
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --data-key-service http://dks-standalone-http:8080/datakey
       --zookeeper-quorum hbase
-      --data-key-service http://dks-standalone:8080/datakey
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
@@ -68,19 +68,25 @@ services:
     container_name: hbase-to-mongo-export-file
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng
+      --spring.profiles.active=production,aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=data/ready
-      --data.key.service.url=http://dks-standalone:8080
+      --data.key.service.url=https://dks-standalone-https:8443
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.store.password=changeit
+      --identity.key.password=changeit
+      --identity.store.alias=cid
+      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.store.password=changeit
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -91,11 +97,11 @@ services:
     container_name: hbase-to-mongo-export-directory
     depends_on:
       - hbase
-      - dks-standalone
+      - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng
+      --spring.profiles.active=production,aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -105,7 +111,13 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=http://dks-standalone:8080
+      --data.key.service.url=https://dks-standalone-https:8443
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.store.password=changeit
+      --identity.key.password=changeit
+      --identity.store.alias=cid
+      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.store.password=changeit
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -116,11 +128,11 @@ services:
     container_name: hbase-to-mongo-export-s3
     depends_on:
       - hbase
-#      - dks-standalone
+      - dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,realS3DataStore,outputToS3,batchRun,strongRng
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,S3Client,outputToS3,batchRun,strongRng,secureHttpClient
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -128,7 +140,13 @@ services:
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --data.key.service.url=${DATA_KEY_SERVICE_URL}
+      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.store.password=changeit
+      --identity.key.password=changeit
+      --identity.store.alias=cid
+      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.store.password=changeit
+      --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
@@ -149,25 +167,38 @@ services:
       - hbase
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
+      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "integration"
     environment:
       - FILE_NAME=data/ucdata-file-output.txt
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 
-  dks-standalone:
-    image: dks-standalone
+  dks-standalone-http:
+    image: dks-standalone-http
     ports:
       - 8090:8080
-      - 8091:443
     build:
-      context: scripts
-      dockerfile: Dockerfile_dks
-    container_name: dks-standalone
+      context: .
+      dockerfile: scripts/Dockerfile_dks
+    container_name: dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
+
+  dks-standalone-https:
+    image: dks-standalone-https
+    ports:
+      - 8091:8443
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile_dks
+    container_name: dks-standalone-https
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    environment:
+      - SPRING_CONFIG_LOCATION=application_dks.properties
 
 volumes:
   shared-volume:

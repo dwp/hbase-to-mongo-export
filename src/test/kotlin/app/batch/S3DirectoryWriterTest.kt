@@ -30,8 +30,13 @@ import org.springframework.test.context.junit4.SpringRunner
     "aws.region=eu-west-1",
     "s3.bucket=not_set",
     "s3.prefix.folder=not_set",
-    "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2"
+    "identity.keystore=resources/identity.jks",
+    "trust.keystore=resources/truststore.jks",
+    "identity.store.password=changeit",
+    "identity.key.password=changeit",
+    "trust.store.password=changeit",
+    "identity.store.alias=cid",
+    "hbase.zookeeper.quorum=hbase"
 ])
 
 class S3DirectoryWriterTest {

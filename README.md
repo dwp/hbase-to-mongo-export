@@ -16,39 +16,49 @@ mongo backup format, i.e. 1 json record per line.
 
 * The program arguments are
 
-  | Parameter name                | Sample Value          | Further info
-  |-------------------------------|-----------------------|--------------
-  | `compress.output`             | true                  | Whether to compress the output.
-  | `encrypt.output`              | true                  | Whether to encrypt the output.
-  | `data.key.service.url`        | http://local-dks:8090 | Url of remote data key service. (set this to `http://local-dks:8090` to run from IDE).
-  | `directory.output`            | mongo-export/2019080  | Directory to write output files to.
-  | `file.output`                 | export20190808.txt    | File to write output to - only needed if `outputToFile` spring profile is active so not used in production.
-  | `aws.region`                  | eu-west-2             | AWS Region to use for client auth - required when `outputToS3` is used
-  | `s3.bucket`                   | a1b2c3d               | S3 bucket to write output to - required when `outputToS3` spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
-  | `s3.folder`                   | mongo-export/2019080  | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
-  | `hbase.zookeeper.quorum`      | http://local-hbase    | Name of the hbase host (set this to `local-hbase` to run from IDE).
-  | `output.batch.size.max.bytes` | 100000                | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
-  | `source.cipher.algorithm`     | AES/CTR/NoPadding     | The algorithm that was used to encrypt the source data.
-  | `source.table.name`           | k2hb:ingest           | Table in hbase to read data from.
-  | `target.cipher.algorithm`     | AES/CTR/NoPadding     | The algorithm that should be used to encrypt the output data.
-
+  | Parameter name                | Sample Value               | Further info
+  |-------------------------------|----------------------------|--------------
+  | `aws.region`                  | eu-west-2                  | AWS Region to use for client auth - required when `outputToS3` is used
+  | `compress.output`             | true                       | Whether to compress the output.
+  | `data.key.service.url`        | http://localhost:8080      | Url of remote data key service.
+  | `directory.output`            | mongo-export/2019080       | Directory to write output files to.
+  | `encrypt.output`              | true                       | Whether to encrypt the output.
+  | `file.output`                 | export20190808.txt         | File to write output to - only needed if `outputToFile` spring profile is active so not used in production.
+  | `hbase.zookeeper.quorum`      | hbase                      | Name of the hbase host (set this to `localhost` to run from IDE).
+  | `output.batch.size.max.bytes` | 100000                     | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
+  | `s3.bucket`                   | a1b2c3d                    | S3 bucket to write output to - required when `outputToS3` spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
+  | `s3.prefix.folder`                   | mongo-export/2019080       | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
+  | `source.cipher.algorithm`     | AES/CTR/NoPadding          | The algorithm that was used to encrypt the source data.
+  | `source.table.name`           | k2hb:ingest                | Table in hbase to read data from.
+  | `target.cipher.algorithm`     | AES/CTR/NoPadding          | The algorithm that should be used to encrypt the output data.
+  | `column.family`               | topic                      | The common column family that the encrypted record data column is in.
+  | `topic.name`                  | db.core.addressDeclaration | The column qualifier, also is the name of the topic that the data came in on.
+  | `data.table.name`             | k2hb:ingest                | The table to which all the kafka messages have been persisted.
+  | `identity.keystore`           | resources/identity.jks     | For mutual auth - the client cert and key truststore.
+  | `trust.keystore`              | resources/truststore.jks   | For mutual auth - the DKS cert.
+  | `identity.store.password`     | changeit                   | client cert store password.
+  | `identity.key.password`       | changeit                   | the client key password.
+  | `trust.store.password`        | changeit                   | the trust store password.
+  | `identity.store.alias`        | cid                        | The name of the cert in to present to DKS.
 
 * The available spring profiles are
 
   | Profile name           | Production profile | Result
   |------------------------|--------------------|-------
-  | `strongRng`            | Yes                | Not needed if using `unitTest`. Create a strong random number generator.
-  | `realHttpClient`       | Yes                | Not needed if using `unitTest`. Use the actual cipher service that does real encryption and decryption.
-  | `realHbaseDataSource`  | Yes                | Not needed if using `unitTest`. Indicates a real hbase connection i.e. not a mock
   | `aesCipherService`     | Yes                | Use the actual cipher service that does real encryption and decryption.
   | `batchRun`             | Yes                | Activates the batch run (omit for unit tests).
   | `httpDataKeyService`   | Yes                | Use a remote (i.e. real) data key service (not a fake stubbed one)
+  | `insecureHttpClient`   | No                 | Connects to DKS over unencrypted http.
   | `outputToConsole`      | No                 | Output is written to console as is (not encrypted or compressed).
   | `outputToDirectory`    | No                 | Output is chunked and written to the configured directory.
   | `outputToFile`         | No                 | Output is written to configured local file as is (used for the hbase integration test).
+  | `S3Client`             | Yes                | AWS S3 Client to communicate to AWS S3 service
   | `outputToS3`           | Yes                | Output is chunked and written to configured S3 folder.
   | `phoneyCipherService`  | No                 | Use a cipher service that does not do real encryption.
   | `phoneyDataKeyService` | No                 | Use a dummy key service that does not require a configured DKS instance.
+  | `realHbaseDataSource`  | Yes                | Not needed if using `unitTest`. Indicates a real hbase connection i.e. not a mock
+  | `secureHttpClient`     | Yes                | Connects to DKS over TLS with mutual authorisation.
+  | `strongRng`            | Yes                | Not needed if using `unitTest`. Create a strong random number generator.
   | `unitTest`             | No                 | Overrides `strongRng`, `realHttpClient` and `realHbaseDataSource`. Use mock http client and psuedo random number generator.
 
 
@@ -76,18 +86,18 @@ There are makefile commands for all your common actions;
  | `restart`                 |      Restart hbase and other services
  | `up`                      |      Run `build-all` then start the services with `up-all`
  | `up-all`                  |      Bring up hbase, population, and sample exporter services
- 
+
 ### Stand up the hbase container and populate it, and execute sample exporters
 
 Create all:
 ```
     make up
-``` 
+```
 Check the logs:
 ```
     make logs-file-exporter
     make logs-directory-eporter
-``` 
+```
 
 ### Run the integration tests against local containerized setup.
 
@@ -100,7 +110,7 @@ Check the logs:
 
 You will need to have valid aws credentials to access S3 with a bucket you already have created and have permissions for.
 * This is a sample only
-* This uses some default values - further settings (like changing profiles for the real DWP Data Key Service) 
+* This uses some default values - further settings (like changing profiles for the real DWP Data Key Service)
 can be updated in the `docker-compose` file
 
 ```
@@ -110,7 +120,7 @@ can be updated in the `docker-compose` file
                       aws_default_profile=profile \
                       s3_bucket=9876543210 \
                       s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=http://dks-standalone:8080
+                      data_key_service_url=https://dks-standalone-https:8443
 ```
 then check the logs
 ```
@@ -143,6 +153,12 @@ It should now be possible to run code in an IDE against the local instance.
 
 See the makefile command `up` and the docker-compose file for `hbase-to-mongo-export-directory` for a sample of the arguments you need
 
+### Running on the command line
+
+```bash
+ SPRING_CONFIG_LOCATION=./resources/application.properties ./gradlew bootRun
+```
+
 #### Console output
 
 Make a run configuration and add arguments as per `export-to-s3`:
@@ -155,7 +171,7 @@ Make a run configuration and add arguments as per `export-to-s3`:
 
 #### S3 Output
 
-To test a running it from local HBase to S3, you can try this - 
+To test a running it from local HBase to S3, you can try this -
 See the makefile command `export-to-s3` and the docker-compose file for `hbase-to-mongo-export-s3` for a sample of the arguments you need
 
 * Env vars:

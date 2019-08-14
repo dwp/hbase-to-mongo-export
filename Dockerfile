@@ -44,6 +44,9 @@ COPY --from=buildImage \
         $INSTALL_DIR/build/libs/$JAR \
         $INSTALL_DIR
 
+RUN mkdir certs
+COPY resources/certs/htme/* certs/
+
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
 USER ${SERVICE_USER}
 ENTRYPOINT ["sh", "-c", "${INSTALL_DIR}/${JAR} \"$@\"", "--"]
