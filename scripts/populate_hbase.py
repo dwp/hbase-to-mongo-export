@@ -107,7 +107,7 @@ def main():
                         obj = {column_family_qualifier: json.dumps(value)}
                         data_table.put(record_id, obj, timestamp=int(timestamp))
                         print("Saved record %s timestamp %s topic %s in table %s"
-                              .format(record_id, timestamp, topic_name, args.data_table))
+                              .format(record_id, timestamp, topic_name, args.data_table_name))
 
                         topics_table.counter_inc(
                             topic_name, TOPIC_LIST_COLUMN_FAMILY_QUALIFIER, 1)

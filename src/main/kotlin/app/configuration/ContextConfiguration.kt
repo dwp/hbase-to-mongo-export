@@ -1,10 +1,5 @@
 package app.configuration
 
-import com.amazonaws.regions.Regions
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.Protocol
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
@@ -22,10 +17,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
-import java.util.function.Consumer
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.client.builder.AwsClientBuilder
 
 
 @Configuration
@@ -76,7 +67,6 @@ class ContextConfiguration {
         val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
             this.set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
             this.setInt("hbase.zookeeper.port", 2181)
-
         })
 
         addShutdownHook(connection)
