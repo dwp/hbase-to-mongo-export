@@ -7,7 +7,7 @@ s3_prefix_folder=test-exporter
 data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
 local_hbase_url=local-hbase
-local_dks_url=http://local-dks-https:8443
+local_dks_url=https://local-dks-https:8443
 local_s3_service_endpoint=http://localhost:4572
 follow_flag=--follow
 
