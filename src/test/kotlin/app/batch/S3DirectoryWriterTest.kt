@@ -1,5 +1,6 @@
 package app.batch
 
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.junit.Test
@@ -34,7 +35,7 @@ import org.springframework.test.context.junit4.SpringRunner
     "identity.store.password=changeit",
     "identity.key.password=changeit",
     "trust.store.password=changeit",
-    "identity.store.alias=cid", 
+    "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase"
 ])
 
@@ -69,7 +70,7 @@ class S3DirectoryWriterTest {
     private lateinit var s3DirectoryWriter: S3DirectoryWriter
 
     @Autowired
-    private lateinit var s3Client: AmazonS3Client
+    private lateinit var s3Client: AmazonS3
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriterTest::class.toString())

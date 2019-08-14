@@ -39,14 +39,16 @@ RUN id -a ${SERVICE_USER}
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 
 WORKDIR ${INSTALL_DIR}
+
+RUN mkdir certs
+COPY resources/certs/htme/* certs/
+
 ENV JAR=hbase-to-mongo-export-${HBASE_TO_MONGO_EXPORT_VERSION}.jar
 COPY --from=buildImage \
         $INSTALL_DIR/build/libs/$JAR \
         $INSTALL_DIR
 
-RUN mkdir certs
-COPY resources/certs/htme/* certs/
-
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
 USER ${SERVICE_USER}
+
 ENTRYPOINT ["sh", "-c", "${INSTALL_DIR}/${JAR} \"$@\"", "--"]

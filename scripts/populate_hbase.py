@@ -34,23 +34,23 @@ def main():
 
             if not args.skip_table_creation:
                 try:
-                    connection.create_table(args.topics_table,
+                    connection.create_table(args.topics_table_name,
                                         {TOPIC_LIST_COLUMN_FAMILY: {}})
-                    print("Created table '{}'".format(args.topics_table))
+                    print("Created table '{}'".format(args.topics_table_name))
                 except Exception as e:
-                    print("Table '{}' already exists. {}".format(args.topics_table, e))
+                    print("Table '{}' already exists. {}".format(args.topics_table_name, e))
                     pass
 
                 try:
-                    connection.create_table(args.data_table,
+                    connection.create_table(args.data_table_name,
                                         {DATA_COLUMN_FAMILY: dict(max_versions=10)})
-                    print("Created table '{}'".format(args.data_table))
+                    print("Created table '{}'".format(args.data_table_name))
                 except Exception as e:
-                    print("Table '{}' already exists. {}".format(args.data_table, e))
+                    print("Table '{}' already exists. {}".format(args.data_table_name, e))
                     pass
 
-            topics_table = connection.table(args.topics_table)
-            data_table = connection.table(args.data_table)
+            topics_table = connection.table(args.topics_table_name)
+            data_table = connection.table(args.data_table_name)
             connected = True
 
             print("data_key_service='{}'".format(args.data_key_service))
@@ -78,7 +78,7 @@ def main():
                     topic_name = "db." + db_name + "." + collection_name
 
                     print("Creating record %s timestamp %s topic %s in table %s"
-                          .format(record_id, timestamp, topic_name, args.data_table))
+                          .format(record_id, timestamp, topic_name, args.data_table_name))
 
                     if 'dbObject' in value['message']:
                         db_object = value['message']['dbObject']
@@ -106,13 +106,13 @@ def main():
                         column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
                         obj = {column_family_qualifier: json.dumps(value)}
                         data_table.put(record_id, obj, timestamp=int(timestamp))
-                        print("Saved record %s timestamp %s topic %s in table "
-                              .format(record_id, timestamp, topic_name, args.data_table))
+                        print("Saved record %s timestamp %s topic %s in table %s"
+                              .format(record_id, timestamp, topic_name, args.data_table_name))
 
                         topics_table.counter_inc(
                             topic_name, TOPIC_LIST_COLUMN_FAMILY_QUALIFIER, 1)
-                        print("Updated count of topic %s in table "
-                              .format(topic_name, args.topics_table))
+                        print("Updated count of topic %s in table %s"
+                              .format(topic_name, args.topics_table_name))
 
                     else:
                         print("Skipped record %s as dbObject was missing".format(record_id))
@@ -207,9 +207,9 @@ def command_line_args():
                         help='Remove the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
-    parser.add_argument('-dt', '--data-table', default='data',
+    parser.add_argument('-dt', '--data-table-name', default='data',
                         help='The data table to write the records to.')
-    parser.add_argument('-tt', '--topics-table', default='topics',
+    parser.add_argument('-tt', '--topics-table-name', default='topics',
                         help='The table to write the list of topics to.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')

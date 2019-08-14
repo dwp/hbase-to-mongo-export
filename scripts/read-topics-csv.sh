@@ -2,13 +2,13 @@
 
 TOPICS_CSV_FILE=$1
 S3_BUCKET=$2
-AWS_ACCESS_KEY_ID=$3
-AWS_SECRET_ACCESS_KEY=$4
-S3_PREFIX_FOLDER=${5:-"test-exporter"}
-AWS_DEFAULT_REGION=${6:-"eu-west-2"}
-AWS_DEFAULT_PROFILE=${7:-"default"}
-HBASE_URL=${8:-"local-hbase"}
-DATA_KEY_SERVICE_URL=${9:-"http://local-dks:8090"}
+S3_SERVICE_ENDPOINT=$3
+AWS_ACCESS_KEY_ID=$4
+AWS_SECRET_ACCESS_KEY=$5
+S3_PREFIX_FOLDER=$6
+AWS_DEFAULT_REGION=$7
+HBASE_URL=$8
+DATA_KEY_SERVICE_URL=$9
 
 TODAY=$(date +"%Y-%m-%d")
 # shellcheck disable=SC2002
@@ -38,16 +38,14 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
     echo "Processing: ${TOPIC_NAME} into folder ${S3_FOLDER}"
     echo ""
 
-    export AWS_REGION="${AWS_DEFAULT_REGION}"
-    export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION}"
-    export AWS_DEFAULT_PROFILE="${AWS_DEFAULT_PROFILE}"
-    export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
-    export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
     java -jar "${JAR_FILE}" \
-      --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng \
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
       --data.key.service.url="${DATA_KEY_SERVICE_URL}" \
       --aws.region="${AWS_DEFAULT_REGION}" \
+      --s3.service.endpoint="${S3_SERVICE_ENDPOINT}" \
+      --s3.access.key="${AWS_ACCESS_KEY_ID}" \
+      --s3.secret.key="${AWS_SECRET_ACCESS_KEY}" \
       --s3.bucket="${S3_BUCKET}" \
       --s3.prefix.folder="${S3_FOLDER}" \
       --data.table.name=ucfs-data \
@@ -55,7 +53,13 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --topic.name="${TOPIC_NAME}" \
       --encrypt.output=true \
       --compress.output=true \
-      --output.batch.size.max.bytes=2048 ;
+      --output.batch.size.max.bytes=2048 \
+      --identity.keystore=../resources/certs/htme/keystore.jks \
+      --identity.store.password=changeit \
+      --identity.key.password=changeit \
+      --identity.store.alias=cid \
+      --trust.keystore=../resources/certs/htme/truststore.jks \
+      --trust.store.password=changeit ;
   done
 
 echo ""

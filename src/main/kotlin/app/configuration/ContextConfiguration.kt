@@ -18,6 +18,7 @@ import java.nio.file.Paths
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
 
+
 @Configuration
 class ContextConfiguration {
 
@@ -66,7 +67,6 @@ class ContextConfiguration {
         val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
             this.set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
             this.setInt("hbase.zookeeper.port", 2181)
-
         })
 
         addShutdownHook(connection)
@@ -98,7 +98,7 @@ class ContextConfiguration {
 
     @Value("\${trust.store.password}")
     private lateinit var trustStorePassword: String
-  
+
     @Value("\${hbase.zookeeper.quorum}")
     private lateinit var hbaseZookeeperQuorum: String
 

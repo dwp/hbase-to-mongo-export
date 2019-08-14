@@ -27,7 +27,7 @@ mongo backup format, i.e. 1 json record per line.
   | `hbase.zookeeper.quorum`      | hbase                      | Name of the hbase host (set this to `localhost` to run from IDE).
   | `output.batch.size.max.bytes` | 100000                     | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
   | `s3.bucket`                   | a1b2c3d                    | S3 bucket to write output to - required when `outputToS3` spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
-  | `s3.prefix.folder`                   | mongo-export/2019080       | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
+  | `s3.prefix.folder`            | mongo-export/2019080       | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
   | `source.cipher.algorithm`     | AES/CTR/NoPadding          | The algorithm that was used to encrypt the source data.
   | `source.table.name`           | k2hb:ingest                | Table in hbase to read data from.
   | `target.cipher.algorithm`     | AES/CTR/NoPadding          | The algorithm that should be used to encrypt the output data.
@@ -52,7 +52,8 @@ mongo backup format, i.e. 1 json record per line.
   | `outputToConsole`      | No                 | Output is written to console as is (not encrypted or compressed).
   | `outputToDirectory`    | No                 | Output is chunked and written to the configured directory.
   | `outputToFile`         | No                 | Output is written to configured local file as is (used for the hbase integration test).
-  | `realS3Client`         | Yes                | AWS S3 Client to communicate to AWS S3 service
+  | `realS3Client`         | Yes                | AWS S3 Client to communicate to the real AWS S3 service
+  | `dummyS3Client`        | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
   | `outputToS3`           | Yes                | Output is chunked and written to configured S3 folder.
   | `phoneyCipherService`  | No                 | Use a cipher service that does not do real encryption.
   | `phoneyDataKeyService` | No                 | Use a dummy key service that does not require a configured DKS instance.
@@ -66,39 +67,43 @@ mongo backup format, i.e. 1 json record per line.
 
 There are makefile commands for all your common actions;
 
- | Command                   | Description
- |---------------------------|--------------------
- | `add-hbase-to-hosts`      | Update laptop hosts file with reference to hbase container (http://local-hbase:8080) and dks-standalone container (http://local-dks:8090 and https://local-dks:8091 )
- | `build-all`               | Build the jar file and then all docker images
- | `build-images`            | Build the hbase, population, and exporter images
- | `build-jar`               | Build the hbase exporter jar file
- | `destroy`                 | Bring down the hbase and other services then delete all volumes
- | `dist`                    | Assemble distribution files in build/dist
- | `down`                    | Bring down the hbase and other services
- | `echo-version`            | Echo the current version Jar version from Gradle settings
- | `hbase-shell`             | Open an Hbase shell onto the running hbase container
- | `integration-all`         | Build the jar and images, put up the containers, run the integration tests
- | `integration-tests`       | (Re-)Run the integration tests in a Docker container
- | `logs-directory-exporter` | Show the logs of the directory exporter. Update follow_flag as required.
- | `logs-file-exporter`      | Show the logs of the file exporter. Update follow_flag as required.
- | `logs-hbase-populate`     | Show the logs of the hbase-populater. Update follow_flag as required.
- | `reset-all`               | Destroy all, rebuild and up all, and check the export logs
- | `restart`                 | Restart hbase and other services
- | `up`                      | Run `build-all` then start the services with `up-all`
- | `up-all`                  | Bring up hbase, population, and sample exporter services
- | `export-to-s3`            | Bring up a sample s3-exporter service exporting to local AWS S3 container. Depends on running `up-all` first
+ | Command                      | Description
+ |------------------------------|--------------------
+ | `add-hbase-to-hosts`         | Update laptop hosts file with reference to hbase container (`http://local-hbase:8080`) and dks-standalone container (`http://local-dks:8080`)
+ | `build-all`                  | Build the jar file and then all docker images
+ | `build-images`               | Build the hbase, population, and exporter images
+ | `build-jar`                  | Build the hbase exporter jar file
+ | `destroy`                    | Bring down the hbase and other services then delete all volumes
+ | `dist`                       | Assemble distribution files in build/dist
+ | `down`                       | Bring down the hbase and other services
+ | `echo-version`               | Echo the current version Jar version from Gradle settings
+ | `hbase-shell`                | Open an Hbase shell onto the running hbase container
+ | `integration-all`            | Build the jar and images, put up the containers, run the integration tests
+ | `integration-tests`          | (Re-)Run the integration tests in a Docker container
+ | `logs-directory-exporter`    | Show the logs of the directory exporter. Update follow_flag as required.
+ | `logs-file-exporter`         | Show the logs of the file exporter. Update follow_flag as required.
+ | `logs-s3-exporter`           | Show the logs of the s3 exporter. Update follow_flag as required.
+ | `logs-hbase-populate`        | Show the logs of the hbase-populater. Update follow_flag as required.
+ | `reset-all`                  | Destroy all, rebuild and up all, and check the export logs
+ | `restart`                    | Restart hbase and other services
+ | `up`                         | Run `build-all` then start the services with `up-all`
+ | `up-all`                     | Bring up hbase, population, and sample exporter services
+ | `local-all-collections-test` | Runs a sample test of local collections, similar to how we do in a VM. Only works properly on Unix hosts with native docker.
 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
 Create all:
 ```
-    make up
+    make up-all
 ```
 Check the logs:
 ```
     make logs-file-exporter
     make logs-directory-eporter
+    make logs-s3-exporter
 ```
+Verify the data in the localstack dummy s3 container:
+* Browse to http:localhost:4572
 
 ### Run the integration tests against local containerized setup.
 
@@ -106,29 +111,12 @@ Check the logs:
     make integration-all
 ```
 ...this also executes `build-all` and `up-all`.
+It is a simple test that the File exporter generated the correct sample set of records.
+It does not check that the encryption/decryption is correct
 
-### Run the s3 exporter
+## Run locally in IDE or as a jar (Unix)
 
-You will need to have valid aws credentials to access S3 with a bucket you already have created and have permissions for.
-* This is a sample only
-* This uses some default values - further settings (like changing profiles for the real DWP Data Key Service)
-can be updated in the `docker-compose` file
-
-```
-    make export-to-s3 aws_default_region=eu-west-2 \
-                      aws_access_key_id=keykeykey \
-                      aws_secret_access_key=tokentokentoken \
-                      aws_default_profile=profile \
-                      s3_bucket=9876543210 \
-                      s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=https://dks-standalone-https:8443
-```
-then check the logs
-```
-    make logs-s3-exporter
-```
-
-## Run locally in IDE or as a jar
+* Note this only works properly on Unix hosts with native docker.
 
 ### First, you must stand up the hbase container and populate it
 
@@ -139,7 +127,7 @@ if the name given by zookeeper is then entered into the local `/etc/hosts` file.
 1. Bring up the hbase container and populate it with test data:
 
 ```
-   make up
+   make up-all
 ```
 
 2. Add hbase and dks-standalone entry in local /etc/hosts file:
@@ -150,42 +138,15 @@ See Make targets above for the names this puts in
 
 It should now be possible to run code in an IDE against the local instance.
 
-### Running locally in IDE
+### Running locally in IDE (Unix)
 
-See the makefile command `up` and the docker-compose file for `hbase-to-mongo-export-directory` for a sample of the arguments you need
+* Only works properly on Unix, not Mac or Windows, as they run docker in VMs.
 
-### Running on the command line
-
-```bash
- SPRING_CONFIG_LOCATION=./resources/application.properties ./gradlew bootRun
+Run the application from class file `HBaseToMongoExport` and add arguments to the profile:
 ```
-
-#### Console output
-
-Make a run configuration and add arguments as per `export-to-s3`:
-```
---spring.profiles.active=phoneyCipherService,phonyDataKeyService,realHbaseDataSource,outputToConsole,batchRun,strongRng
---source.table.name=ucdata
---data.ready.flag.location=data/ready
-```
-...it should the print out what it has exported from the local containerised hbase
-
-#### S3 Output
-
-To test a running it from local HBase to S3, you can try this -
-See the makefile command `export-to-s3` and the docker-compose file for `hbase-to-mongo-export-s3` for a sample of the arguments you need
-
-* Env vars:
-```
-aws_access_key_id=keykeykey
-aws_secret_access_key=secretsecretsecret
-```
-
-* Arguments:
-```
---spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---hbase.zookeeper.quorum=http://local-hbase
---data.key.service.url=http://local-dks:8090
+--spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,dummyS3Client,batchRun,strongRng
+--hbase.zookeeper.quorum=local-hbase
+--data.key.service.url=http://local-dks-insecure:8080
 --data.table.name=ucfs-data
 --column.family=topic
 --topic.name=db.core.addressDeclaration
@@ -195,4 +156,20 @@ aws_secret_access_key=secretsecretsecret
 --aws.region=eu-west-1
 --s3.bucket=9876543210
 --s3.folder=test/businessdata/mongo/ucdata
+--s3.service.endpoint=http://localhost:4572
+--s3.access.key=DummyKey
+--s3.secret.key=DummySecret
 ```
+
+### Running on the command line (Unix)
+
+You will need to update the active profiles to suit your needs...
+```bash
+ SPRING_CONFIG_LOCATION=./resources/application.properties ./gradlew bootRun
+```
+
+#### Console output
+
+Make a run configuration and add arguments as per `hbase-to-mongo-export-file` in the docker-compose file, and update as you need.
+
+...it should the print out what it has exported from the local containerised hbase

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile
 
 @Configuration
 @Profile("realS3Client")
-class S3Configuration {
+class S3RealConfiguration {
 
     @Bean
     fun amazonS3(): AmazonS3 {
