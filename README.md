@@ -98,7 +98,7 @@ Check the logs:
 ```
     make logs-file-exporter
     make logs-directory-eporter
-    make logs-s3-eporter
+    make logs-s3-exporter
 ```
 Verify the data in the localstack dummy s3 container:
 * Browse to http:localhost:4572
