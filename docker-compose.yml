@@ -129,6 +129,7 @@ services:
     depends_on:
       - hbase
       - dks-standalone-https
+      - s3
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-

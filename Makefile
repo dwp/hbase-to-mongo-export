@@ -46,7 +46,7 @@ build-images: ## Build the hbase, population, and exporter images
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate s3 s3-bucket-provision hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
@@ -79,7 +79,7 @@ export-to-s3: ## Bring up a sample s3-exporter service exporting to dev AWS
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose up --build -d hbase-to-mongo-export-s3; \
+		docker-compose up --build -d s3 s3-bucket-provision hbase-to-mongo-export-s3; \
 	}
 
 .PHONY: s3-provision
