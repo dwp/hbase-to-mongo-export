@@ -49,8 +49,8 @@ def main():
                     print("Table '{}' already exists. {}".format(args.data_table, e))
                     pass
 
-            topics_table = connection.table(args.topics_table)
-            data_table = connection.table(args.data_table)
+            topics_table = connection.table(args.topics_table_name)
+            data_table = connection.table(args.data_table_name)
             connected = True
 
             print("data_key_service='{}'".format(args.data_key_service))
@@ -207,9 +207,9 @@ def command_line_args():
                         help='Remove the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
-    parser.add_argument('-dt', '--data-table', default='data',
+    parser.add_argument('-dt', '--data-table-name', default='data',
                         help='The data table to write the records to.')
-    parser.add_argument('-tt', '--topics-table', default='topics',
+    parser.add_argument('-tt', '--topics-table-name', default='topics',
                         help='The table to write the list of topics to.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')

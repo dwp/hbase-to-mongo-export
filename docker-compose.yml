@@ -53,8 +53,8 @@ services:
       --dump-table-contents
       --completed-flag data/ready
       --remove-output-file data/ucdata-file-output.txt
-      --data-table ucfs-data
-      --topics-table ucfs-topics
+      --data-table-name ucfs-data
+      --topics-table-name ucfs-topics
       --test-configuration-file test-config.json
 
   hbase-to-mongo-export-file:
@@ -136,6 +136,7 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
+      --data.ready.flag.location=data/ready
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
