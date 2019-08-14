@@ -10,6 +10,34 @@ services:
       - 16201:16201
     container_name: hbase
 
+  s3:
+    image: localstack/localstack:latest
+    ports:
+      - '4563-4584:4563-4584'
+      - '8055:8080'
+    container_name: s3
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DATA_DIR=/opt/hbase-to-mongo-export/data
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+
+  s3-bucket-provision:
+    image: s3-bucket-provision
+    build:
+      context: scripts
+      dockerfile: Dockerfile-s3-bucket-provision
+    container_name: s3-bucket-provision
+    depends_on:
+      - s3
+    environment:
+      - AWS_REGION=${AWS_DEFAULT_REGION}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+
+
   hbase-populate:
     image: hbase-populate
     build:
@@ -101,6 +129,7 @@ services:
     depends_on:
       - hbase
       - dks-standalone-https
+      - s3
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
@@ -127,6 +156,7 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - S3_BUCKET=${S3_BUCKET}
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

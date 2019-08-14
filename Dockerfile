@@ -25,7 +25,7 @@ USER ${SERVICE_USER}
 RUN $GRADLE wrapper
 RUN $GRADLE --refresh-dependencies compileKotlin
 COPY src/ ./src
-RUN $GRADLE build
+RUN $GRADLE build -x test
 
 FROM openjdk:8-slim
 ARG HBASE_TO_MONGO_EXPORT_VERSION

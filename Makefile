@@ -2,7 +2,7 @@ hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-2
 aws_secret_access_key=not_set
 aws_access_key_id=not_set
-s3_bucket=not_set
+s3_bucket=demobucket
 s3_prefix_folder=not_set
 data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
@@ -46,7 +46,7 @@ build-images: ## Build the hbase, population, and exporter images
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate s3 s3-bucket-provision hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
@@ -79,9 +79,21 @@ export-to-s3: build-jar ## Bring up a sample s3-exporter service exporting to lo
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose up --build -d hbase-to-mongo-export-s3; \
+		docker-compose up --build -d s3 s3-bucket-provision hbase-to-mongo-export-s3; \
 	}
 
+.PHONY: s3-provision
+s3-provision: ## Bring up a sample s3-exporter service exporting to dev AWS
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		docker-compose up --build s3-bucket-provision; \
+	}
 .PHONY: restart
 restart: ## Restart hbase and other services
 	@{ \

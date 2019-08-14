@@ -53,6 +53,7 @@ mongo backup format, i.e. 1 json record per line.
   | `outputToDirectory`    | No                 | Output is chunked and written to the configured directory.
   | `outputToFile`         | No                 | Output is written to configured local file as is (used for the hbase integration test).
   | `realS3Client`         | Yes                | AWS S3 Client to communicate to AWS S3 service
+  | `fakeS3Client`         | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
   | `outputToS3`           | Yes                | Output is chunked and written to configured S3 folder.
   | `phoneyCipherService`  | No                 | Use a cipher service that does not do real encryption.
   | `phoneyDataKeyService` | No                 | Use a dummy key service that does not require a configured DKS instance.
@@ -184,8 +185,8 @@ aws_secret_access_key=secretsecretsecret
 * Arguments:
 ```
 --spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---hbase.zookeeper.quorum=http://local-hbase
---data.key.service.url=http://local-dks:8090
+--hbase.zookeeper.quorum=local-hbase
+--data.key.service.url=http://local-dks:8080
 --data.table.name=ucfs-data
 --column.family=topic
 --topic.name=db.core.addressDeclaration

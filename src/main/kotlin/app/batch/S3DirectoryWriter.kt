@@ -4,9 +4,7 @@ import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.SdkClientException
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.slf4j.Logger
