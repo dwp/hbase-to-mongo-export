@@ -52,8 +52,8 @@ mongo backup format, i.e. 1 json record per line.
   | `outputToConsole`      | No                 | Output is written to console as is (not encrypted or compressed).
   | `outputToDirectory`    | No                 | Output is chunked and written to the configured directory.
   | `outputToFile`         | No                 | Output is written to configured local file as is (used for the hbase integration test).
-  | `realS3Client`         | Yes                | AWS S3 Client to communicate to AWS S3 service
-  | `fakeS3Client`         | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
+  | `realS3Client`         | Yes                | AWS S3 Client to communicate to the real AWS S3 service
+  | `dummyS3Client`        | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
   | `outputToS3`           | Yes                | Output is chunked and written to configured S3 folder.
   | `phoneyCipherService`  | No                 | Use a cipher service that does not do real encryption.
   | `phoneyDataKeyService` | No                 | Use a dummy key service that does not require a configured DKS instance.
@@ -69,7 +69,7 @@ There are makefile commands for all your common actions;
 
  | Command                   | Description
  |---------------------------|--------------------
- | `add-hbase-to-hosts`      | Update laptop hosts file with reference to hbase container (http://local-hbase:8080) and dks-standalone container (http://local-dks:8090 and https://local-dks:8091 )
+ | `add-hbase-to-hosts`      | Update laptop hosts file with reference to hbase container (`http://local-hbase:8080`) and dks-standalone container (`http://local-dks:8080`)
  | `build-all`               | Build the jar file and then all docker images
  | `build-images`            | Build the hbase, population, and exporter images
  | `build-jar`               | Build the hbase exporter jar file
@@ -87,19 +87,21 @@ There are makefile commands for all your common actions;
  | `restart`                 | Restart hbase and other services
  | `up`                      | Run `build-all` then start the services with `up-all`
  | `up-all`                  | Bring up hbase, population, and sample exporter services
- | `export-to-s3`            | Bring up a sample s3-exporter service exporting to local AWS S3 container. Depends on running `up-all` first
 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
 Create all:
 ```
-    make up
+    make up-all
 ```
 Check the logs:
 ```
     make logs-file-exporter
     make logs-directory-eporter
+    make logs-s3-eporter
 ```
+Verify the data in the localstack dummy s3 container:
+* Browse to http:localhost:4572
 
 ### Run the integration tests against local containerized setup.
 
@@ -107,27 +109,8 @@ Check the logs:
     make integration-all
 ```
 ...this also executes `build-all` and `up-all`.
-
-### Run the s3 exporter
-
-You will need to have valid aws credentials to access S3 with a bucket you already have created and have permissions for.
-* This is a sample only
-* This uses some default values - further settings (like changing profiles for the real DWP Data Key Service)
-can be updated in the `docker-compose` file
-
-```
-    make export-to-s3 aws_default_region=eu-west-2 \
-                      aws_access_key_id=keykeykey \
-                      aws_secret_access_key=tokentokentoken \
-                      aws_default_profile=profile \
-                      s3_bucket=9876543210 \
-                      s3_prefix_folder=hbase-export/2019-07-11/ \
-                      data_key_service_url=https://dks-standalone-https:8443
-```
-then check the logs
-```
-    make logs-s3-exporter
-```
+It is a simple test that the File exporter generated the correct sample set of records.
+It does not check that the encryption/decryption is correct
 
 ## Run locally in IDE or as a jar
 
@@ -140,7 +123,7 @@ if the name given by zookeeper is then entered into the local `/etc/hosts` file.
 1. Bring up the hbase container and populate it with test data:
 
 ```
-   make up
+   make up-all
 ```
 
 2. Add hbase and dks-standalone entry in local /etc/hosts file:
@@ -151,12 +134,32 @@ See Make targets above for the names this puts in
 
 It should now be possible to run code in an IDE against the local instance.
 
-### Running locally in IDE
+### Running locally in IDE (Unix)
 
-See the makefile command `up` and the docker-compose file for `hbase-to-mongo-export-directory` for a sample of the arguments you need
+* Probably only works rightt on Unix, not Mac or Windows, as they run docker in VMs.
+
+Run the application from class file `HBaseToMongoExport` and add arguments to the profile:
+```
+--spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,dummyS3Client,batchRun,strongRng
+--hbase.zookeeper.quorum=local-hbase
+--data.key.service.url=http://local-dks-insecure:8080
+--data.table.name=ucfs-data
+--column.family=topic
+--topic.name=db.core.addressDeclaration
+--encrypt.output=true
+--compress.output=true
+--output.batch.size.max.bytes=2048
+--aws.region=eu-west-1
+--s3.bucket=9876543210
+--s3.folder=test/businessdata/mongo/ucdata
+--s3.service.endpoint=http://localhost:4572
+--s3.access.key=DummyKey
+--s3.secret.key=DummySecret
+```
 
 ### Running on the command line
 
+You will need to update the active profiles to suit your needs...
 ```bash
  SPRING_CONFIG_LOCATION=./resources/application.properties ./gradlew bootRun
 ```
@@ -170,30 +173,3 @@ Make a run configuration and add arguments as per `export-to-s3`:
 --data.ready.flag.location=data/ready
 ```
 ...it should the print out what it has exported from the local containerised hbase
-
-#### S3 Output
-
-To test a running it from local HBase to S3, you can try this -
-See the makefile command `export-to-s3` and the docker-compose file for `hbase-to-mongo-export-s3` for a sample of the arguments you need
-
-* Env vars:
-```
-aws_access_key_id=keykeykey
-aws_secret_access_key=secretsecretsecret
-```
-
-* Arguments:
-```
---spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,batchRun,strongRng
---hbase.zookeeper.quorum=local-hbase
---data.key.service.url=http://local-dks:8080
---data.table.name=ucfs-data
---column.family=topic
---topic.name=db.core.addressDeclaration
---encrypt.output=true
---compress.output=true
---output.batch.size.max.bytes=2048
---aws.region=eu-west-1
---s3.bucket=9876543210
---s3.folder=test/businessdata/mongo/ucdata
-```
