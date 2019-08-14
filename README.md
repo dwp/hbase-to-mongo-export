@@ -67,26 +67,28 @@ mongo backup format, i.e. 1 json record per line.
 
 There are makefile commands for all your common actions;
 
- | Command                   | Description
- |---------------------------|--------------------
- | `add-hbase-to-hosts`      | Update laptop hosts file with reference to hbase container (`http://local-hbase:8080`) and dks-standalone container (`http://local-dks:8080`)
- | `build-all`               | Build the jar file and then all docker images
- | `build-images`            | Build the hbase, population, and exporter images
- | `build-jar`               | Build the hbase exporter jar file
- | `destroy`                 | Bring down the hbase and other services then delete all volumes
- | `dist`                    | Assemble distribution files in build/dist
- | `down`                    | Bring down the hbase and other services
- | `echo-version`            | Echo the current version Jar version from Gradle settings
- | `hbase-shell`             | Open an Hbase shell onto the running hbase container
- | `integration-all`         | Build the jar and images, put up the containers, run the integration tests
- | `integration-tests`       | (Re-)Run the integration tests in a Docker container
- | `logs-directory-exporter` | Show the logs of the directory exporter. Update follow_flag as required.
- | `logs-file-exporter`      | Show the logs of the file exporter. Update follow_flag as required.
- | `logs-hbase-populate`     | Show the logs of the hbase-populater. Update follow_flag as required.
- | `reset-all`               | Destroy all, rebuild and up all, and check the export logs
- | `restart`                 | Restart hbase and other services
- | `up`                      | Run `build-all` then start the services with `up-all`
- | `up-all`                  | Bring up hbase, population, and sample exporter services
+ | Command                      | Description
+ |------------------------------|--------------------
+ | `add-hbase-to-hosts`         | Update laptop hosts file with reference to hbase container (`http://local-hbase:8080`) and dks-standalone container (`http://local-dks:8080`)
+ | `build-all`                  | Build the jar file and then all docker images
+ | `build-images`               | Build the hbase, population, and exporter images
+ | `build-jar`                  | Build the hbase exporter jar file
+ | `destroy`                    | Bring down the hbase and other services then delete all volumes
+ | `dist`                       | Assemble distribution files in build/dist
+ | `down`                       | Bring down the hbase and other services
+ | `echo-version`               | Echo the current version Jar version from Gradle settings
+ | `hbase-shell`                | Open an Hbase shell onto the running hbase container
+ | `integration-all`            | Build the jar and images, put up the containers, run the integration tests
+ | `integration-tests`          | (Re-)Run the integration tests in a Docker container
+ | `logs-directory-exporter`    | Show the logs of the directory exporter. Update follow_flag as required.
+ | `logs-file-exporter`         | Show the logs of the file exporter. Update follow_flag as required.
+ | `logs-s3-exporter`           | Show the logs of the s3 exporter. Update follow_flag as required.
+ | `logs-hbase-populate`        | Show the logs of the hbase-populater. Update follow_flag as required.
+ | `reset-all`                  | Destroy all, rebuild and up all, and check the export logs
+ | `restart`                    | Restart hbase and other services
+ | `up`                         | Run `build-all` then start the services with `up-all`
+ | `up-all`                     | Bring up hbase, population, and sample exporter services
+ | `local-all-collections-test` | Runs a sample test of local collections, similar to how we do in a VM. Only works properly on Unix hosts with native docker.
 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
@@ -112,7 +114,9 @@ Verify the data in the localstack dummy s3 container:
 It is a simple test that the File exporter generated the correct sample set of records.
 It does not check that the encryption/decryption is correct
 
-## Run locally in IDE or as a jar
+## Run locally in IDE or as a jar (Unix)
+
+* Note this only works properly on Unix hosts with native docker.
 
 ### First, you must stand up the hbase container and populate it
 
@@ -136,7 +140,7 @@ It should now be possible to run code in an IDE against the local instance.
 
 ### Running locally in IDE (Unix)
 
-* Probably only works rightt on Unix, not Mac or Windows, as they run docker in VMs.
+* Only works properly on Unix, not Mac or Windows, as they run docker in VMs.
 
 Run the application from class file `HBaseToMongoExport` and add arguments to the profile:
 ```
@@ -157,7 +161,7 @@ Run the application from class file `HBaseToMongoExport` and add arguments to th
 --s3.secret.key=DummySecret
 ```
 
-### Running on the command line
+### Running on the command line (Unix)
 
 You will need to update the active profiles to suit your needs...
 ```bash
@@ -166,10 +170,6 @@ You will need to update the active profiles to suit your needs...
 
 #### Console output
 
-Make a run configuration and add arguments as per `export-to-s3`:
-```
---spring.profiles.active=phoneyCipherService,phonyDataKeyService,realHbaseDataSource,outputToConsole,batchRun,strongRng
---source.table.name=ucdata
---data.ready.flag.location=data/ready
-```
+Make a run configuration and add arguments as per `hbase-to-mongo-export-file` in the docker-compose file, and update as you need.
+
 ...it should the print out what it has exported from the local containerised hbase
