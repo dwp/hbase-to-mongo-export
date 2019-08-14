@@ -7,7 +7,8 @@ s3_prefix_folder=test-exporter
 data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
 local_hbase_url=local-hbase
-local_dks_url=http://local-dks:8090
+local_dks_url=http://local-dks-https:8443
+local_s3_service_endpoint=http://localhost:4572
 follow_flag=--follow
 
 default: help
@@ -162,20 +163,15 @@ reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebui
 .PHONY: local-all-collections-test
 local-all-collections-test: build-jar ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
-		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
-		export S3_BUCKET=$(s3_bucket); \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		pushd scripts; \
 		./read-topics-csv.sh \
 			topics-test.csv \
 			$(s3_bucket) \
+			$(local_s3_service_endpoint) \
 			$(aws_access_key_id) \
 			$(aws_secret_access_key) \
 			$(s3_prefix_folder) \
 			$(aws_default_region) \
-			default \
 			$(local_hbase_url) \
 			$(local_dks_url) ;\
 		popd ;\

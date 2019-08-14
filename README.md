@@ -27,7 +27,7 @@ mongo backup format, i.e. 1 json record per line.
   | `hbase.zookeeper.quorum`      | hbase                      | Name of the hbase host (set this to `localhost` to run from IDE).
   | `output.batch.size.max.bytes` | 100000                     | The maximum size of each  batch of output (calculated before compression and encryption). Max is `Int.MAX_VALUE` = `2147483647`
   | `s3.bucket`                   | a1b2c3d                    | S3 bucket to write output to - required when `outputToS3` spring profile is active. I.e. `bucket` in `s3://bucket/folder/`
-  | `s3.prefix.folder`                   | mongo-export/2019080       | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
+  | `s3.prefix.folder`            | mongo-export/2019080       | S3 folder to write to in the bucket - required when `outputToS3` spring profile is active. I.e. `folder` in  `s3://bucket/folder/`
   | `source.cipher.algorithm`     | AES/CTR/NoPadding          | The algorithm that was used to encrypt the source data.
   | `source.table.name`           | k2hb:ingest                | Table in hbase to read data from.
   | `target.cipher.algorithm`     | AES/CTR/NoPadding          | The algorithm that should be used to encrypt the output data.
