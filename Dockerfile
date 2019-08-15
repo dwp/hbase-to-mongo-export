@@ -41,7 +41,8 @@ RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 WORKDIR ${INSTALL_DIR}
 
 RUN mkdir certs
-COPY resources/certs/htme/* certs/
+COPY resources/htme-keystore.jks certs/keystore.jks
+COPY resources/htme-truststore.jks certs/truststore.jks
 
 ENV JAR=hbase-to-mongo-export-${HBASE_TO_MONGO_EXPORT_VERSION}.jar
 COPY --from=buildImage \

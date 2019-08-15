@@ -18,6 +18,7 @@ RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-s
 RUN ls -la *.jar
 
 COPY scripts/application_dks.properties ./
-COPY resources/certs/dks/* ./
+COPY resources/dks-keystore.jks ./keystore.jks
+COPY resources/dks-truststore.jks ./truststore.jks
 
 CMD ["sh", "-c", "java -jar dks-latest.jar"]
