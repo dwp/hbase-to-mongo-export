@@ -9,6 +9,20 @@ mongo backup format, i.e. 1 json record per line.
 2. Docker
 3. docker-compose
 
+## Self signed certificates
+
+The integration tests standup various services as docker containers and the
+export and dks containers require keystores and truststores so that they can
+communicate over 2-way https. To generate these:
+
+```bash
+    cd resources
+    ./certificates.sh
+```
+
+This will create the required keystores where the docker build processes expect
+to find them.
+
 ## Configuration
 
 * The main class is

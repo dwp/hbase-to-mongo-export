@@ -73,18 +73,3 @@ password() {
 }
 
 main
-
-#First/last name
-#ou
-#org
-#city
-#state
-#country
-#keypassword
-
-# CN=dks-ss, OU=ou, O=o, L=leeds, ST=Y, C=UK
-
-
-
-#keytool -export -keystore keystore.jks -alias cid -file dks-standalone-https.crt
-#keytool -import -v -trustcacerts -alias cid -file dks-standalone-https.crt -keystore truststore.jks -storepass changeit
