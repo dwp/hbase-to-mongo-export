@@ -3,7 +3,7 @@ FROM python:3.7.3-stretch
 ENV SERVICE_USER=dataworks
 ENV SERVICE_USER_HOME=/home/${SERVICE_USER}
 ENV INSTALL_DIR=/opt/hbase-to-mongo-export
-RUN mkdir -p ${SERVICE_USER_HOME} ${INSTALL_DIR}/data
+RUN mkdir -p ${SERVICE_USER_HOME} ${INSTALL_DIR}/data /opt/snapshot-sender/data
 RUN useradd -d ${SERVICE_USER_HOME} ${SERVICE_USER}
 RUN id -a ${SERVICE_USER}
 
@@ -13,5 +13,7 @@ RUN pip3 install --trusted-host=pypi.python.org --trusted-host=pypi.org --truste
 
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
+RUN chown -R ${SERVICE_USER}.${SERVICE_USER} /opt/snapshot-sender/data
+RUN ls -al /opt/snapshot-sender/data
 USER $SERVICE_USER
 ENTRYPOINT ["./populate_hbase.py"]
