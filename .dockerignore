@@ -11,4 +11,5 @@
 !/gradle/
 !/entrypoint.sh
 !/resources/
+!*.jks
 !/resources/application_dks.properties

@@ -68,6 +68,9 @@ jobs:
           name: "Run the integration test"
           command: |
             sudo pip3 install docker-compose
+            sudo apt-get update
+            sudo apt-get install openjdk-8-jre-headless
+
             export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=')
             export DATA_KEY_SERVICE_URL=http://localhost:8090
             export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
@@ -76,11 +79,13 @@ jobs:
             export AWS_DEFAULT_REGION=dummy-region
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
+
             cd resources
             ./generate-developer-certs.sh
             docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
             docker build --tag dwp-pthon-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
             cd -
+
             docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
             docker-compose up -d hbase hbase-populate dks-standalone-http dks-standalone-https
             sleep 5
