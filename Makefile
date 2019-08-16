@@ -40,8 +40,16 @@ add-containers-to-hosts: ## Update laptop hosts file with reference to container
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
+build-base-images: ## Build base images to avoid rebuilding frequently
+	@{ \
+		pushd resources; \
+		docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
+		docker build --tag dwp-pthon-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
+		popd; \
+	}
+
 .PHONY: build-images
-build-images: ## Build the hbase, population, and exporter images
+build-images: build-jar build-base-images ## Build the hbase, population, and exporter images
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
