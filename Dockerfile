@@ -1,14 +1,14 @@
 FROM dwp-centos-with-java-htme:latest
 ARG HBASE_TO_MONGO_EXPORT_VERSION
 
-RUN mkdir certs
+RUN mkdir -p certs
 COPY resources/htme-keystore.jks certs/keystore.jks
 COPY resources/htme-truststore.jks certs/truststore.jks
 
 ENV JAR=hbase-to-mongo-export-${HBASE_TO_MONGO_EXPORT_VERSION}.jar
-COPY build/libs/$JAR $INSTALL_DIR/
+COPY build/libs/$JAR ./hbase-to-mongo-export-latest.jar
+RUN ls -la *.jar
 
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
-USER ${SERVICE_USER}
+RUN chmod -R a+rwx /opt/hbase-to-mongo-export/data
 
-ENTRYPOINT ["sh", "-c", "${INSTALL_DIR}/${JAR} \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "./hbase-to-mongo-export-latest.jar \"$@\"", "--"]

@@ -5,5 +5,9 @@ RUN pip3 install --trusted-host=pypi.python.org --trusted-host=pypi.org --truste
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR} ${INSTALL_DIR}/data
 RUN ls -l ${INSTALL_DIR}/data
+
+RUN mkdir -p /opt/hbase-to-mongo-export/data
+RUN chmod -R a+rwx /opt/hbase-to-mongo-export/data
+
 USER $SERVICE_USER
 ENTRYPOINT ["./populate_hbase.py"]

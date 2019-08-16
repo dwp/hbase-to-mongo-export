@@ -52,7 +52,7 @@ services:
       --data-key-service http://dks-standalone-http:8080/datakey
       --zookeeper-quorum hbase
       --dump-table-contents
-      --completed-flag data/ready
+      --completed-flag /opt/hbase-to-mongo-export/data/ready
       --remove-output-file data/ucdata-file-output.txt
       --data-table-name ucfs-data
       --topics-table-name ucfs-topics
@@ -76,15 +76,15 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
       --file.output=data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
-      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
 
   hbase-to-mongo-export-directory:
@@ -105,17 +105,17 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --directory.output=data
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
       --data.key.service.url=https://dks-standalone-https:8443
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
-      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
 
   hbase-to-mongo-export-s3:
@@ -137,15 +137,15 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
-      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
       --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
       --aws.region=${AWS_DEFAULT_REGION}

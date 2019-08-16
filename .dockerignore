@@ -2,6 +2,7 @@
 **
 
 # Allow specifics
+!/build/libs/*.jar
 !/src
 !/gradlew
 !/build.gradle.kts
