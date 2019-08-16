@@ -62,7 +62,7 @@ class S3DirectoryWriterTest {
         }
 
         s3DirectoryWriter.writeOutput()
-        Mockito.verify(s3Client, Mockito.times(8))
+        Mockito.verify(s3Client, Mockito.times(4))
                 .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
     }
 

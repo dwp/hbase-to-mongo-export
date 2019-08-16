@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
 
 // See also https://github.com/aws/aws-sdk-java
 
@@ -26,7 +27,7 @@ class S3DirectoryWriter(keyService: KeyService,
     @Autowired
     private lateinit var s3Client: AmazonS3
 
-    override fun writeToTarget(filePath: String, fileBytes: ByteArray) {
+    override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
         // See also https://github.com/aws/aws-sdk-java
         val bytesSize = fileBytes.size.toLong()
         logger.info("Writing file 's3://$s3BucketName/$filePath' of '$bytesSize' bytes.")
@@ -43,6 +44,10 @@ class S3DirectoryWriter(keyService: KeyService,
             val metadata = ObjectMetadata()
             metadata.contentType = "binary/octetstream"
             metadata.addUserMetadata("x-amz-meta-title", objKeyName)
+            metadata.addUserMetadata("iv", iv)
+            metadata.addUserMetadata("cipherText", cipherText)
+            metadata.addUserMetadata("dataKeyEncryptionKeyId", dataKeyEncryptionKeyId)
+
             metadata.contentLength = bytesSize
             val request = PutObjectRequest(s3BucketName, objKeyName, bufferedInputStream, metadata)
 

@@ -99,22 +99,27 @@ class DirectoryWriterChunkingTest {
 
         val outputs = File(outputDirectoryPath).listFiles()
 
-        assertEquals(4, outputs.size)
+        assertEquals(8, outputs.size)
 
-        val expectedSizes = mapOf(1 to 95_519, 2 to 97_525, 3 to 98_643, 4 to 10_913)
-
-        val filenameRegex = Regex("""(\d+)\.\w+$""")
+        val expectedSizes = mapOf(
+            "db.a.b-000001.metadata" to 40,
+            "db.a.b-000001.txt" to 95_519,
+            "db.a.b-000002.metadata" to 40,
+            "db.a.b-000002.txt" to 97_525,
+            "db.a.b-000003.metadata" to 40,
+            "db.a.b-000003.txt" to 98_643,
+            "db.a.b-000004.metadata" to 40,
+            "db.a.b-000004.txt" to 10_913)
 
         outputs.forEach { outputFile ->
-            logger.info("Checking $outputFile.")
-            val match = filenameRegex.find(outputFile.name)
+            val fileName = outputFile.name
+            logger.info("Checking $fileName.")
 
-            match?.groups?.get(1)?.value?.toInt().let { fileNumber ->
-                val expectedSize = expectedSizes[fileNumber]
-                outputFile.length().toInt().also { actualSize ->
-                    logger.info("Checking that $outputFile actual size $actualSize is the expected size $expectedSize")
-                    assertEquals(expectedSize, actualSize)
-                }
+            val expectedSize = expectedSizes[fileName]
+
+            outputFile.length().toInt().also { actualSize ->
+                logger.info("Checking that $fileName actual size $actualSize is the expected size $expectedSize")
+                assertEquals("File $fileName actual size $actualSize should be $expectedSize", expectedSize, actualSize)
             }
 
         }
