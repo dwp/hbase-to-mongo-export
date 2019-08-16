@@ -53,7 +53,7 @@ services:
       --zookeeper-quorum hbase
       --dump-table-contents
       --completed-flag /opt/hbase-to-mongo-export/data/ready
-      --remove-output-file data/ucdata-file-output.txt
+      --remove-output-file /opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       --data-table-name ucfs-data
       --topics-table-name ucfs-topics
       --test-configuration-file test-config.json
@@ -78,7 +78,7 @@ services:
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
-      --file.output=data/ucdata-file-output.txt
+      --file.output=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
       --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
@@ -168,7 +168,7 @@ services:
       - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "integration"
     environment:
-      - FILE_NAME=data/ucdata-file-output.txt
+      - FILE_NAME=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 
