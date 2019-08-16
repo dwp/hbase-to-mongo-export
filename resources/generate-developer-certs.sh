@@ -9,8 +9,8 @@ main() {
     extract_public_certificate htme-keystore.jks hbase-to-mongo-export.crt
     make_truststore htme-truststore.jks hbase-to-mongo-export.crt
 
-    import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt
-    import_into_truststore htme-truststore.jks dks-standalone-https.crt
+    import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt hbase-to-mongo-export
+    import_into_truststore htme-truststore.jks dks-standalone-https.crt dks
 }
 
 make_keystore() {

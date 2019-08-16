@@ -41,3 +41,4 @@ ephemera/
 rad/
 *.jks
 *.crt
+*.pem

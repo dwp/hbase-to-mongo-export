@@ -77,13 +77,14 @@ to find them.
   | `unitTest`             | No                 | Overrides `strongRng`, `realHttpClient` and `realHbaseDataSource`. Use mock http client and psuedo random number generator.
 
 
-## Run locally containerized
+## Makefile targets
 
 There are makefile commands for all your common actions;
 
  | Command                      | Description
  |------------------------------|--------------------
- | `add-hbase-to-hosts`         | Update laptop hosts file with reference to hbase container (`http://local-hbase:8080`) and dks-standalone container (`http://local-dks:8080`)
+ | `generate-developer-certs`   | Generate temporary local certs and stores for the local developer containers to use
+ | `add-contaners-to-hosts`     | Update laptop hosts file with reference to containers (`http://local-hbase:8080`, `http://local-dks:8080`, etc etc)
  | `build-all`                  | Build the jar file and then all docker images
  | `build-images`               | Build the hbase, population, and exporter images
  | `build-jar`                  | Build the hbase exporter jar file
@@ -103,6 +104,9 @@ There are makefile commands for all your common actions;
  | `up`                         | Run `build-all` then start the services with `up-all`
  | `up-all`                     | Bring up hbase, population, and sample exporter services
  | `local-all-collections-test` | Runs a sample test of local collections, similar to how we do in a VM. Only works properly on Unix hosts with native docker.
+
+
+## Run locally containerized
 
 ### Stand up the hbase container and populate it, and execute sample exporters
 
