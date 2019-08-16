@@ -1,3 +1,5 @@
+SHELL:=bash
+
 hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-2
 aws_secret_access_key=DummyKey
@@ -21,6 +23,9 @@ help:
 echo-version: ## Echo the current version
 	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
 
+generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
+	pushd resources && ./generate-developer-certs.sh && popd
+
 .PHONY: build-jar
 build-jar: ## Build the hbase exporter jar file
 	./gradlew build
@@ -30,14 +35,21 @@ dist: ## Assemble distribution files in build/dist
 	./gradlew assembleDist
 
 .PHONY: add-containers-to-hosts
-add-containers-to-hosts: ## Update laptop hosts file with reference to hbase and dks-standalone containers
-	./scripts/add-hbase-to-hosts.sh;
-	./scripts/add-dks-to-hosts.sh;
+add-containers-to-hosts: ## Update laptop hosts file with reference to containers
+	pushd resources && ./add-containers-to-hosts.sh && popd
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
+build-base-images: ## Build base images to avoid rebuilding frequently
+	@{ \
+		pushd resources; \
+		docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
+		docker build --tag dwp-pthon-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
+		popd; \
+	}
+
 .PHONY: build-images
-build-images: ## Build the hbase, population, and exporter images
+build-images: build-jar build-base-images ## Build the hbase, population, and exporter images
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -163,7 +175,7 @@ reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebui
 .PHONY: local-all-collections-test
 local-all-collections-test: build-jar ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
-		pushd scripts; \
+		pushd resources; \
 		./read-topics-csv.sh \
 			topics-test.csv \
 			$(s3_bucket) \

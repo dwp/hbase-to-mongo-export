@@ -24,7 +24,7 @@ services:
   s3-bucket-provision:
     image: s3-bucket-provision
     build:
-      context: scripts
+      context: resources
       dockerfile: Dockerfile_s3_bucket_provision
     container_name: s3-bucket-provision
     depends_on:
@@ -40,7 +40,7 @@ services:
   hbase-populate:
     image: hbase-populate
     build:
-      context: scripts
+      context: resources
       dockerfile: Dockerfile_populate_hbase
     container_name: hbase-populate
     depends_on:
@@ -52,8 +52,8 @@ services:
       --data-key-service http://dks-standalone-http:8080/datakey
       --zookeeper-quorum hbase
       --dump-table-contents
-      --completed-flag data/ready
-      --remove-output-file data/ucdata-file-output.txt
+      --completed-flag /opt/hbase-to-mongo-export/data/ready
+      --remove-output-file /opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       --data-table-name ucfs-data
       --topics-table-name ucfs-topics
       --test-configuration-file test-config.json
@@ -76,15 +76,15 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
-      --file.output=data/ucdata-file-output.txt
+      --file.output=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       --output.batch.size.max.bytes=2048
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
-      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
 
   hbase-to-mongo-export-directory:
@@ -105,17 +105,17 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --directory.output=data
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
       --data.key.service.url=https://dks-standalone-https:8443
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
-      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
 
   hbase-to-mongo-export-s3:
@@ -137,15 +137,15 @@ services:
       --data.table.name=ucfs-data
       --column.family=topic
       --topic.name=db.core.addressDeclaration
-      --data.ready.flag.location=data/ready
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048
-      --identity.keystore=/opt/hbase-to-mongo-export/certs/keystore.jks
+      --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
-      --trust.keystore=/opt/hbase-to-mongo-export/certs/truststore.jks
+      --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
       --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
       --aws.region=${AWS_DEFAULT_REGION}
@@ -168,7 +168,7 @@ services:
       - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "integration"
     environment:
-      - FILE_NAME=data/ucdata-file-output.txt
+      - FILE_NAME=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 
@@ -177,8 +177,8 @@ services:
     ports:
       - 8090:8080
     build:
-      context: .
-      dockerfile: scripts/Dockerfile_dks
+      context: resources
+      dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
@@ -190,8 +190,8 @@ services:
     ports:
       - 8091:8443
     build:
-      context: .
-      dockerfile: scripts/Dockerfile_dks
+      context: resources
+      dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data

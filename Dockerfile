@@ -1,54 +1,14 @@
-FROM zenika/kotlin:1.3-jdk8-slim as buildImage
-
-ENV SERVICE_USER=dataworks
-ENV SERVICE_USER_HOME=/home/${SERVICE_USER}
-ENV BUILD_DIR=/opt/hbase-to-mongo-export
-ENV GRADLE='./gradlew --no-daemon'
-
-RUN mkdir -p ${SERVICE_USER_HOME} ${BUILD_DIR}
-RUN useradd -d ${SERVICE_USER_HOME} ${SERVICE_USER}
-RUN id -a ${SERVICE_USER}
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
-
-WORKDIR ${BUILD_DIR}
-
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-COPY gradle.properties .
-COPY gradlew .
-COPY gradle/ ./gradle
-
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${BUILD_DIR}
-
-USER ${SERVICE_USER}
-
-RUN $GRADLE wrapper
-RUN $GRADLE --refresh-dependencies compileKotlin
-COPY src/ ./src
-RUN $GRADLE build
-
-FROM openjdk:8-slim
+FROM dwp-centos-with-java-htme:latest
 ARG HBASE_TO_MONGO_EXPORT_VERSION
 
-ENV SERVICE_USER=dataworks
-ENV SERVICE_USER_HOME=/home/${SERVICE_USER}
-ENV INSTALL_DIR=/opt/hbase-to-mongo-export
-RUN mkdir -p ${SERVICE_USER_HOME} ${INSTALL_DIR}/data
-RUN useradd -d ${SERVICE_USER_HOME} ${SERVICE_USER}
-RUN id -a ${SERVICE_USER}
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${SERVICE_USER_HOME}
-
-WORKDIR ${INSTALL_DIR}
-
-RUN mkdir certs
-COPY resources/certs/htme/* certs/
+RUN mkdir -p certs
+COPY resources/htme-keystore.jks certs/keystore.jks
+COPY resources/htme-truststore.jks certs/truststore.jks
 
 ENV JAR=hbase-to-mongo-export-${HBASE_TO_MONGO_EXPORT_VERSION}.jar
-COPY --from=buildImage \
-        $INSTALL_DIR/build/libs/$JAR \
-        $INSTALL_DIR
+COPY build/libs/$JAR ./hbase-to-mongo-export-latest.jar
+RUN ls -la *.jar
 
-RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${INSTALL_DIR}
-USER ${SERVICE_USER}
+RUN chmod -R a+rwx /opt/hbase-to-mongo-export/data
 
-ENTRYPOINT ["sh", "-c", "${INSTALL_DIR}/${JAR} \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "./hbase-to-mongo-export-latest.jar \"$@\"", "--"]

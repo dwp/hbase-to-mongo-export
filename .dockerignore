@@ -2,6 +2,7 @@
 **
 
 # Allow specifics
+!/build/libs/*.jar
 !/src
 !/gradlew
 !/build.gradle.kts
@@ -9,5 +10,6 @@
 !/settings.gradle.kts
 !/gradle/
 !/entrypoint.sh
-!/resources/certs/
-!/scripts/application_dks.properties
+!/resources/
+!*.jks
+!/resources/application_dks.properties

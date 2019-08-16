@@ -31,7 +31,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: 
+      - run:
           name: run gradle
           command: |
             LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -68,6 +68,9 @@ jobs:
           name: "Run the integration test"
           command: |
             sudo pip3 install docker-compose
+            sudo apt-get update
+            sudo apt-get install openjdk-8-jdk
+
             export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=')
             export DATA_KEY_SERVICE_URL=http://localhost:8090
             export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
@@ -76,10 +79,17 @@ jobs:
             export AWS_DEFAULT_REGION=dummy-region
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
+
+            cd resources
+            ./generate-developer-certs.sh
+            docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
+            docker build --tag dwp-pthon-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
+            cd -
+            ./gradlew build
             docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
-            docker-compose up -d hbase hbase-populate
+            docker-compose up -d hbase hbase-populate dks-standalone-http dks-standalone-https
             sleep 5
-            docker-compose up -d hbase-to-mongo-export-file dks-standalone-http dks-standalone-https
+            docker-compose up -d hbase-to-mongo-export-file
             sleep 5
             docker-compose up hbase-to-mongo-export-itest
 

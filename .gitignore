@@ -33,9 +33,12 @@ out/
 
 ### local ###
 src/main/python/environment/
-scripts/environment/
+resources/environment/
 __pycache__
 classes/
 data/
 ephemera/
 rad/
+*.jks
+*.crt
+*.pem
