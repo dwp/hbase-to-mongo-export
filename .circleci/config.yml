@@ -77,12 +77,14 @@ jobs:
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
             cd resources
-            ./certificates.sh
+            ./generate-developer-certs.sh
+            docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
+            docker build --tag dwp-pthon-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
             cd -
             docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
-            docker-compose up -d hbase hbase-populate
+            docker-compose up -d hbase hbase-populate dks-standalone-http dks-standalone-https
             sleep 5
-            docker-compose up -d hbase-to-mongo-export-file dks-standalone-http dks-standalone-https
+            docker-compose up -d hbase-to-mongo-export-file
             sleep 5
             docker-compose up hbase-to-mongo-export-itest
 
