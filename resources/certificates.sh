@@ -13,18 +13,17 @@ main() {
     import_into_truststore htme-truststore.jks dks-standalone-https.crt
 }
 
-
 make_keystore() {
     local keystore="${1:?Usage: $FUNCNAME keystore common-name}"
     local common_name="${2:?Usage: $FUNCNAME keystore common-name}"
 
-    [[ -f "$keystore" ]] && rm -v "$keystore"
+    [[ -f "${keystore}" ]] && rm -v "${keystore}"
 
     keytool -v \
             -genkeypair \
             -keyalg RSA \
             -alias cid \
-            -keystore "$keystore" \
+            -keystore "${keystore}" \
             -storepass $(password) \
             -validity 365 \
             -keysize 2048 \
@@ -36,11 +35,11 @@ extract_public_certificate() {
     local keystore="${1:?Usage: $FUNCNAME keystore certificate}"
     local certificate="${2:?Usage: $FUNCNAME keystore certificate}"
 
-    [[ -f "$certificate" ]] && rm -v "$certificate"
+    [[ -f "${certificate}" ]] && rm -v "${certificate}"
 
     keytool -v \
             -exportcert \
-            -keystore "$keystore" \
+            -keystore "${keystore}" \
             -storepass $(password) \
             -alias cid \
             -file "$certificate"
@@ -49,8 +48,8 @@ extract_public_certificate() {
 make_truststore() {
     local truststore="${1:?Usage: $FUNCNAME truststore certificate}"
     local certificate="${2:?Usage: $FUNCNAME truststore certificate}"
-    [[ -f $truststore ]] && rm -v "$truststore"
-    import_into_truststore $truststore $certificate self
+    [[ -f ${truststore} ]] && rm -v "${truststore}"
+    import_into_truststore ${truststore} ${certificate} self
 }
 
 import_into_truststore() {
@@ -62,9 +61,9 @@ import_into_truststore() {
             -noprompt \
             -v \
             -trustcacerts \
-            -alias "$alias" \
-            -file "$certificate" \
-            -keystore "$truststore" \
+            -alias "${alias}" \
+            -file "${certificate}" \
+            -keystore "${truststore}" \
             -storepass $(password)
 }
 

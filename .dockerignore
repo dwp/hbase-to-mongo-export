@@ -10,4 +10,4 @@
 !/gradle/
 !/entrypoint.sh
 !/resources/
-!/scripts/application_dks.properties
+!/resources/application_dks.properties

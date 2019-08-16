@@ -31,8 +31,7 @@ dist: ## Assemble distribution files in build/dist
 
 .PHONY: add-containers-to-hosts
 add-containers-to-hosts: ## Update laptop hosts file with reference to hbase and dks-standalone containers
-	./scripts/add-hbase-to-hosts.sh;
-	./scripts/add-dks-to-hosts.sh;
+	./resources/add-containers-to-hosts.sh;
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
@@ -163,7 +162,7 @@ reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebui
 .PHONY: local-all-collections-test
 local-all-collections-test: build-jar ## Build a local jar, then run it repeat times for each configured collection
 	@{ \
-		pushd scripts; \
+		pushd resources; \
 		./read-topics-csv.sh \
 			topics-test.csv \
 			$(s3_bucket) \

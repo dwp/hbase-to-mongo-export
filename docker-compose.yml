@@ -24,7 +24,7 @@ services:
   s3-bucket-provision:
     image: s3-bucket-provision
     build:
-      context: scripts
+      context: resources
       dockerfile: Dockerfile_s3_bucket_provision
     container_name: s3-bucket-provision
     depends_on:
@@ -40,7 +40,7 @@ services:
   hbase-populate:
     image: hbase-populate
     build:
-      context: scripts
+      context: resources
       dockerfile: Dockerfile_populate_hbase
     container_name: hbase-populate
     depends_on:
@@ -178,7 +178,7 @@ services:
       - 8090:8080
     build:
       context: .
-      dockerfile: scripts/Dockerfile_dks
+      dockerfile: resources/Dockerfile_dks
     container_name: dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
@@ -191,7 +191,7 @@ services:
       - 8091:8443
     build:
       context: .
-      dockerfile: scripts/Dockerfile_dks
+      dockerfile: resources/Dockerfile_dks
     container_name: dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
