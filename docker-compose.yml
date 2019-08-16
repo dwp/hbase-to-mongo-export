@@ -177,8 +177,8 @@ services:
     ports:
       - 8090:8080
     build:
-      context: .
-      dockerfile: resources/Dockerfile_dks
+      context: resources
+      dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
@@ -190,8 +190,8 @@ services:
     ports:
       - 8091:8443
     build:
-      context: .
-      dockerfile: resources/Dockerfile_dks
+      context: resources
+      dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
