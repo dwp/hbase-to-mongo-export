@@ -3,6 +3,7 @@ package app.configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
+import org.apache.http.client.HttpClient
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContexts
@@ -24,6 +25,21 @@ class ContextConfiguration {
 
     @Bean
     @Profile("secureHttpClient")
+    fun secureHttpClientProvider() = object: HttpClientProvider {
+            override fun client() = HttpClients.custom()
+                        .setSSLSocketFactory(connectionFactory())
+                        .build()!!
+    }
+
+
+    @Bean
+    @Profile("insecureHttpClient")
+    fun insecureHttpClientProvider() = object: HttpClientProvider {
+        override fun client() = HttpClients.createDefault()!!
+    }
+
+    @Bean
+    @Profile("secureHttpClient")
     fun secureHttpClient() = HttpClients.custom()
             .setSSLSocketFactory(connectionFactory())
             .build()!!
@@ -39,7 +55,7 @@ class ContextConfiguration {
                 .loadKeyMaterial(
                         File(identityStore),
                         identityStorePassword.toCharArray(),
-                        identityKeyPassword.toCharArray()) {_, socket -> identityStoreAlias}
+                        identityKeyPassword.toCharArray()) { _, _ -> identityStoreAlias}
                 .loadTrustMaterial(File(trustStore), trustStorePassword.toCharArray())
                 .build()
 
