@@ -11,8 +11,6 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
-import org.bouncycastle.crypto.tls.ConnectionEnd
-import org.bouncycastle.crypto.tls.ConnectionEnd.client
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -28,6 +26,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
 
     override fun batchDataKey(): DataKeyResult {
         httpClientProvider.client().use { client ->
+            val wtf = HttpGet("$dataKeyServiceUrl/datakey")
             client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
                 return if (response.statusLine.statusCode == 201) {
                     val entity = response.entity
