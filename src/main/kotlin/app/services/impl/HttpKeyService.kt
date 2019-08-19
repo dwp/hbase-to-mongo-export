@@ -26,7 +26,6 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
 
     override fun batchDataKey(): DataKeyResult {
         httpClientProvider.client().use { client ->
-            val wtf = HttpGet("$dataKeyServiceUrl/datakey")
             client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
                 return if (response.statusLine.statusCode == 201) {
                     val entity = response.entity
