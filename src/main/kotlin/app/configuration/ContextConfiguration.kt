@@ -3,45 +3,26 @@ package app.configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.HttpClients
-import org.apache.http.ssl.SSLContexts
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.SecureRandom
-import javax.net.ssl.SSLContext
 
 
 @Configuration
 class ContextConfiguration {
 
     @Bean
-    @Profile("secureHttpClient")
-    fun secureHttpClient() = HttpClients.custom()
-            .setSSLSocketFactory(connectionFactory())
-            .build()!!
-
-    fun connectionFactory() = SSLConnectionSocketFactory(
-                sslContext(),
-                arrayOf("TLSv1"),
-                null,
-                SSLConnectionSocketFactory.getDefaultHostnameVerifier())
-
-    fun sslContext(): SSLContext =
-        SSLContexts.custom()
-                .loadKeyMaterial(
-                        File(identityStore),
-                        identityStorePassword.toCharArray(),
-                        identityKeyPassword.toCharArray()) {_, socket -> identityStoreAlias}
-                .loadTrustMaterial(File(trustStore), trustStorePassword.toCharArray())
-                .build()
+    @Profile("insecureHttpClient")
+    fun insecureHttpClientProvider() = object: HttpClientProvider {
+        override fun client() = HttpClients.createDefault()!!
+    }
 
     @Bean
     @Profile("strongRng")
@@ -81,23 +62,6 @@ class ContextConfiguration {
             }
         })
     }
-    @Value("\${identity.keystore}")
-    private lateinit var identityStore: String
-
-    @Value("\${identity.store.password}")
-    private lateinit var identityStorePassword: String
-
-    @Value("\${identity.store.alias}")
-    private lateinit var identityStoreAlias: String
-
-    @Value("\${identity.key.password}")
-    private lateinit var identityKeyPassword: String
-
-    @Value("\${trust.keystore}")
-    private lateinit var trustStore: String
-
-    @Value("\${trust.store.password}")
-    private lateinit var trustStorePassword: String
 
     @Value("\${hbase.zookeeper.quorum}")
     private lateinit var hbaseZookeeperQuorum: String
