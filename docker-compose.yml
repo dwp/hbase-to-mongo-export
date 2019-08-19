@@ -106,7 +106,7 @@ services:
       --column.family=topic
       --topic.name=db.core.addressDeclaration
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
-      --directory.output=data
+      --directory.output=/opt/hbase-to-mongo-export/data
       --encrypt.output=true
       --compress.output=true
       --output.batch.size.max.bytes=2048

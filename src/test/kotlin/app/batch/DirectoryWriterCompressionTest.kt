@@ -61,9 +61,9 @@ class DirectoryWriterCompressionTest {
         val listOfLists: MutableList<MutableList<String>> = mutableListOf()
         var total = 0
 
-        for (i in 1 .. 10) {
+        for (i in 1..10) {
             val list: MutableList<String> = mutableListOf()
-            for (j in 1 .. 10) {
+            for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
                 list.add(item)
@@ -79,15 +79,15 @@ class DirectoryWriterCompressionTest {
 
         directoryWriter.writeOutput()
         val outputs = File(outputDirectoryPath).list()
-        assertEquals(4, outputs.size)
-        val filenameRegex = Regex("""(\d+)\.\w+\.bz2$""")
+        assertEquals(8, outputs.size)
+        val filenameRegex = Regex("""(\d+)\.\w+\.txt.bz2$""")
 
         outputs.forEach {
             logger.info("Checking $it.")
-            val match = filenameRegex.find(it)
+            if (it.endsWith(".txt.bz2")) {
+                val match = filenameRegex.find(it)
 
-            match?.groups?.get(1)?.value?.toInt().let {
-                _ ->
+                match?.groups?.get(1)?.value?.toInt().let { _ ->
                     val fin = Files.newInputStream(Paths.get("ephemera", it))
                     val buffered = BufferedInputStream(fin)
                     val bzIn = BZip2CompressorInputStream(buffered)
@@ -96,10 +96,10 @@ class DirectoryWriterCompressionTest {
 
                     do {
                         n = bzIn.read(buffer)
-                    }
-                    while (n  != -1)
+                    } while (n != -1)
 
                     bzIn.close()
+                }
             }
         }
 

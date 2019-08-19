@@ -43,3 +43,4 @@ rad/
 *.crt
 *.pem
 venv/
+.DS_Store

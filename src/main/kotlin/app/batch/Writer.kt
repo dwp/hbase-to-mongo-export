@@ -21,7 +21,7 @@ abstract class Writer(private val keyService: KeyService,
     }
 
     abstract fun outputLocation(): String
-    abstract fun writeToTarget(filePath: String, fileBytes: ByteArray)
+    abstract fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String)
 
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
@@ -53,19 +53,8 @@ abstract class Writer(private val keyService: KeyService,
                         byteArrayOutputStream.toByteArray())
 
                 val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
-                writeToTarget(dataFile, dataBytes)
 
-                val metadataFile = metadataPath(currentOutputFileNumber)
-                val metadataByteArrayOutputStream = ByteArrayOutputStream()
-                val metadataStream: OutputStream = BufferedOutputStream(metadataByteArrayOutputStream)
-                metadataStream.use {
-                    val iv = encryptionResult.initialisationVector
-                    it.write("iv=$iv\n".toByteArray(StandardCharsets.UTF_8))
-                    it.write("ciphertext=${dataKeyResult.ciphertextDataKey}\n".toByteArray(StandardCharsets.UTF_8))
-                    it.write("dataKeyEncryptionKeyId=${dataKeyResult.dataKeyEncryptionKeyId}\n".toByteArray(StandardCharsets.UTF_8))
-                }
-                val metadataBytes = metadataByteArrayOutputStream.toByteArray()
-                writeToTarget(metadataFile, metadataBytes)
+                writeToTarget(dataFile, dataBytes, encryptionResult.initialisationVector, dataKeyResult.ciphertextDataKey, dataKeyResult.dataKeyEncryptionKeyId)
 
             } else {
                 //no encryption
@@ -73,7 +62,7 @@ abstract class Writer(private val keyService: KeyService,
                 bufferedOutputStream(byteArrayOutputStream).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
-                writeToTarget(dataFile, byteArrayOutputStream.toByteArray())
+                writeToTarget(dataFile, byteArrayOutputStream.toByteArray(), "", "", "")
             }
 
             this.currentBatch = StringBuilder()
@@ -89,7 +78,7 @@ abstract class Writer(private val keyService: KeyService,
             BufferedOutputStream(outputStream)
         }
 
-    private fun metadataPath(number: Int): String =
+    protected fun metadataPath(number: Int): String =
         "${outputLocation()}/$topicName-%06d.metadata".format(number)
 
     private fun outputName(number: Int): String =
@@ -110,7 +99,7 @@ abstract class Writer(private val keyService: KeyService,
 
     private var currentBatch = StringBuilder()
     private var batchSizeBytes = 0
-    private var currentOutputFileNumber = 0
+    protected var currentOutputFileNumber = 0
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
