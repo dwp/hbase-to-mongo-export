@@ -29,6 +29,10 @@ class ContextConfiguration {
     fun secureRandom() = SecureRandom.getInstanceStrong()!!
 
     @Bean
+    @Profile("weakRng")
+    fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
+
+    @Bean
     @Profile("insecureHttpClient")
     fun insecureHttpClient() = HttpClients.createDefault()!!
 
