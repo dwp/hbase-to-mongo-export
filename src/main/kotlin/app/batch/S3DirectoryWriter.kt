@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
 
 // See also https://github.com/aws/aws-sdk-java
 
@@ -72,6 +71,6 @@ class S3DirectoryWriter(keyService: KeyService,
     private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DirectoryWriter::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriter::class.toString())
     }
 }

@@ -43,7 +43,7 @@ class SecureHttpClientProvider: HttpClientProvider {
                 loadKeyMaterial(
                         File(identityStore),
                         identityStorePassword.toCharArray(),
-                        identityKeyPassword.toCharArray()) { _, socket -> identityStoreAlias }
+                        identityKeyPassword.toCharArray()) { _, _ -> identityStoreAlias }
                 loadTrustMaterial(File(trustStore), trustStorePassword.toCharArray())
                 build()
             }

@@ -37,11 +37,11 @@ abstract class Writer(private val keyService: KeyService,
         if (batchSizeBytes > 0) {
 
             val dataFile = outputName(++currentOutputFileNumber)
-            S3DirectoryWriter.logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
+            logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
 
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
-                S3DirectoryWriter.logger.info("dataKeyResult: '$dataKeyResult'.")
+                logger.info("dataKeyResult: '$dataKeyResult'.")
                 val byteArrayOutputStream = ByteArrayOutputStream()
 
                 bufferedOutputStream(byteArrayOutputStream).use {
