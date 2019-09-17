@@ -16,8 +16,15 @@ export and dks containers require keystores and truststores so that they can
 communicate over 2-way https. To generate these:
 
 ```bash
-    cd resources
-    ./certificates.sh
+   make generate-developer-certs
+```
+
+## UCD MIM Certs
+
+We need certificates to talk through UC proxies from inside UC/DWP. To download these:
+
+```bash
+   make download-ucd-certs
 ```
 
 This will create the required keystores where the docker build processes expect
