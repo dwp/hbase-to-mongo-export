@@ -2,8 +2,8 @@ FROM dwp-kotlin-slim-gradle:latest
 
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
-RUN $GRADLE --refresh-dependencies compileKotlin
+RUN /gradlew --refresh-dependencies compileKotlin
 COPY src/ ./src
-RUN $GRADLE build
+RUN /gradlew build
 
 ENTRYPOINT ["sh", "-c", "/gradlew \"$@\"", "--"]

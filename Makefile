@@ -38,6 +38,10 @@ dist: ## Assemble distribution files in build/dist
 add-containers-to-hosts: ## Update laptop hosts file with reference to containers
 	pushd resources && ./add-containers-to-hosts.sh && popd
 
+.PHONY: download-ucd-certs
+download-ucd-certs: ## Download intermediate UC certs for MIM
+	pushd resources && ./download-ucd-certs.sh && popd
+
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
 build-base-images: ## Build base images to avoid rebuilding frequently
