@@ -21,7 +21,10 @@ COPY gradle/ ./gradle
 RUN chown -R ${SERVICE_USER}.${SERVICE_USER} ${BUILD_DIR}
 USER ${SERVICE_USER}
 
-RUN $GRADLE wrapper
+COPY UCD-CA.crt /usr/local/share/ca-certificates/
+RUN /usr/sbin/update-ca-certificates --verbose
+
+RUN ./gradlew
 RUN $GRADLE --refresh-dependencies compileKotlin
 COPY src/ ./src
 RUN $GRADLE build
