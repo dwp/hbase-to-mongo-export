@@ -1,0 +1,10 @@
+FROM zenika/kotlin:1.3-jdk8-slim
+
+COPY UCD*.crt /usr/local/share/ca-certificates/
+RUN /usr/sbin/update-ca-certificates --verbose
+
+COPY settings.gradle.kts .
+COPY gradle.properties .
+COPY gradlew .
+COPY gradle/ ./gradle
+RUN ./gradlew

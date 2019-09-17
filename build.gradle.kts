@@ -24,7 +24,6 @@ tasks.bootJar {
     launchScript()
 }
 
-
 release {
     failOnPublishNeeded = false
     with (propertyMissing("git") as GitAdapter.GitConfig) {

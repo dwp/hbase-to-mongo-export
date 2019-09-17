@@ -2,6 +2,7 @@
 **
 
 # Allow specifics
+!UCD*.crt
 !/build/libs/*.jar
 !/src
 !/gradlew
