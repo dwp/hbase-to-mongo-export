@@ -1,7 +1,5 @@
-FROM zenika/kotlin:1.3-jdk8-slim
+FROM gradle:jdk8
 COPY settings.gradle.kts .
 COPY gradle.properties .
-RUN apt-get update && apt-get install -y --no-install-recommends gradle && \
-   apt-get autoremove -y && \
-   apt-get autoclean -y
+
 RUN gradle
