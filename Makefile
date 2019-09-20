@@ -28,11 +28,11 @@ generate-developer-certs:  ## Generate temporary local certs and stores for the 
 
 .PHONY: build-jar
 build-jar: ## Build the hbase exporter jar file
-	./gradlew build
+	gradle build
 
 .PHONY: dist
 dist: ## Assemble distribution files in build/dist
-	./gradlew assembleDist
+	gradle assembleDist
 
 .PHONY: add-containers-to-hosts
 add-containers-to-hosts: ## Update laptop hosts file with reference to containers
@@ -48,8 +48,10 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 	@{ \
 		pushd resources; \
 		docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
-		docker build --tag dwp-pthon-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
+		docker build --tag dwp-python-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
+		cp ../settings.gradle.kts ../gradle.properties ./ ; \
 		docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_tests_kotlin_base . ; \
+		rm settings.gradle.ktsgradle.properties ./ ; \
 		popd; \
 	}
 

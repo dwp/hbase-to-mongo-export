@@ -1,4 +1,4 @@
-FROM dwp-pthon-preinstall-htme:latest
+FROM dwp-python-preinstall-htme:latest
 
 COPY provision-s3.sh ./
 
