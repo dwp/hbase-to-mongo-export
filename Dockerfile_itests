@@ -5,4 +5,4 @@ COPY settings.gradle.kts .
 COPY src/ ./src
 RUN gradle build
 
-ENTRYPOINT [“sh”, “-c”, “gradle \“$@\“”, “--“]
+ENTRYPOINT [“bash”, “-c”, “gradle \“$@\“”, “--“]
