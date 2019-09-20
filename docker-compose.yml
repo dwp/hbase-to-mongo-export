@@ -166,7 +166,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
       - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
-    command: "integration"
+    command: "gradle --rerun-tasks integration"
     environment:
       - FILE_NAME=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
       - EXPECTED_TIMESTAMP=10
