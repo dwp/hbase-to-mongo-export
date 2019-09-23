@@ -189,7 +189,7 @@ Run the application from class file `HBaseToMongoExport` and add arguments to th
 
 You will need to update the active profiles to suit your needs...
 ```bash
- SPRING_CONFIG_LOCATION=./resources/application.properties ./gradlew bootRun
+ SPRING_CONFIG_LOCATION=./resources/application.properties gradle bootRun
 ```
 
 #### Console output
