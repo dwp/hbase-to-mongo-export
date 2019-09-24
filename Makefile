@@ -46,7 +46,7 @@ build-base-images: ## Build base images to avoid rebuilding frequently
 		docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
 		docker build --tag dwp-python-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
 		cp ../settings.gradle.kts ../gradle.properties . ; \
-		docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_tests_kotlin_base . ; \
+		docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_java_gradle_base . ; \
 		rm settings.gradle.kts gradle.properties ; \
 		popd; \
 	}
