@@ -9,7 +9,6 @@ mongo backup format, i.e. 1 json record per line.
 2. Docker
 3. docker-compose
 
-
 ## Self signed certificates
 
 The integration tests standup various services as docker containers and the
@@ -19,10 +18,6 @@ communicate over 2-way https. To generate these:
 ```bash
    make generate-developer-certs
 ```
-
-
-This will create the required keystores where the docker build processes expect
-to find them.
 
 ## Configuration
 
@@ -51,9 +46,9 @@ to find them.
   | `data.table.name`             | k2hb:ingest                | The table to which all the kafka messages have been persisted.
   | `identity.keystore`           | resources/identity.jks     | For mutual auth - the client cert and key truststore.
   | `trust.keystore`              | resources/truststore.jks   | For mutual auth - the DKS cert.
-  | `identity.store.password`     | changeit                   | client cert store password.
-  | `identity.key.password`       | changeit                   | the client key password.
-  | `trust.store.password`        | changeit                   | the trust store password.
+  | `identity.store.password`     | changeit                   | Client cert store password.
+  | `identity.key.password`       | changeit                   | The client key password.
+  | `trust.store.password`        | changeit                   | The trust store password.
   | `identity.store.alias`        | cid                        | The name of the cert in to present to DKS.
 
 * The available spring profiles are
@@ -184,11 +179,11 @@ Run the application from class file `HBaseToMongoExport` and add arguments to th
 
 You will need to update the active profiles to suit your needs...
 ```bash
- SPRING_CONFIG_LOCATION=./resources/application.properties ./gradlew bootRun
+ SPRING_CONFIG_LOCATION=./resources/application.properties gradle bootRun
 ```
 
 #### Console output
 
 Make a run configuration and add arguments as per `hbase-to-mongo-export-file` in the docker-compose file, and update as you need.
 
-...it should the print out what it has exported from the local containerised hbase
+...it will then print out what it has exported from the local containerised hbase
