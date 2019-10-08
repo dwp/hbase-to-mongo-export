@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
+import java.lang.RuntimeException
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
@@ -87,6 +88,22 @@ class HttpKeyServiceTest {
         given(httpResponse.statusLine).willReturn(statusLine)
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
+        given(httpClientProvider.client()).willReturn(httpClient)
+
+        keyService.batchDataKey()
+
+        verify(httpClient, times(10)).execute(any(HttpGet::class.java))
+    }
+
+    @Test(expected = DataKeyServiceUnavailableException::class)
+    fun testBatchDataKey_UnknownHttpError_ThrowsException_AndWillRetry() {
+        val statusLine = mock(StatusLine::class.java)
+        //val entity = mock(HttpEntity::class.java)
+        given(statusLine.statusCode).willReturn(503)
+        val httpResponse = mock(CloseableHttpResponse::class.java)
+        given(httpResponse.statusLine).willReturn(statusLine)
+        val httpClient = mock(CloseableHttpClient::class.java)
+        given(httpClient.execute(any(HttpGet::class.java))).willThrow(RuntimeException("Boom!"))
         given(httpClientProvider.client()).willReturn(httpClient)
 
         keyService.batchDataKey()
@@ -176,6 +193,23 @@ class HttpKeyServiceTest {
         given(httpResponse.statusLine).willReturn(statusLine)
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClientProvider.client()).willReturn(httpClient)
+
+        keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+
+        verify(httpClient, times(10))
+            .execute(any(HttpPost::class.java))
+    }
+
+    @Test(expected = DataKeyServiceUnavailableException::class)
+    fun testDecryptKey_UnknownHttpError_WillCauseRetry() {
+
+        val statusLine = mock(StatusLine::class.java)
+        given(statusLine.statusCode).willReturn(503)
+        val httpResponse = mock(CloseableHttpResponse::class.java)
+        given(httpResponse.statusLine).willReturn(statusLine)
+        val httpClient = mock(CloseableHttpClient::class.java)
+        given(httpClient.execute(any(HttpPost::class.java))).willThrow(RuntimeException("Boom!"))
         given(httpClientProvider.client()).willReturn(httpClient)
 
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
