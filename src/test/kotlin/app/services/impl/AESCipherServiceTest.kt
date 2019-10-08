@@ -57,7 +57,7 @@ class AESCipherServiceTest {
         val (initialisationVector, encrypted) = cipherService.encrypt(key, original.toByteArray())
         val firstChar = initialisationVector[0]
         val decrypted =
-                cipherService.decrypt(key, initialisationVector.replace(firstChar, firstChar + 1), encrypted)
+            cipherService.decrypt(key, initialisationVector.replace(firstChar, firstChar + 1), encrypted)
         assertNotEquals(original, decrypted)
     }
 

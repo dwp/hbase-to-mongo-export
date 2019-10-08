@@ -9,7 +9,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component
 
 @Component
-class JobCompletionNotificationListener(private val writer: ItemWriter<String>): JobExecutionListenerSupport() {
+class JobCompletionNotificationListener(private val writer: ItemWriter<String>) : JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
         if (writer is DirectoryWriter) {

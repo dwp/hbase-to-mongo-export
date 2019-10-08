@@ -1,8 +1,8 @@
 package app.domain
 
-data class EncryptionBlock (val keyEncryptionKeyId: String,
-                            val initializationVector: String,
-                            val encryptedEncryptionKey: String)
+data class EncryptionBlock(val keyEncryptionKeyId: String,
+                           val initializationVector: String,
+                           val encryptedEncryptionKey: String)
 
 data class EncryptionResult(val initialisationVector: String, val encrypted: String)
 

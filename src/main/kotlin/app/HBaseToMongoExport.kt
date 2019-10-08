@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.runApplication
 import kotlin.system.exitProcess
 
-@SpringBootApplication (exclude = [DataSourceAutoConfiguration::class])
+@SpringBootApplication(exclude = [DataSourceAutoConfiguration::class])
 class HBaseToMongoExport
 
 fun main(args: Array<String>) {

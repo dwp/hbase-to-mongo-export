@@ -2,7 +2,6 @@ package app.configuration
 
 import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3Client
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.http.client.HttpClient
 import org.mockito.Mockito
@@ -20,15 +19,15 @@ class TestContextConfiguration {
 
     @Bean
     @Profile("unitTest")
-    fun connection()= Mockito.mock(Connection::class.java)!!
+    fun connection() = Mockito.mock(Connection::class.java)!!
 
     @Bean
     @Profile("unitTest")
-    fun httpClientProvider()= Mockito.mock(HttpClientProvider::class.java)!!
+    fun httpClientProvider() = Mockito.mock(HttpClientProvider::class.java)!!
 
     @Bean
     @Profile("unitTest")
-    fun httpClient()= Mockito.mock(HttpClient::class.java)!!
+    fun httpClient() = Mockito.mock(HttpClient::class.java)!!
 
     @Bean
     @Profile("decryptionTest")

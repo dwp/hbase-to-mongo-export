@@ -22,34 +22,34 @@ import org.springframework.context.annotation.Profile
 @Configuration
 @Profile("batchRun")
 @EnableBatchProcessing
-class JobConfiguration: DefaultBatchConfigurer() {
+class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
     fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
-            jobBuilderFactory.get("nightlyExportBatchJob")
-                .incrementer(RunIdIncrementer())
-                .listener(listener)
-                .flow(step)
-                .end()
-                .build()
+        jobBuilderFactory.get("nightlyExportBatchJob")
+            .incrementer(RunIdIncrementer())
+            .listener(listener)
+            .flow(step)
+            .end()
+            .build()
 
     @Bean
     fun step() =
-            stepBuilderFactory.get("step")
-                .chunk<SourceRecord, String>(10)
-                .reader(itemReader)
-                .faultTolerant()
-                .skip(MissingFieldException::class.java)
-                .skip(DecryptionFailureException::class.java)
-                .skipLimit(Integer.MAX_VALUE)
-                .processor(itemProcessor())
-                .writer(itemWriter)
-                .build()
+        stepBuilderFactory.get("step")
+            .chunk<SourceRecord, String>(10)
+            .reader(itemReader)
+            .faultTolerant()
+            .skip(MissingFieldException::class.java)
+            .skip(DecryptionFailureException::class.java)
+            .skipLimit(Integer.MAX_VALUE)
+            .processor(itemProcessor())
+            .writer(itemWriter)
+            .build()
 
     fun itemProcessor(): ItemProcessor<SourceRecord, String> =
         CompositeItemProcessor<SourceRecord, String>().apply {
             setDelegates(listOf(decryptionProcessor,
-                                ItemProcessor<JsonObject, String> { it.toString() }))
+                ItemProcessor<JsonObject, String> { it.toString() }))
         }
 
     @Autowired

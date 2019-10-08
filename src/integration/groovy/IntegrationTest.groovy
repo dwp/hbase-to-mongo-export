@@ -36,7 +36,7 @@ class IntegrationTest extends Specification {
             log.info("Waiting for population process of file " + fileName)
             sleep(3000)
         }
-        assert(outputFile.isFile())
+        assert (outputFile.isFile())
 
         then: "the latest records have been written"
 

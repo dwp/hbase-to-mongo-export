@@ -15,20 +15,20 @@ import org.springframework.stereotype.Component
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
                           private val keyService: KeyService) :
-        ItemProcessor<SourceRecord, JsonObject> {
+    ItemProcessor<SourceRecord, JsonObject> {
 
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): JsonObject? {
         try {
             logger.info("Processing '$item'.")
             val decryptedKey = keyService.decryptKey(
-                    item.encryption.keyEncryptionKeyId,
-                    item.encryption.encryptedEncryptionKey)
+                item.encryption.keyEncryptionKeyId,
+                item.encryption.encryptedEncryptionKey)
             val decrypted =
-                    cipherService.decrypt(
-                            decryptedKey,
-                            item.encryption.initializationVector,
-                            item.dbObject)
+                cipherService.decrypt(
+                    decryptedKey,
+                    item.encryption.initializationVector,
+                    item.dbObject)
             val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)
             jsonObject.addProperty("timestamp", item.hbaseTimestamp)
             return jsonObject
@@ -37,12 +37,12 @@ class DecryptionProcessor(private val cipherService: CipherService,
         } catch (e: Exception) {
             logger.error("Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
             throw DecryptionFailureException(
-                    "database-unknown",
-                    "collection-unknown",
-                    item.hbaseRowId,
-                    item.hbaseTimestamp,
-                    item.encryption.keyEncryptionKeyId,
-                    e)
+                "database-unknown",
+                "collection-unknown",
+                item.hbaseRowId,
+                item.hbaseTimestamp,
+                item.encryption.keyEncryptionKeyId,
+                e)
         }
     }
 

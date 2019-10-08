@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-    id("org.springframework.boot") version "2.1.6.RELEASE"
+    id("org.springframework.boot") version "2.1.7.RELEASE"
     id("io.spring.dependency-management") version "1.0.7.RELEASE"
     kotlin("jvm") version "1.3.40"
     kotlin("plugin.spring") version "1.3.40"
@@ -53,6 +53,8 @@ dependencies {
     implementation("junit:junit:4.12")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.6")
     implementation("org.apache.httpcomponents:httpclient:4.5.9")
+    implementation("org.springframework.retry:spring-retry:1.2.4.RELEASE")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")
 }
