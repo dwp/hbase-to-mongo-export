@@ -52,7 +52,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testBatchDataKey_WillCallClient_AndReturnKey() {
+    fun testBatchDataKey_WillCallClientOnce_AndReturnKey() {
         val responseBody = """
             |{
             |    "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -77,6 +77,8 @@ class HttpKeyServiceTest {
 
         val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
         assertEquals(expectedResult, dataKeyResult)
+
+        verify(httpClient, times(1)).execute(any(HttpGet::class.java))
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
@@ -92,7 +94,7 @@ class HttpKeyServiceTest {
 
         keyService.batchDataKey()
 
-        verify(httpClient, times(10)).execute(any(HttpGet::class.java))
+        verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
@@ -108,11 +110,11 @@ class HttpKeyServiceTest {
 
         keyService.batchDataKey()
 
-        verify(httpClient, times(10)).execute(any(HttpGet::class.java))
+        verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
     }
 
     @Test
-    fun testDecryptKey_HappyCase_RetunsUnencryptedData() {
+    fun testDecryptKey_HappyCase_CallsServerOnce_AndReturnsUnencryptedData() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -135,10 +137,11 @@ class HttpKeyServiceTest {
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
+        verify(httpClient, times(1)).execute(any(HttpPost::class.java))
     }
 
     @Test
-    fun testDecryptKey_WillCacheResponse() {
+    fun testDecryptKey_HappyCase_WillCallServerOnce_AndCacheResponse() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -159,15 +162,15 @@ class HttpKeyServiceTest {
         given(httpClientProvider.client()).willReturn(httpClient)
 
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
+
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-        verify(httpClient, times(1))
-            .execute(any(HttpPost::class.java))
+
+        verify(httpClient, times(1)).execute(any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyDecryptionException::class)
-    fun testDecryptKey_WithABadKey_WillNotRetry() {
+    fun testDecryptKey_WithABadKey_WillCallServerOnce_AndNotRetry() {
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(400)
         val httpResponse = mock(CloseableHttpResponse::class.java)
@@ -178,8 +181,7 @@ class HttpKeyServiceTest {
 
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
-        verify(httpClient, times(1))
-            .execute(any(HttpPost::class.java))
+        verify(httpClient, times(1)).execute(any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
@@ -195,8 +197,7 @@ class HttpKeyServiceTest {
 
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
-        verify(httpClient, times(10))
-            .execute(any(HttpPost::class.java))
+        verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
@@ -212,8 +213,7 @@ class HttpKeyServiceTest {
 
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
-        verify(httpClient, times(10))
-            .execute(any(HttpPost::class.java))
+        verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
     }
 
     @Autowired
