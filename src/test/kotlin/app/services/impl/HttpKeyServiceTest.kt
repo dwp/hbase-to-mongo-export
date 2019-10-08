@@ -15,11 +15,9 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -53,7 +51,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
-    fun testDataKeyOk() {
+    fun testBatchDataKey_WillCallClient_AndReturnKey() {
         val responseBody = """
             |{
             |    "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -71,28 +69,33 @@ class HttpKeyServiceTest {
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
         val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpGet::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+
         val dataKeyResult = keyService.batchDataKey()
+
         val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
         Assert.assertEquals(expectedResult, dataKeyResult)
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
-    fun testDataKeyServerError() {
+    fun testBatchDataKey_ServerError_ThrowsException_AndWillRetry() {
         val statusLine = mock(StatusLine::class.java)
         //val entity = mock(HttpEntity::class.java)
         given(statusLine.statusCode).willReturn(503)
         val httpResponse = mock(CloseableHttpResponse::class.java)
         given(httpResponse.statusLine).willReturn(statusLine)
         val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpGet::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+
         keyService.batchDataKey()
+
+        verify(httpClient, times(10)).execute(any(HttpGet::class.java))
     }
 
     @Test
-    fun testDecryptKeyOk() {
+    fun testDecryptKey_HappyCase_RetunsUnencryptedData() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -109,15 +112,17 @@ class HttpKeyServiceTest {
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
         val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+
         //val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
         Assert.assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
     }
 
     @Test
-    fun testDecryptKeyCaches() {
+    fun testDecryptKey_WillCacheResponse() {
         val responseBody = """
             |{
             |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
@@ -134,39 +139,49 @@ class HttpKeyServiceTest {
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
         val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+
         //val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
         Assert.assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
         verify(httpClient, times(1))
-            .execute(ArgumentMatchers.any(HttpPost::class.java))
+            .execute(any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyDecryptionException::class)
-    fun testDecryptKeyBadKey() {
+    fun testDecryptKey_WithABadKey_WillNotRetry() {
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(400)
         val httpResponse = mock(CloseableHttpResponse::class.java)
         given(httpResponse.statusLine).willReturn(statusLine)
         val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+
+        verify(httpClient, times(1))
+            .execute(any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
-    fun testDecryptKeyServerError() {
+    fun testDecryptKey_ServerError_WillCauseRetry() {
 
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(503)
         val httpResponse = mock(CloseableHttpResponse::class.java)
         given(httpResponse.statusLine).willReturn(statusLine)
         val httpClient = mock(CloseableHttpClient::class.java)
-        given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+
+        verify(httpClient, times(10))
+            .execute(any(HttpPost::class.java))
     }
 
     @Autowired
@@ -174,8 +189,4 @@ class HttpKeyServiceTest {
 
     @Autowired
     private lateinit var httpClientProvider: HttpClientProvider
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
-    }
 }
