@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 
 @Component
-class HBaseReader constructor(private val connection: Connection): ItemReader<SourceRecord> {
+class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
     override fun read(): SourceRecord? {
         return scanner().next()?.let { result ->

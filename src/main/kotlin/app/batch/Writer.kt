@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets
 
 
 abstract class Writer(private val keyService: KeyService,
-                              private val cipherService: CipherService) : ItemWriter<String> {
+                      private val cipherService: CipherService) : ItemWriter<String> {
 
     override fun write(items: MutableList<out String>) {
         chunkData(items)

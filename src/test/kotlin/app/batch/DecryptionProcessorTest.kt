@@ -12,8 +12,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -45,11 +43,11 @@ class DecryptionProcessorTest {
     @Test(expected = DataKeyServiceUnavailableException::class)
     fun testDataKeyServiceUnavailable() {
         given(dataKeyService.decryptKey(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
-                .willThrow(DataKeyServiceUnavailableException::class.java)
+            .willThrow(DataKeyServiceUnavailableException::class.java)
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
 
         val sourceRecord = SourceRecord("00001".toByteArray(), 10, encryptionBlock, "dbObject")
         decryptionProcessor.process(sourceRecord)
@@ -58,12 +56,12 @@ class DecryptionProcessorTest {
     @Test(expected = DecryptionFailureException::class)
     fun testDataKeyDecryptionFailure() {
         given(dataKeyService.decryptKey(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
-                .willThrow(DataKeyDecryptionException::class.java)
+            .willThrow(DataKeyDecryptionException::class.java)
 
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         decryptionProcessor.process(SourceRecord("00001".toByteArray(), 10, encryptionBlock, "dbObject"))
     }
 
@@ -73,6 +71,5 @@ class DecryptionProcessorTest {
     @Autowired
     private lateinit var decryptionProcessor: DecryptionProcessor
 
-    companion object {
-    }
+    companion object
 }

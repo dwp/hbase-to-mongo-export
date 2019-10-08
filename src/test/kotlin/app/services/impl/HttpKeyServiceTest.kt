@@ -6,7 +6,6 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import com.google.gson.Gson
 import org.apache.http.HttpEntity
-import org.apache.http.HttpResponse
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
@@ -142,7 +141,7 @@ class HttpKeyServiceTest {
         Assert.assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
         verify(httpClient, times(1))
-                .execute(ArgumentMatchers.any(HttpPost::class.java))
+            .execute(ArgumentMatchers.any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyDecryptionException::class)

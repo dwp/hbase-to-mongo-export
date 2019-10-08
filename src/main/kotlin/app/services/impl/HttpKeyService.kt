@@ -30,15 +30,14 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                 return if (response.statusLine.statusCode == 201) {
                     val entity = response.entity
                     val result = BufferedReader(InputStreamReader(entity.content))
-                            .use(BufferedReader::readText).let {
-                                Gson().fromJson(it, DataKeyResult::class.java)
-                            }
+                        .use(BufferedReader::readText).let {
+                            Gson().fromJson(it, DataKeyResult::class.java)
+                        }
                     EntityUtils.consume(entity)
                     result
-                }
-                else {
+                } else {
                     throw DataKeyServiceUnavailableException(
-                            "DataKeyService returned status code '${response.statusLine.statusCode}'.")
+                        "DataKeyService returned status code '${response.statusLine.statusCode}'.")
                 }
             }
         }
@@ -49,8 +48,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
         val cacheKey = "$encryptedKey/$encryptionKeyId"
         return if (decryptedKeyCache.containsKey(cacheKey)) {
             decryptedKeyCache[cacheKey]!!
-        }
-        else {
+        } else {
             httpClientProvider.client().use { client ->
                 val url = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
                 logger.info("url: '$url'.")
@@ -68,12 +66,12 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         }
                         response.statusLine.statusCode == 400 ->
                             throw DataKeyDecryptionException(
-                                    """Decrypting encryptedKey: '$encryptedKey' with 
+                                """Decrypting encryptedKey: '$encryptedKey' with 
                             |keyEncryptionKeyId: '$encryptionKeyId'
                             |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
                         else ->
                             throw DataKeyServiceUnavailableException(
-                                    """Decrypting encryptedKey: '$encryptedKey' with 
+                                """Decrypting encryptedKey: '$encryptedKey' with 
                             |keyEncryptionKeyId: '$encryptionKeyId'
                             |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
                     }

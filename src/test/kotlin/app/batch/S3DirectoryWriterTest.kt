@@ -1,7 +1,6 @@
 package app.batch
 
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,7 +62,7 @@ class S3DirectoryWriterTest {
 
         s3DirectoryWriter.writeOutput()
         Mockito.verify(s3Client, Mockito.times(4))
-                .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
+            .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
     }
 
     @Autowired
