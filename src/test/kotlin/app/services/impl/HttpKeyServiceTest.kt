@@ -11,7 +11,7 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.CloseableHttpClient
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,7 +76,7 @@ class HttpKeyServiceTest {
         val dataKeyResult = keyService.batchDataKey()
 
         val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
-        Assert.assertEquals(expectedResult, dataKeyResult)
+        assertEquals(expectedResult, dataKeyResult)
     }
 
     @Test(expected = DataKeyServiceUnavailableException::class)
@@ -134,8 +134,7 @@ class HttpKeyServiceTest {
 
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
-        //val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
-        Assert.assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
+        assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
     }
 
     @Test
@@ -161,8 +160,7 @@ class HttpKeyServiceTest {
 
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
-        //val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
-        Assert.assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
+        assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
         verify(httpClient, times(1))
             .execute(any(HttpPost::class.java))
