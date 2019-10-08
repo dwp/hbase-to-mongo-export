@@ -15,6 +15,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -24,6 +26,14 @@ import java.net.URLEncoder
 @Profile("httpDataKeyService")
 class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeyService {
 
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
+        const val maxAttempts = 10 //System.getProperty("RETRY_MAX_ATTEMPTS", "10").toLong()
+        const val backoffMillis = 1000L
+    }
+
+    @Override
+    @Retryable(value = [DataKeyServiceUnavailableException::class], maxAttempts = maxAttempts, backoff = Backoff(delay = backoffMillis))
     override fun batchDataKey(): DataKeyResult {
         httpClientProvider.client().use { client ->
             client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
@@ -43,6 +53,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
         }
     }
 
+    @Override
+    @Retryable(value = [DataKeyServiceUnavailableException::class], maxAttempts = maxAttempts, backoff = Backoff(delay = backoffMillis))
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         val cacheKey = "$encryptedKey/$encryptionKeyId"
@@ -75,9 +87,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                             |keyEncryptionKeyId: '$encryptionKeyId'
                             |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
                     }
-
                 }
-
             }
         }
     }
@@ -90,9 +100,4 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
 
     @Value("\${data.key.service.url}")
     private lateinit var dataKeyServiceUrl: String
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
-    }
-
 }
