@@ -64,7 +64,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             throw ex
         }
         catch (ex: Exception) {
-            throw DataKeyServiceUnavailableException("Error contacting data key service: ${ex.javaClass.name}: $ex.message")
+            throw DataKeyServiceUnavailableException("Error contacting data key service: $ex")
         }
     }
 
