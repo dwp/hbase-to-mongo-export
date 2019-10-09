@@ -39,11 +39,13 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     @Retryable(value = [DataKeyServiceUnavailableException::class],
         maxAttempts = maxAttempts,
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    @Throws(DataKeyServiceUnavailableException::class)
     override fun batchDataKey(): DataKeyResult {
         try {
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
-                    return if (response.statusLine.statusCode == 201) {
+                    val statusCode = response.statusLine.statusCode
+                    return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
                             .use(BufferedReader::readText).let {
@@ -53,7 +55,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         result
                     }
                     else {
-                        throw DataKeyServiceUnavailableException("DataKeyService returned status code '${response.statusLine.statusCode}'.")
+                        throw DataKeyServiceUnavailableException("DataKeyService returned status code '$statusCode'.")
                     }
                 }
             }
@@ -70,6 +72,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     @Retryable(value = [DataKeyServiceUnavailableException::class],
         maxAttempts = maxAttempts,
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         try {
@@ -112,7 +115,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             throw ex
         }
         catch (ex: Exception) {
-            throw DataKeyServiceUnavailableException("Error contacting data key service: ${ex.javaClass.name}: $ex.message")
+            throw DataKeyServiceUnavailableException("Error contacting data key service: $ex")
         }
     }
 

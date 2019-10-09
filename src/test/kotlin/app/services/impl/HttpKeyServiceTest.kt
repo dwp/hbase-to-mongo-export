@@ -99,7 +99,6 @@ class HttpKeyServiceTest {
         given(httpClientProvider.client()).willReturn(httpClient)
 
         try {
-
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
         }
@@ -110,6 +109,7 @@ class HttpKeyServiceTest {
     }
 
     @Test
+    @Throws(DataKeyServiceUnavailableException::class)
     fun testBatchDataKey_UnknownHttpError_ThrowsException_AndWillRetry() {
         val statusLine = mock(StatusLine::class.java)
         //val entity = mock(HttpEntity::class.java)
@@ -123,13 +123,15 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException){
-            assertEquals("Error contacting data key service: xxxxx: xxxxxx", ex.message)
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
+            assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
         }
     }
 
     @Test
+    @Throws(DataKeyServiceUnavailableException::class)
     fun testBatchDataKey_WhenErrorsOccur_WillRetryUntilSuccessful() {
         val responseBody = """
             |{
@@ -298,7 +300,7 @@ class HttpKeyServiceTest {
             fail("Should throw a DataKeyServiceUnavailableException")
         }
         catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("error", ex.message)
+            assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
         }
     }
