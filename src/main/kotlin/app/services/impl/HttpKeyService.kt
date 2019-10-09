@@ -24,7 +24,7 @@ import java.net.URLEncoder
 
 @Service
 @Profile("httpDataKeyService")
-class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeyService {
+open class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeyService {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
@@ -39,7 +39,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     @Retryable(value = [DataKeyServiceUnavailableException::class],
         maxAttempts = maxAttempts,
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    override fun batchDataKey(): DataKeyResult {
+    open override fun batchDataKey(): DataKeyResult {
         try {
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
@@ -70,7 +70,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     @Retryable(value = [DataKeyServiceUnavailableException::class],
         maxAttempts = maxAttempts,
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
+    open override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
@@ -84,8 +84,9 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                     val httpPost = HttpPost(url)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
+                        val statusCode = response.statusLine.statusCode
                         return when {
-                            response.statusLine.statusCode == 200 -> {
+                            statusCode == 200 -> {
                                 val entity = response.entity
                                 val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
                                 EntityUtils.consume(entity)
@@ -93,12 +94,12 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                                 decryptedKeyCache[cacheKey] = dataKeyResult.plaintextDataKey
                                 dataKeyResult.plaintextDataKey
                             }
-                            response.statusLine.statusCode == 400 ->
+                            statusCode == 400 ->
                                 throw DataKeyDecryptionException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '${response.statusLine.statusCode}'".trimMargin())
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'".trimMargin())
                             else ->
                                 throw DataKeyServiceUnavailableException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '${response.statusLine.statusCode}'".trimMargin())
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'".trimMargin())
                         }
                     }
                 }
@@ -115,7 +116,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
         }
     }
 
-    fun clearCache() {
+    open fun clearCache() {
         this.decryptedKeyCache = mutableMapOf()
     }
 
