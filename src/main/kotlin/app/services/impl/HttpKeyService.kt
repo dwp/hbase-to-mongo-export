@@ -42,9 +42,12 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     @Throws(DataKeyServiceUnavailableException::class)
     override fun batchDataKey(): DataKeyResult {
         try {
+            val dksUrl = "$dataKeyServiceUrl/datakey"
+            logger.info("dataKeyServiceUrl: '$dksUrl'.")
             httpClientProvider.client().use { client ->
-                client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
+                client.execute(HttpGet(dksUrl)).use { response ->
                     val statusCode = response.statusLine.statusCode
+                    logger.info("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
@@ -55,7 +58,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         result
                     }
                     else {
-                        throw DataKeyServiceUnavailableException("DataKeyService returned status code '$statusCode'.")
+                        throw DataKeyServiceUnavailableException("data key service returned status code '$statusCode'.")
                     }
                 }
             }
@@ -82,12 +85,13 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             }
             else {
                 httpClientProvider.client().use { client ->
-                    val url = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
-                    logger.info("url: '$url'.")
-                    val httpPost = HttpPost(url)
+                    val dksUrl = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
+                    logger.info("dataKeyServiceUrl: '$dksUrl'.")
+                    val httpPost = HttpPost(dksUrl)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
+                        logger.info("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                         return when {
                             statusCode == 200 -> {
                                 val entity = response.entity
@@ -99,10 +103,10 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                             }
                             statusCode == 400 ->
                                 throw DataKeyDecryptionException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'".trimMargin())
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
                             else ->
                                 throw DataKeyServiceUnavailableException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'".trimMargin())
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
                         }
                     }
                 }
