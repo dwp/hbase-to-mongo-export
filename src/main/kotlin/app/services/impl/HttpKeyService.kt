@@ -24,7 +24,7 @@ import java.net.URLEncoder
 
 @Service
 @Profile("httpDataKeyService")
-open class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeyService {
+class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeyService {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
@@ -39,7 +39,7 @@ open class HttpKeyService(private val httpClientProvider: HttpClientProvider) : 
     @Retryable(value = [DataKeyServiceUnavailableException::class],
         maxAttempts = maxAttempts,
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    open override fun batchDataKey(): DataKeyResult {
+    override fun batchDataKey(): DataKeyResult {
         try {
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
@@ -70,7 +70,7 @@ open class HttpKeyService(private val httpClientProvider: HttpClientProvider) : 
     @Retryable(value = [DataKeyServiceUnavailableException::class],
         maxAttempts = maxAttempts,
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    open override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
+    override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
@@ -116,7 +116,7 @@ open class HttpKeyService(private val httpClientProvider: HttpClientProvider) : 
         }
     }
 
-    open fun clearCache() {
+    fun clearCache() {
         this.decryptedKeyCache = mutableMapOf()
     }
 

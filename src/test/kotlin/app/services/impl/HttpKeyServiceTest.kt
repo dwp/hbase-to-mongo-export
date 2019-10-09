@@ -14,7 +14,6 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -58,7 +57,6 @@ class HttpKeyServiceTest {
         reset(this.httpClientProvider)
     }
 
-    @Ignore
     @Test
     fun testBatchDataKey_WillCallClientOnce_AndReturnKey() {
         val responseBody = """
@@ -89,7 +87,6 @@ class HttpKeyServiceTest {
         verify(httpClient, times(1)).execute(any(HttpGet::class.java))
     }
 
-    @Ignore
     @Test
     fun testBatchDataKey_ServerError_ThrowsException_AndWillRetry() {
         val httpClient = mock(CloseableHttpClient::class.java)
@@ -112,7 +109,6 @@ class HttpKeyServiceTest {
         }
     }
 
-    @Ignore
     @Test
     fun testBatchDataKey_UnknownHttpError_ThrowsException_AndWillRetry() {
         val statusLine = mock(StatusLine::class.java)
@@ -133,7 +129,6 @@ class HttpKeyServiceTest {
         }
     }
 
-    @Ignore
     @Test
     fun testBatchDataKey_WhenErrorsOccur_WillRetryUntilSuccessful() {
         val responseBody = """
@@ -164,7 +159,6 @@ class HttpKeyServiceTest {
         verify(httpClient, times(3)).execute(any(HttpGet::class.java))
     }
 
-    @Ignore
     @Test
     fun testDecryptKey_HappyCase_CallsServerOnce_AndReturnsUnencryptedData() {
         val responseBody = """
@@ -220,7 +214,6 @@ class HttpKeyServiceTest {
         verify(httpClient, times(3)).execute(any(HttpPost::class.java))
     }
 
-    @Ignore
     @Test
     fun testDecryptKey_HappyCase_WillCallServerOnce_AndCacheResponse() {
         val responseBody = """
@@ -250,7 +243,6 @@ class HttpKeyServiceTest {
         verify(httpClient, times(1)).execute(any(HttpPost::class.java))
     }
 
-    @Ignore
     @Test
     fun testDecryptKey_WithABadKey_WillCallServerOnce_AndNotRetry() {
         val statusLine = mock(StatusLine::class.java)
@@ -271,7 +263,6 @@ class HttpKeyServiceTest {
         }
     }
 
-    @Ignore
     @Test
     fun testDecryptKey_ServerError_WillCauseRetryMaxTimes() {
         val statusLine = mock(StatusLine::class.java)
@@ -292,7 +283,6 @@ class HttpKeyServiceTest {
         }
     }
 
-    @Ignore
     @Test
     fun testDecryptKey_UnknownHttpError_WillCauseRetryMaxTimes() {
 
