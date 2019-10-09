@@ -145,7 +145,7 @@ class HttpKeyServiceTest {
         val statusLine = mock(StatusLine::class.java)
         val entity = mock(HttpEntity::class.java)
         given(entity.content).willReturn(byteArrayInputStream)
-        given(statusLine.statusCode).willReturn(503, 503, 200)
+        given(statusLine.statusCode).willReturn(503, 503, 201)
         val httpResponse = mock(CloseableHttpResponse::class.java)
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
