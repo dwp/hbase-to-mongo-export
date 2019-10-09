@@ -127,7 +127,7 @@ class HttpKeyServiceTest {
         val statusLine = mock(StatusLine::class.java)
         val entity = mock(HttpEntity::class.java)
         given(entity.content).willReturn(byteArrayInputStream)
-        given(statusLine.statusCode).willReturn(503, 503, 503, 201)
+        given(statusLine.statusCode).willReturn(503, 503, 201)
         val httpResponse = mock(CloseableHttpResponse::class.java)
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
@@ -140,7 +140,7 @@ class HttpKeyServiceTest {
         val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
         assertEquals(expectedResult, dataKeyResult)
 
-        verify(httpClient, times(4)).execute(any(HttpGet::class.java))
+        verify(httpClient, times(3)).execute(any(HttpGet::class.java))
     }
 
     @Test
@@ -170,7 +170,7 @@ class HttpKeyServiceTest {
         verify(httpClient, times(1)).execute(any(HttpPost::class.java))
     }
 
-    @Test
+    @Test(expected = DataKeyServiceUnavailableException::class)
     fun testDecryptKey_WhenErrorOccur_WillRetryUntilSuccessful() {
         val responseBody = """
             |{
@@ -183,7 +183,7 @@ class HttpKeyServiceTest {
         val statusLine = mock(StatusLine::class.java)
         val entity = mock(HttpEntity::class.java)
         given(entity.content).willReturn(byteArrayInputStream)
-        given(statusLine.statusCode).willReturn(503, 503, 503, 200)
+        given(statusLine.statusCode).willReturn(503, 503, 200)
         val httpResponse = mock(CloseableHttpResponse::class.java)
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpResponse.entity).willReturn(entity)
@@ -194,7 +194,7 @@ class HttpKeyServiceTest {
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
-        verify(httpClient, times(4)).execute(any(HttpPost::class.java))
+        verify(httpClient, times(3)).execute(any(HttpPost::class.java))
     }
 
     @Test
