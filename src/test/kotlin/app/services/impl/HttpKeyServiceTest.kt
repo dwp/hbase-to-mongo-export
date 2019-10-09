@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.CloseableHttpClient
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,7 +25,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
-import java.lang.RuntimeException
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
@@ -44,6 +44,12 @@ import java.lang.RuntimeException
     "aws.region=eu-west-2"
 ])
 class HttpKeyServiceTest {
+
+    @Autowired
+    private lateinit var keyService: HttpKeyService
+
+    @Autowired
+    private lateinit var httpClientProvider: HttpClientProvider
 
     @Before
     fun init() {
@@ -194,6 +200,7 @@ class HttpKeyServiceTest {
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
+
         verify(httpClient, times(3)).execute(any(HttpPost::class.java))
     }
 
@@ -226,7 +233,7 @@ class HttpKeyServiceTest {
         verify(httpClient, times(1)).execute(any(HttpPost::class.java))
     }
 
-    @Test(expected = DataKeyDecryptionException::class)
+    @Test
     fun testDecryptKey_WithABadKey_WillCallServerOnce_AndNotRetry() {
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(400)
@@ -236,14 +243,17 @@ class HttpKeyServiceTest {
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
 
-        keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-
-        verify(httpClient, times(1)).execute(any(HttpPost::class.java))
+        try {
+            keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+            fail("Should throw a DataKeyDecryptionException")
+        } catch (ex: DataKeyDecryptionException) {
+            verify(httpClient, times(1)).execute(any(HttpPost::class.java))
+            assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400'", ex.message)
+        }
     }
 
-    @Test(expected = DataKeyServiceUnavailableException::class)
-    fun testDecryptKey_ServerError_WillCauseRetry() {
-
+    @Test
+    fun testDecryptKey_ServerError_WillCauseRetryMaxTimes() {
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(503)
         val httpResponse = mock(CloseableHttpResponse::class.java)
@@ -252,13 +262,16 @@ class HttpKeyServiceTest {
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
 
-        keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-
-        verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
+        try {
+            keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+        }
+        catch (e: DataKeyServiceUnavailableException) {
+            verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
+        }
     }
 
-    @Test(expected = DataKeyServiceUnavailableException::class)
-    fun testDecryptKey_UnknownHttpError_WillCauseRetry() {
+    @Test
+    fun testDecryptKey_UnknownHttpError_WillCauseRetryMaxTimes() {
 
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(503)
@@ -267,15 +280,11 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willThrow(RuntimeException("Boom!"))
         given(httpClientProvider.client()).willReturn(httpClient)
-
-        keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-
-        verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
+        try {
+            keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+        }
+        catch (e: DataKeyServiceUnavailableException) {
+            verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
+        }
     }
-
-    @Autowired
-    private lateinit var keyService: HttpKeyService
-
-    @Autowired
-    private lateinit var httpClientProvider: HttpClientProvider
 }

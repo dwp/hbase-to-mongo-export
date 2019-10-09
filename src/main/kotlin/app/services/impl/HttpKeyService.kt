@@ -28,7 +28,9 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
-        const val maxAttempts = 10
+
+        // Will retry at 1s, 2s, 4s, 8, 16 then give up (after a total of 31 secs)
+        const val maxAttempts = 6
         const val initialBackoffMillis = 1000L
         const val backoffMultiplier = 2.0
     }
