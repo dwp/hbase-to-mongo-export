@@ -29,11 +29,14 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
         const val maxAttempts = 10
-        const val backoffMillis = 1000L
+        const val initialBackoffMillis = 1000L
+        const val backoffMultiplier = 2.0
     }
 
     @Override
-    @Retryable(value = [DataKeyServiceUnavailableException::class], maxAttempts = maxAttempts, backoff = Backoff(delay = backoffMillis))
+    @Retryable(value = [DataKeyServiceUnavailableException::class],
+        maxAttempts = maxAttempts,
+        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun batchDataKey(): DataKeyResult {
         try {
             httpClientProvider.client().use { client ->
@@ -48,8 +51,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         result
                     }
                     else {
-                        throw DataKeyServiceUnavailableException(
-                            "DataKeyService returned status code '${response.statusLine.statusCode}'.")
+                        throw DataKeyServiceUnavailableException("DataKeyService returned status code '${response.statusLine.statusCode}'.")
                     }
                 }
             }
@@ -58,13 +60,14 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             throw ex
         }
         catch (ex: Exception) {
-            throw DataKeyServiceUnavailableException(
-                "Error contacting data key service: ${ex.javaClass.name}: $ex.message")
+            throw DataKeyServiceUnavailableException("Error contacting data key service: ${ex.javaClass.name}: $ex.message")
         }
     }
 
     @Override
-    @Retryable(value = [DataKeyServiceUnavailableException::class], maxAttempts = maxAttempts, backoff = Backoff(delay = backoffMillis))
+    @Retryable(value = [DataKeyServiceUnavailableException::class],
+        maxAttempts = maxAttempts,
+        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         try {
@@ -106,10 +109,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             throw ex
         }
         catch (ex: Exception) {
-            throw DataKeyServiceUnavailableException(
-                "Error contacting data key service: ${ex.javaClass.name}: $ex.message")
+            throw DataKeyServiceUnavailableException("Error contacting data key service: ${ex.javaClass.name}: $ex.message")
         }
-
     }
 
     fun clearCache() {

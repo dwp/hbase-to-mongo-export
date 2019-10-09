@@ -113,6 +113,36 @@ class HttpKeyServiceTest {
         verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
     }
 
+    @Test(expected = DataKeyServiceUnavailableException::class)
+    fun testBatchDataKey_WhenErrorsOccur_WillRetryUntilSuccessful() {
+        val responseBody = """
+            |{
+            |    "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
+            |    "plaintextDataKey": "PLAINTEXT_DATAKEY",
+            |    "ciphertextDataKey": "CIPHERTEXT_DATAKEY"
+            |}
+        """.trimMargin()
+
+        val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
+        val statusLine = mock(StatusLine::class.java)
+        val entity = mock(HttpEntity::class.java)
+        given(entity.content).willReturn(byteArrayInputStream)
+        given(statusLine.statusCode).willReturn(503, 503, 503, 201)
+        val httpResponse = mock(CloseableHttpResponse::class.java)
+        given(httpResponse.statusLine).willReturn(statusLine)
+        given(httpResponse.entity).willReturn(entity)
+        val httpClient = mock(CloseableHttpClient::class.java)
+        given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
+        given(httpClientProvider.client()).willReturn(httpClient)
+
+        val dataKeyResult = keyService.batchDataKey()
+
+        val expectedResult: DataKeyResult = Gson().fromJson(responseBody, DataKeyResult::class.java)
+        assertEquals(expectedResult, dataKeyResult)
+
+        verify(httpClient, times(4)).execute(any(HttpGet::class.java))
+    }
+
     @Test
     fun testDecryptKey_HappyCase_CallsServerOnce_AndReturnsUnencryptedData() {
         val responseBody = """
@@ -138,6 +168,33 @@ class HttpKeyServiceTest {
 
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         verify(httpClient, times(1)).execute(any(HttpPost::class.java))
+    }
+
+    @Test
+    fun testDecryptKey_WhenErrorOccur_WillRetryUntilSuccessful() {
+        val responseBody = """
+            |{
+            |  "dataKeyEncryptionKeyId": "DATAKEY_ENCRYPTION_KEY_ID",
+            |  "plaintextDataKey": "PLAINTEXT_DATAKEY"
+            |}
+        """.trimMargin()
+
+        val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
+        val statusLine = mock(StatusLine::class.java)
+        val entity = mock(HttpEntity::class.java)
+        given(entity.content).willReturn(byteArrayInputStream)
+        given(statusLine.statusCode).willReturn(503, 503, 503, 200)
+        val httpResponse = mock(CloseableHttpResponse::class.java)
+        given(httpResponse.statusLine).willReturn(statusLine)
+        given(httpResponse.entity).willReturn(entity)
+        val httpClient = mock(CloseableHttpClient::class.java)
+        given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
+        given(httpClientProvider.client()).willReturn(httpClient)
+
+        val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
+
+        assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
+        verify(httpClient, times(4)).execute(any(HttpPost::class.java))
     }
 
     @Test
