@@ -29,8 +29,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
 
-        // Will retry at 1s, 2s, 4s, 8, 16 then give up (after a total of 31 secs)
-        const val maxAttempts = 6
+        // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
+        const val maxAttempts = 5
         const val initialBackoffMillis = 1000L
         const val backoffMultiplier = 2.0
     }
@@ -92,8 +92,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
                         logger.info("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
-                        return when {
-                            statusCode == 200 -> {
+                        return when (statusCode) {
+                            200 -> {
                                 val entity = response.entity
                                 val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
                                 EntityUtils.consume(entity)
@@ -101,7 +101,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                                 decryptedKeyCache[cacheKey] = dataKeyResult.plaintextDataKey
                                 dataKeyResult.plaintextDataKey
                             }
-                            statusCode == 400 ->
+                            400 ->
                                 throw DataKeyDecryptionException(
                                     "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
                             else ->

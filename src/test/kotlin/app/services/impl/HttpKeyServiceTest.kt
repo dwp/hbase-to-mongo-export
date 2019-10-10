@@ -103,7 +103,7 @@ class HttpKeyServiceTest {
             fail("Should throw a DataKeyServiceUnavailableException")
         }
         catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("DataKeyService returned status code '503'.", ex.message)
+            assertEquals("data key service returned status code '503'.", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
         }
     }
