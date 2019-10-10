@@ -53,7 +53,7 @@ dependencies {
     implementation("junit:junit:4.12")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.6")
     implementation("org.apache.httpcomponents:httpclient:4.5.9")
-    implementation("org.springframework.retry:spring-retry:1.2.4.RELEASE")
+    implementation("org.springframework.retry:spring-retry")
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
