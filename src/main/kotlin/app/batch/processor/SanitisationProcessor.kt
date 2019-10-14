@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
-// See DA-2374
+// See https://projects.ucd.gpn.gov.uk/browse/DW-2374
 @Component
 class SanitisationProcessor: ItemProcessor<JsonObject, String> {
 
