@@ -31,7 +31,7 @@ class SanitisationProcessorTest {
 
     @Test
     fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
-        val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
+        val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java)
         val expectedOutput =         """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
 
@@ -89,7 +89,7 @@ class SanitisationProcessorTest {
             |      "db": "$db",
             |      "collection": "$collection"
             |   },
-            |   "charsToRemove": ""
+            |   "chars": ""
             |}
         """.trimMargin().replace("\n", "").replace(" ", "")
     }
