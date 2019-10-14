@@ -31,7 +31,7 @@ class SanitisationProcessorTest {
 
     @Test
     fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
-        val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
+        val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java)
         val expectedOutput =         """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
 
@@ -44,7 +44,7 @@ class SanitisationProcessorTest {
         val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
 
         val actualOutput = sanitisationProcessor.process(Gson().fromJson(data, JsonObject::class.java))
-        assertThat(actualOutput).isEqualTo(data.replace("\\[r|n]|\\s".toRegex(), ""))
+        assertThat(actualOutput).isEqualTo(data)
     }
 
     @Test
@@ -77,7 +77,7 @@ class SanitisationProcessorTest {
             |      "db": "$db",
             |      "collection": "$collection"
             |   },
-            |   "charsToRemove": "\r\n"
+            |   "chars": "\r\n"
             |}
         """.trimMargin()
         return Gson().fromJson(data, JsonObject::class.java)

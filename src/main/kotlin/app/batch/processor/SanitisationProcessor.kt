@@ -11,11 +11,12 @@ import org.springframework.stereotype.Component
 @Component
 class SanitisationProcessor: ItemProcessor<JsonObject, String> {
 
+    val replacementRegex = """(?<!\\)\\[r|n]""".toRegex()
+
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: JsonObject): String? {
         val output = sanitiseCollectionSpecific(item)
         return output.replace("$", "d_")
-                .replace("\u0000", "")
                 .replace("\\u0000", "")
                 .replace("_archivedDateTime", "_removedDateTime")
                 .replace("_archived", "_removed")
@@ -23,12 +24,12 @@ class SanitisationProcessor: ItemProcessor<JsonObject, String> {
 
     fun sanitiseCollectionSpecific(input: JsonObject): String {
         val db = input.getAsJsonObject("message")?.getAsJsonPrimitive("db")?.asString
-        val collection = input .getAsJsonObject("message")?.getAsJsonPrimitive("collection")?.asString
+        val collection = input.getAsJsonObject("message")?.getAsJsonPrimitive("collection")?.asString
         if((db == "penalties-and-deductions" && collection == "sanction")
                 || (db == "core" && collection == "healthAndDisabilityDeclaration")
                 || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
             logger.debug("Sanitising output for db: {} and collection: {}", db, collection)
-            return input.toString().replace("""(?<!\\)\\[r|n]""".toRegex(), "")
+            return input.toString().replace(replacementRegex, "")
         }
         return input.toString()
     }
