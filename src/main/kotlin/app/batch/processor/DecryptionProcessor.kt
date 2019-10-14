@@ -1,4 +1,4 @@
-package app.batch
+package app.batch.processor
 
 import app.domain.SourceRecord
 import app.exceptions.DataKeyServiceUnavailableException
