@@ -48,8 +48,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     fun itemProcessor(): ItemProcessor<SourceRecord, String> =
         CompositeItemProcessor<SourceRecord, String>().apply {
-            setDelegates(listOf(decryptionProcessor,
-                ItemProcessor<JsonObject, String> { it.toString() }))
+            setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
         }
 
     @Autowired
@@ -57,6 +56,9 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<SourceRecord, JsonObject>
+
+    @Autowired
+    lateinit var sanitisationProcessor: ItemProcessor<JsonObject, String>
 
     @Autowired
     lateinit var itemWriter: ItemWriter<String>

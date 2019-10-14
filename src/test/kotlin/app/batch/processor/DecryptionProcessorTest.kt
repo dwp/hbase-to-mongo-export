@@ -1,4 +1,4 @@
-package app.batch
+package app.batch.processor
 
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
