@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner
 class SanitisationProcessorTest {
 
     @Test
-    fun testRemoveDesiredChars() {
+    fun testSanitisationProcessor_WillRemoveDesiredChars_WhenAnyCollectionArrives() {
         val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java)
         val expectedOutput =         """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
@@ -40,7 +40,7 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testRemoveNewlinesFromEachCollection() {
+    fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollectionsArrive() {
         var input = collectionInputData("penalties-and-deductions", "sanction")
         var expected = collectionOutputData("penalties-and-deductions", "sanction")
         val actual = sanitisationProcessor.process(input)
@@ -53,6 +53,14 @@ class SanitisationProcessorTest {
         input = collectionInputData("accepted-data", "healthAndDisabilityCircumstances")
         expected = collectionOutputData("accepted-data", "healthAndDisabilityCircumstances")
         assertThat(sanitisationProcessor.process(input)).isEqualTo(expected)
+    }
+
+    @Test
+    fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
+        val input = collectionInputData("some-other-db", "collectioName")
+        val expected = collectionInputData("some-other-db", "collectioName").toString()
+        val actual = sanitisationProcessor.process(input)
+        assertThat(actual).isEqualTo(expected)
     }
 
     fun collectionInputData(db: String, collection: String): JsonObject {
