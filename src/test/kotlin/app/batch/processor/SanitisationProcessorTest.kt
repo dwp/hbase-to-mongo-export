@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner
 class SanitisationProcessorTest {
 
     @Test
-    fun testSanitisationProcessor_WillRemoveDesiredChars_WhenAnyCollectionArrives() {
+    fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
         val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java)
         val expectedOutput =         """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
@@ -40,7 +40,15 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollectionsArrive() {
+    fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
+        val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
+
+        val actualOutput = sanitisationProcessor.process(Gson().fromJson(data, JsonObject::class.java))
+        assertThat(actualOutput).isEqualTo(data.replace("\\[r|n]|\\s".toRegex(), ""))
+    }
+
+    @Test
+    fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollections() {
         var input = collectionInputData("penalties-and-deductions", "sanction")
         var expected = collectionOutputData("penalties-and-deductions", "sanction")
         val actual = sanitisationProcessor.process(input)
@@ -57,20 +65,19 @@ class SanitisationProcessorTest {
 
     @Test
     fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
-        val input = collectionInputData("some-other-db", "collectioName")
-        val expected = collectionInputData("some-other-db", "collectioName").toString()
+        val input = collectionInputData("some-other-db", "collectionName")
+        val expected = collectionInputData("some-other-db", "collectionName").toString()
         val actual = sanitisationProcessor.process(input)
         assertThat(actual).isEqualTo(expected)
     }
 
     fun collectionInputData(db: String, collection: String): JsonObject {
-        val chars = "\r\n"
         val data = """{
             |   "message": {
             |      "db": "$db",
             |      "collection": "$collection"
             |   },
-            |   "charsToRemove": "$chars"
+            |   "charsToRemove": "\r\n"
             |}
         """.trimMargin()
         return Gson().fromJson(data, JsonObject::class.java)

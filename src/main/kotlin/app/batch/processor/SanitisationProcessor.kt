@@ -28,8 +28,7 @@ class SanitisationProcessor: ItemProcessor<JsonObject, String> {
                 || (db == "core" && collection == "healthAndDisabilityDeclaration")
                 || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
             logger.debug("Sanitising output for db: {} and collection: {}", db, collection)
-            return input.toString().replace("\r", "").replace("\n", "")
-                    .replace("\\r", "").replace("\\n", "")
+            return input.toString().replace("""(?<!\\)\\[r|n]""".toRegex(), "")
         }
         return input.toString()
     }
