@@ -30,7 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner
 class SanitisationProcessorTest {
 
     @Test
-    fun testRemoveDesiredChars() {
+    fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
         val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java)
         val expectedOutput =         """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
@@ -40,7 +40,15 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testRemoveNewlinesFromEachCollection() {
+    fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
+        val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
+
+        val actualOutput = sanitisationProcessor.process(Gson().fromJson(data, JsonObject::class.java))
+        assertThat(actualOutput).isEqualTo(data)
+    }
+
+    @Test
+    fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollections() {
         var input = collectionInputData("penalties-and-deductions", "sanction")
         var expected = collectionOutputData("penalties-and-deductions", "sanction")
         val actual = sanitisationProcessor.process(input)
@@ -55,14 +63,21 @@ class SanitisationProcessorTest {
         assertThat(sanitisationProcessor.process(input)).isEqualTo(expected)
     }
 
+    @Test
+    fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
+        val input = collectionInputData("some-other-db", "collectionName")
+        val expected = collectionInputData("some-other-db", "collectionName").toString()
+        val actual = sanitisationProcessor.process(input)
+        assertThat(actual).isEqualTo(expected)
+    }
+
     fun collectionInputData(db: String, collection: String): JsonObject {
-        val chars = "\r\n"
         val data = """{
             |   "message": {
             |      "db": "$db",
             |      "collection": "$collection"
             |   },
-            |   "charsToRemove": "$chars"
+            |   "chars": "\r\n"
             |}
         """.trimMargin()
         return Gson().fromJson(data, JsonObject::class.java)
@@ -74,7 +89,7 @@ class SanitisationProcessorTest {
             |      "db": "$db",
             |      "collection": "$collection"
             |   },
-            |   "charsToRemove": ""
+            |   "chars": ""
             |}
         """.trimMargin().replace("\n", "").replace(" ", "")
     }
