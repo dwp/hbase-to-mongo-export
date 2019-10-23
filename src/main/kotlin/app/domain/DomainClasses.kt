@@ -1,5 +1,7 @@
 package app.domain
 
+import com.google.gson.JsonObject
+
 data class EncryptionBlock(val keyEncryptionKeyId: String,
                            val initializationVector: String,
                            val encryptedEncryptionKey: String)
@@ -11,7 +13,9 @@ data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKe
 data class SourceRecord(val hbaseRowId: ByteArray,
                         val hbaseTimestamp: Long,
                         val encryption: EncryptionBlock,
-                        var dbObject: String) {
+                        var dbObject: String,
+                        var db: String,
+                        var collection: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -34,3 +38,5 @@ data class SourceRecord(val hbaseRowId: ByteArray,
         return result
     }
 }
+
+data class DecryptedRecord(val dbObject: JsonObject, val db: String, val collection: String)

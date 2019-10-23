@@ -1,9 +1,9 @@
 package app.configuration
 
+import app.domain.DecryptedRecord
 import app.domain.SourceRecord
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
-import com.google.gson.JsonObject
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
@@ -26,39 +26,39 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
     fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
-        jobBuilderFactory.get("nightlyExportBatchJob")
-            .incrementer(RunIdIncrementer())
-            .listener(listener)
-            .flow(step)
-            .end()
-            .build()
+            jobBuilderFactory.get("nightlyExportBatchJob")
+                    .incrementer(RunIdIncrementer())
+                    .listener(listener)
+                    .flow(step)
+                    .end()
+                    .build()
 
     @Bean
     fun step() =
-        stepBuilderFactory.get("step")
-            .chunk<SourceRecord, String>(10)
-            .reader(itemReader)
-            .faultTolerant()
-            .skip(MissingFieldException::class.java)
-            .skip(DecryptionFailureException::class.java)
-            .skipLimit(Integer.MAX_VALUE)
-            .processor(itemProcessor())
-            .writer(itemWriter)
-            .build()
+            stepBuilderFactory.get("step")
+                    .chunk<SourceRecord, String>(10)
+                    .reader(itemReader)
+                    .faultTolerant()
+                    .skip(MissingFieldException::class.java)
+                    .skip(DecryptionFailureException::class.java)
+                    .skipLimit(Integer.MAX_VALUE)
+                    .processor(itemProcessor())
+                    .writer(itemWriter)
+                    .build()
 
     fun itemProcessor(): ItemProcessor<SourceRecord, String> =
-        CompositeItemProcessor<SourceRecord, String>().apply {
-            setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
-        }
+            CompositeItemProcessor<SourceRecord, String>().apply {
+                setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
+            }
 
     @Autowired
     lateinit var itemReader: ItemReader<SourceRecord>
 
     @Autowired
-    lateinit var decryptionProcessor: ItemProcessor<SourceRecord, JsonObject>
+    lateinit var decryptionProcessor: ItemProcessor<SourceRecord, DecryptedRecord>
 
     @Autowired
-    lateinit var sanitisationProcessor: ItemProcessor<JsonObject, String>
+    lateinit var sanitisationProcessor: ItemProcessor<DecryptedRecord, String>
 
     @Autowired
     lateinit var itemWriter: ItemWriter<String>

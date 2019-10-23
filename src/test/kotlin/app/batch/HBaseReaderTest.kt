@@ -98,13 +98,13 @@ class HBaseReaderTest {
         given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject)
+        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject, "core", "addressDeclaration")
 
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
-            expected.toString(), actual.toString())
+                expected.toString(), actual.toString())
     }
 
     @Test(expected = MissingFieldException::class)
@@ -163,3 +163,4 @@ class HBaseReaderTest {
     }
 
 }
+
