@@ -75,7 +75,7 @@ services:
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
-      --topic.name=db.core.addressDeclaration
+      --topic.name=db.penalties-and-deductions.sanction
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
       --file.output=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt

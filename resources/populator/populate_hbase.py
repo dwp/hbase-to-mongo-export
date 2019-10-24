@@ -172,9 +172,19 @@ def decrypted_db_object():
             "knownDate": 20150320
         },
         "createdDateTime": {
-            "$date":"2015-03-20T12:23:25.183Z"
+            "$date":"2015-03-20T12:23:25.183Z",
+            "_archivedDateTime":"should be replaced by _archivedDateTime"
         },
         "_version": 2,
+        "_archived":"should be replaced by _removed",
+        "unicodeNull": "\u0000",
+        "unicodeNullwithText": "some\u0000text",
+        "lineFeedChar": "\n",
+        "lineFeedCharWithText": "some\ntext",
+        "carriageReturn": "\r",
+        "carriageReturnWithText": "some\rtext",
+        "carriageReturnLineFeed": "\r\n",
+         "carriageReturnLineFeedWithText": "some\r\ntext",
         "_lastModifiedDateTime": {
             "$date": "2018-12-14T15:01:02.000+0000"
         }
@@ -187,11 +197,11 @@ def guid():
 
 def unique_decrypted_db_object():
     record = decrypted_db_object()
-    record['_id']['declarationId'] = guid()
-    record['contractId'] = guid()
-    record['addressNumber']['cryptoId'] = guid()
-    record['townCity']['cryptoId'] = guid()
-    record['processId'] = guid()
+    record['_id']['declarationId'] = 1234
+    record['contractId'] = 1234
+    record['addressNumber']['cryptoId'] = 1234
+    record['townCity']['cryptoId'] = 1234
+    record['processId'] = 1234
     return record
 
 

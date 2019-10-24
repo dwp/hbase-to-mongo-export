@@ -9,6 +9,9 @@ class IntegrationTest extends Specification {
 
     Logger log
 
+    String expected_content = "{\"_id\":{\"someId\":\"RANDOM_GUID\",\"declarationId\":1234},\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\",\"_removedDateTime\":\"should be replaced by _removedDateTime\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000+0000\"},\"timestamp\":10}"
+
+
     String fileName = System.getenv("FILE_NAME")
     Integer expectedTimestamp = Integer.valueOf(System.getenv("EXPECTED_TIMESTAMP"))
     Integer expectedLineCount = Integer.valueOf(System.getenv("EXPECTED_LINE_COUNT"))
@@ -45,11 +48,13 @@ class IntegrationTest extends Specification {
         def reader = new BufferedReader(new FileReader(outputFile))
         def lineCount = 0
         while ((line = reader.readLine()) != null) {
+            println(line)
             def jsonSlurper = new JsonSlurper()
             def object = jsonSlurper.parse(line.getBytes())
             println(object)
             println(object.getClass())
             def timestamp = object.get('timestamp')
+            assert line == expected_content
             lineCount++
             log.info("lineCount = " + lineCount)
             log.info("timestamp = " + timestamp)
