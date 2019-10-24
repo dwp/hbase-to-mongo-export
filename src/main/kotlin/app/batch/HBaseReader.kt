@@ -32,6 +32,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
 
             val messageInfo = dataBlock.getAsJsonObject("message")
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
+            val db = messageInfo.getAsJsonPrimitive("db")?.asString
+            val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
 
             val encryptionInfo = messageInfo.getAsJsonObject("encryption")
             val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
@@ -42,9 +44,17 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 logger.error("'$idBytes' missing dbObject field, skipping this record.")
                 throw MissingFieldException(idBytes, "dbObject")
             }
+            if (db.isNullOrEmpty()) {
+                logger.error("'$idBytes' missing db field, skipping this record.")
+                throw MissingFieldException(idBytes, "db")
+            }
+            if (collection.isNullOrEmpty()) {
+                logger.error("'$idBytes' missing collection field, skipping this record.")
+                throw MissingFieldException(idBytes, "collection")
+            }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject)
+            return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection)
         }
     }
 
@@ -80,5 +90,4 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
     }
-
 }

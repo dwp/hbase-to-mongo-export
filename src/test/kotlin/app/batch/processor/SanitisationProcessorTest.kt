@@ -1,8 +1,10 @@
 package app.batch.processor
 
+import app.domain.DecryptedRecord
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,9 +33,9 @@ class SanitisationProcessorTest {
 
     @Test
     fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
-        val jsonWithRemovableChars =  "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
-        val input = Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java)
-        val expectedOutput =         """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
+        val jsonWithRemovableChars = "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
+        val input = DecryptedRecord(Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java), "db", "collection")
+        val expectedOutput = """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
 
         val actualOutput = sanitisationProcessor.process(input)
         assertThat(actualOutput).isEqualTo(expectedOutput)
@@ -42,56 +44,118 @@ class SanitisationProcessorTest {
     @Test
     fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
         val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
-
-        val actualOutput = sanitisationProcessor.process(Gson().fromJson(data, JsonObject::class.java))
+        val input = DecryptedRecord(Gson().fromJson(data, JsonObject::class.java), "db", "collection")
+        val actualOutput = sanitisationProcessor.process(input)
         assertThat(actualOutput).isEqualTo(data)
     }
 
     @Test
     fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollections() {
-        var input = collectionInputData("penalties-and-deductions", "sanction")
-        var expected = collectionOutputData("penalties-and-deductions", "sanction")
-        val actual = sanitisationProcessor.process(input)
-        assertThat(actual).isEqualTo(expected)
+        var input = DecryptedRecord(getInputDBObject(), "penalties-and-deductions", "sanction")
+        var expected = getOutputDBObject()
+        var actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
 
-        input = collectionInputData("core", "healthAndDisabilityDeclaration")
-        expected = collectionOutputData("core", "healthAndDisabilityDeclaration")
-        assertThat(sanitisationProcessor.process(input)).isEqualTo(expected)
+        assertTrue(expected == actual)
 
-        input = collectionInputData("accepted-data", "healthAndDisabilityCircumstances")
-        expected = collectionOutputData("accepted-data", "healthAndDisabilityCircumstances")
-        assertThat(sanitisationProcessor.process(input)).isEqualTo(expected)
+        input = DecryptedRecord(getInputDBObject(), "core", "healthAndDisabilityDeclaration")
+        expected = getOutputDBObject()
+        actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
+        assertEquals(expected, actual)
+
+        input = DecryptedRecord(getInputDBObject(), "accepted-data", "healthAndDisabilityCircumstances")
+        expected = getOutputDBObject()
+        actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
+        assertEquals(expected, actual)
     }
 
     @Test
     fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
-        val input = collectionInputData("some-other-db", "collectionName")
-        val expected = collectionInputData("some-other-db", "collectionName").toString()
+        val input = DecryptedRecord(getInputDBObject(), "some-other-db", "collectionName")
+        val expected = getOutputDBObject()
         val actual = sanitisationProcessor.process(input)
-        assertThat(actual).isEqualTo(expected)
+
+        println("Expected : $expected")
+        println("Actual : $actual")
+        assertNotEquals(expected, actual)
     }
 
-    fun collectionInputData(db: String, collection: String): JsonObject {
+    fun getInputDBObject(): JsonObject {
         val data = """{
-            |   "message": {
-            |      "db": "$db",
-            |      "collection": "$collection"
-            |   },
-            |   "chars": "\r\n"
-            |}
-        """.trimMargin()
+              "_id": {
+                "declarationId": "47a4fad9-49af-4cb2-91b0-0056e2ac0eef\r"
+              },
+              "type": "addressDeclaration\n",
+              "contractId": "aa16e682-fbd6-4fe3-880b-118ac09f992a\r\n",
+              "addressNumber": {
+                "type": "AddressLine",
+                "cryptoId": "bd88a5f9-ab47-4ae0-80bf-e53908457b60"
+              },
+              "addressLine2": null,
+              "townCity": {
+                "type": "AddressLine",
+                "cryptoId": "9ca3c63c-cbfc-452a-88fd-bb97f856fe60"
+              },
+              "postcode": "SM5 2LE",
+              "processId": "3b313df5-96bc-40ff-8128-07d496379664",
+              "effectiveDate": {
+                "type": "SPECIFIC_EFFECTIVE_DATE",
+                "date": 20150320,
+                "knownDate": 20150320
+              },
+              "paymentEffectiveDate": {
+                "type": "SPECIFIC_EFFECTIVE_DATE\r\n",
+                "date": 20150320,
+                "knownDate": 20150320
+              },
+              "createdDateTime": {
+                "${'$'}date": "2015-03-20T12:23:25.183Z"
+              },
+              "_version": 2,
+              "_lastModifiedDateTime": {
+                "${'$'}date": "2016-06-23T05:12:29.624Z"
+              }
+        }"""
         return Gson().fromJson(data, JsonObject::class.java)
     }
 
-    fun collectionOutputData(db: String, collection: String): String {
-        return """{
-            |   "message": {
-            |      "db": "$db",
-            |      "collection": "$collection"
-            |   },
-            |   "chars": ""
-            |}
-        """.trimMargin().replace("\n", "").replace(" ", "")
+    fun getOutputDBObject(): String {
+        val data = """
+              {
+              "_id": {
+               "declarationId": "47a4fad9-49af-4cb2-91b0-0056e2ac0eef"
+              },
+              "type": "addressDeclaration",
+              "contractId": "aa16e682-fbd6-4fe3-880b-118ac09f992a",
+              "addressNumber": {
+               "type": "AddressLine",
+                "cryptoId": "bd88a5f9-ab47-4ae0-80bf-e53908457b60"
+              },
+              "addressLine2": null,
+              "townCity": {
+               "type": "AddressLine",
+               "cryptoId": "9ca3c63c-cbfc-452a-88fd-bb97f856fe60"
+              },
+              "postcode": "SM5 2LE",
+              "processId": "3b313df5-96bc-40ff-8128-07d496379664",
+              "effectiveDate": {
+               "type": "SPECIFIC_EFFECTIVE_DATE",
+               "date": 20150320,
+               "knownDate": 20150320
+              },
+              "paymentEffectiveDate": {
+               "type": "SPECIFIC_EFFECTIVE_DATE",
+               "date": 20150320,
+               "knownDate": 20150320
+              },
+              "createdDateTime": {
+               "d_date": "2015-03-20T12:23:25.183Z"
+              },
+              "_version": 2,
+              "_lastModifiedDateTime": {
+               "d_date": "2016-06-23T05:12:29.624Z"
+              }
+              }"""
+        return Gson().fromJson(data, JsonObject::class.java).toString()
     }
 
     @Autowired
