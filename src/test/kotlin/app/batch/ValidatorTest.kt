@@ -64,7 +64,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Exception : id not found in the decrypted db object'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'id not found in the decrypted db object'"
     }
 
     @Test
@@ -96,7 +96,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Exception : _lastModifiedDateTime not found in the decrypted db object'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason '_lastModifiedDateTime not found in the decrypted db object'"
     }
 
     @Test
@@ -115,7 +115,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Exception : \$date in _lastModifiedDateTime not found in the decrypted db object'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason '\$date in _lastModifiedDateTime not found in the decrypted db object'"
     }
 
     @Test
@@ -134,7 +134,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Exception : Unparseable date: \"\"2018-12-14\"\"'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Unparseable date: \"\"2018-12-14\"\"'"
     }
 
     private fun generateFourByteChecksum(input: String): ByteArray {

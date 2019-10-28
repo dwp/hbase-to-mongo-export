@@ -1,6 +1,5 @@
 package app.batch
 
-import app.batch.processor.DecryptionProcessor
 import app.domain.DecryptedRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
@@ -31,7 +30,7 @@ class Validator {
             }
         } catch (e: Exception) {
             val ex = BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
-            DecryptionProcessor.logger.error(ex.message)
+            logger.error(ex.message)
             throw ex
         }
         return null
@@ -49,50 +48,32 @@ class Validator {
     }
 
     fun retrieveId(hbaseRowId: String, jsonObject: JsonObject): JsonObject? {
-        try {
-            val id = jsonObject.getAsJsonObject("_id")
-            if (null == id) {
-                val idNotFound = "id not found in the decrypted db object"
-                throw Exception(idNotFound)
-            }
-            return id
-        } catch (e: Exception) {
-            val idNotFoundException = "Exception : ${e.message}"
-            throw Exception(idNotFoundException)
+        val id = jsonObject.getAsJsonObject("_id")
+        if (null == id) {
+            val idNotFound = "id not found in the decrypted db object"
+            throw Exception(idNotFound)
         }
-        return null
+        return id
     }
 
     fun retrievelastUpdatedTimestamp(hbaseRowId: String, jsonObject: JsonObject): JsonObject? {
-        try {
-            val lastUpdatedTimestamp = jsonObject.getAsJsonObject("_lastModifiedDateTime")
-            if (null == lastUpdatedTimestamp) {
-                val _lastModifiedDateTimeNotFound = "_lastModifiedDateTime not found in the decrypted db object"
-                throw Exception(_lastModifiedDateTimeNotFound)
-            }
-            return lastUpdatedTimestamp
-        } catch (e: Exception) {
-            val _lastModifiedDateTimeException = "Exception : ${e.message}"
-            throw Exception(_lastModifiedDateTimeException)
+        val lastUpdatedTimestamp = jsonObject.getAsJsonObject("_lastModifiedDateTime")
+        if (null == lastUpdatedTimestamp) {
+            val _lastModifiedDateTimeNotFound = "_lastModifiedDateTime not found in the decrypted db object"
+            throw Exception(_lastModifiedDateTimeNotFound)
         }
-        return null
+        return lastUpdatedTimestamp
     }
 
     fun validate(hbaseRowId: String, lastUpdatedTimestamp: JsonObject): Long? {
         val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
-        try {
-            val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
-            if (null != date) {
-                return df.parse(date.toString()).time
-            } else {
-                val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
-                throw Exception(dateNotFound)
-            }
-        } catch (e: Exception) {
-            val formatException = "Exception : ${e.message}"
-            throw Exception(formatException)
+        val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
+        if (null != date) {
+            return df.parse(date.toString()).time
+        } else {
+            val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
+            throw Exception(dateNotFound)
         }
-        return null
     }
 
     companion object {
