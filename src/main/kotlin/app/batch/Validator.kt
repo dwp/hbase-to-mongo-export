@@ -20,11 +20,11 @@ class Validator {
         val db = item.db
         val collection = item.collection
         try {
-            val jsonObject = parseDecrypted(hbaseRowId, decrypted)
+            val jsonObject = parseDecrypted(decrypted)
             if (null != jsonObject) {
-                retrieveId(hbaseRowId, jsonObject)
-                val lastUpdatedTimestamp = retrievelastUpdatedTimestamp(hbaseRowId, jsonObject)
-                lastUpdatedTimestamp?.let { validate(hbaseRowId, lastUpdatedTimestamp) }
+                retrieveId(jsonObject)
+                val lastUpdatedTimestamp = retrievelastUpdatedTimestamp(jsonObject)
+                lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(jsonObject, db, collection)
             }
@@ -36,7 +36,7 @@ class Validator {
         return null
     }
 
-    fun parseDecrypted(hbaseRowId: String, decrypted: String): JsonObject? {
+    fun parseDecrypted(decrypted: String): JsonObject? {
         try {
             val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)
             return jsonObject
@@ -47,7 +47,7 @@ class Validator {
         return null
     }
 
-    fun retrieveId(hbaseRowId: String, jsonObject: JsonObject): JsonObject? {
+    fun retrieveId(jsonObject: JsonObject): JsonObject? {
         val id = jsonObject.getAsJsonObject("_id")
         if (null == id) {
             val idNotFound = "id not found in the decrypted db object"
@@ -56,7 +56,7 @@ class Validator {
         return id
     }
 
-    fun retrievelastUpdatedTimestamp(hbaseRowId: String, jsonObject: JsonObject): JsonObject? {
+    fun retrievelastUpdatedTimestamp(jsonObject: JsonObject): JsonObject? {
         val lastUpdatedTimestamp = jsonObject.getAsJsonObject("_lastModifiedDateTime")
         if (null == lastUpdatedTimestamp) {
             val _lastModifiedDateTimeNotFound = "_lastModifiedDateTime not found in the decrypted db object"
@@ -65,11 +65,11 @@ class Validator {
         return lastUpdatedTimestamp
     }
 
-    fun validate(hbaseRowId: String, lastUpdatedTimestamp: JsonObject): Long? {
+    fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject) {
         val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
         val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
         if (null != date) {
-            return df.parse(date.toString()).time
+            df.parse(date.toString()).time
         } else {
             val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
             throw Exception(dateNotFound)
