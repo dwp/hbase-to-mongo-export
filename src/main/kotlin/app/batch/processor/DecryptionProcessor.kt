@@ -1,13 +1,12 @@
 package app.batch.processor
 
+import app.batch.Validator
 import app.domain.DecryptedRecord
 import app.domain.SourceRecord
 import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
 import app.services.CipherService
 import app.services.KeyService
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
-                          private val keyService: KeyService) :
+                          private val keyService: KeyService, private val validator: Validator) :
         ItemProcessor<SourceRecord, DecryptedRecord> {
 
     @Throws(DataKeyServiceUnavailableException::class)
@@ -30,9 +29,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
                             decryptedKey,
                             item.encryption.initializationVector,
                             item.dbObject)
-            val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)
-            jsonObject.addProperty("timestamp", item.hbaseTimestamp)
-            return DecryptedRecord(jsonObject, item.db, item.collection)
+            return validator.skipBadDecryptedRecords(item, decrypted)
         } catch (e: DataKeyServiceUnavailableException) {
             throw e
         } catch (e: Exception) {
@@ -50,5 +47,9 @@ class DecryptionProcessor(private val cipherService: CipherService,
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
     }
-
 }
+
+
+
+
+

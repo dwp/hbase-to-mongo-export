@@ -9,11 +9,12 @@ import app.services.KeyService
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -36,13 +37,12 @@ import org.springframework.test.context.junit4.SpringRunner
 ])
 class DecryptionProcessorTest {
 
-
     @Before
     fun init() = Mockito.reset(dataKeyService)
 
     @Test(expected = DataKeyServiceUnavailableException::class)
     fun testDataKeyServiceUnavailable() {
-        given(dataKeyService.decryptKey(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+        given(dataKeyService.decryptKey(anyString(), anyString()))
                 .willThrow(DataKeyServiceUnavailableException::class.java)
         val encryptionBlock: EncryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId",
@@ -55,7 +55,7 @@ class DecryptionProcessorTest {
 
     @Test(expected = DecryptionFailureException::class)
     fun testDataKeyDecryptionFailure() {
-        given(dataKeyService.decryptKey(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+        given(dataKeyService.decryptKey(anyString(), anyString()))
                 .willThrow(DataKeyDecryptionException::class.java)
 
         val encryptionBlock: EncryptionBlock =
@@ -65,11 +65,11 @@ class DecryptionProcessorTest {
         decryptionProcessor.process(SourceRecord("00001".toByteArray(), 10, encryptionBlock, "dbObject", "db", "collection"))
     }
 
-    @Autowired
+    @MockBean
     private lateinit var dataKeyService: KeyService
 
-    @Autowired
+    @SpyBean
     private lateinit var decryptionProcessor: DecryptionProcessor
 
-    companion object
 }
+
