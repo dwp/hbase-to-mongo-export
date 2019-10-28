@@ -2,6 +2,7 @@ package app.configuration
 
 import app.domain.DecryptedRecord
 import app.domain.SourceRecord
+import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
 import org.springframework.batch.core.Step
@@ -41,6 +42,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
                     .faultTolerant()
                     .skip(MissingFieldException::class.java)
                     .skip(DecryptionFailureException::class.java)
+                    .skip(BadDecryptedDataException::class.java)
                     .skipLimit(Integer.MAX_VALUE)
                     .processor(itemProcessor())
                     .writer(itemWriter)
