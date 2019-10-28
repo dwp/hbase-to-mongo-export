@@ -10,16 +10,12 @@ import app.services.KeyService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
-                          private val keyService: KeyService) :
+                          private val keyService: KeyService, private val validator: Validator) :
         ItemProcessor<SourceRecord, DecryptedRecord> {
-
-    @Autowired
-    private lateinit var validator: Validator
 
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
