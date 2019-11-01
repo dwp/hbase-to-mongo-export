@@ -66,7 +66,7 @@ class Validator {
     }
 
     fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject) {
-        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
+        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
         if (null != date) {
             df.parse(date.toString()).time
