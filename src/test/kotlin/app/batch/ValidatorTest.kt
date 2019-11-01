@@ -134,7 +134,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Unparseable date: \"\"2018-12-14\"\"'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Unparseable date: \"2018-12-14\"'"
     }
 
     private fun generateFourByteChecksum(input: String): ByteArray {
