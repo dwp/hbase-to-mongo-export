@@ -72,8 +72,16 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             }
 
             scanner = table.getScanner(scan)
+
+            purgeManifestFolder()
         }
+
         return scanner!!
+    }
+
+    fun purgeManifestFolder() {
+
+
     }
 
     private var scanner: ResultScanner? = null

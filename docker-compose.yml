@@ -78,14 +78,16 @@ services:
       --topic.name=db.penalties-and-deductions.sanction
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
-      --file.output=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
-      --output.batch.size.max.bytes=2048
+      --file.output=/opt/hbase-to-mongo-export/data
+      --output.batch.size.max.bytes=500
       --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
       --identity.store.alias=cid
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
+      --encrypt.output=false
+      --compress.output=false
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -168,7 +170,7 @@ services:
       - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "gradle --rerun-tasks integration"
     environment:
-      - FILE_NAME=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
+      - FILE_NAME=/opt/hbase-to-mongo-export/data
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
 

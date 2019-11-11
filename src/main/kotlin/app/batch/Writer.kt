@@ -2,14 +2,15 @@ package app.batch
 
 import app.services.CipherService
 import app.services.KeyService
+import com.amazonaws.AmazonServiceException
+import com.amazonaws.SdkClientException
+import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
-import java.io.BufferedOutputStream
-import java.io.ByteArrayOutputStream
-import java.io.OutputStream
+import java.io.*
 import java.nio.charset.StandardCharsets
 
 
@@ -22,18 +23,21 @@ abstract class Writer(private val keyService: KeyService,
 
     abstract fun outputLocation(): String
     abstract fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String)
+    abstract fun writeManifest(filePath: String, fileBytes: ByteArray)
 
     private fun chunkData(items: MutableList<out String>) {
         items.map { "$it\n" }.forEach { item ->
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
+                //writeOutputToManifest()
             }
             currentBatch.append(item)
+            currentBatchManifest.append(item)
             batchSizeBytes += item.length
         }
     }
 
-    fun writeOutput() {
+    open fun writeOutput() {
         if (batchSizeBytes > 0) {
 
             val dataFile = outputName(++currentOutputFileNumber)
@@ -70,6 +74,30 @@ abstract class Writer(private val keyService: KeyService,
         }
     }
 
+    fun writeOutputToManifest() {
+
+        if (batchSizeBytes > 0) {
+
+            val dataFile = outputName(++currentOutputFileNumber)
+            logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
+
+            if (encryptOutput) {
+                val byteArrayOutputStream = ByteArrayOutputStream()
+
+                bufferedOutputStream(byteArrayOutputStream).use {
+                    it.write(this.currentBatchManifest.toString().toByteArray(StandardCharsets.UTF_8))
+                }
+
+                val dataBytes = byteArrayOutputStream.toByteArray()
+
+               writeManifest(dataFile, dataBytes)
+
+            }
+
+            this.currentBatchManifest = StringBuilder()
+        }
+    }
+
     private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
         if (compressOutput) {
             CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
@@ -98,6 +126,7 @@ abstract class Writer(private val keyService: KeyService,
     protected lateinit var topicName: String // i.e. "db.user.data"
 
     private var currentBatch = StringBuilder()
+    private var currentBatchManifest = StringBuilder()
     private var batchSizeBytes = 0
     protected var currentOutputFileNumber = 0
 

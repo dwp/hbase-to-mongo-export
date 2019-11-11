@@ -46,6 +46,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
                     .skipLimit(Integer.MAX_VALUE)
                     .processor(itemProcessor())
                     .writer(itemWriter)
+                   // .listener(BeforeStepListener)
                     .build()
 
     fun itemProcessor(): ItemProcessor<SourceRecord, String> =

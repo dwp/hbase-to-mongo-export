@@ -19,6 +19,10 @@ import java.nio.file.Paths
 class DirectoryWriter(keyService: KeyService,
                       cipherService: CipherService) : Writer(keyService, cipherService) {
 
+    override fun writeManifest(filePath: String, fileBytes: ByteArray) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun outputLocation(): String = outputDirectory
 
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {

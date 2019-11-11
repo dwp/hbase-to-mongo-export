@@ -62,6 +62,28 @@ class S3DirectoryWriter(keyService: KeyService,
         }
     }
 
+   override  fun writeManifest(filePath: String, fileBytes: ByteArray){
+
+        val inputStream = ByteArrayInputStream(fileBytes)
+        val bufferedInputStream = BufferedInputStream(inputStream)
+        // i.e. /mongo-export-2019-06-23/db.user.data-0001.bz2.enc
+        // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
+        val objKeyName: String = filePath
+        try {
+            val request = PutObjectRequest(s3BucketName, objKeyName, bufferedInputStream, null)
+
+            s3Client.putObject(request)
+        } catch (e: AmazonServiceException) {
+            // The call was transmitted successfully, but Amazon S3 couldn't process
+            // it, so it returned an error response.
+            e.printStackTrace()
+        } catch (e: SdkClientException) {
+            // Amazon S3 couldn't be contacted for a response, or the client
+            // couldn't parse the response from Amazon S3.
+            e.printStackTrace()
+        }
+    }
+
     override fun outputLocation(): String = s3PrefixFolder
 
     @Value("\${s3.bucket}")

@@ -4,6 +4,7 @@ import org.apache.log4j.Level
 import org.apache.log4j.Logger
 import org.apache.log4j.PatternLayout
 import spock.lang.Specification
+import groovy.io.FileType
 
 class IntegrationTest extends Specification {
 
@@ -32,7 +33,34 @@ class IntegrationTest extends Specification {
         when: "the table has been populated"
         and: "the process has run"
 
-        File outputFile = new File(fileName)
+        log.info(fileName)
+        def list = []
+        def dir = new File(fileName)
+        dir.eachFileRecurse (FileType.FILES) { file ->
+            list << file
+        }
+
+        list.each {
+            log.info (it.path)
+        }
+
+        File outputFile = File.createTempFile("temp",".txt")
+        // Get a writer to your new file
+        outputFile.withWriter { w ->
+
+            // For each input file path
+            list.each { f ->
+                // Get a reader for the input file
+                new File( f.path ).withReader { r ->
+                    // And write data from the input into the output
+                    w << r << '\n'
+                }
+            }
+        }
+
+        log.info(outputFile.text)
+
+        //File outputFile = new File(fileName)
         int attempts = 0
         log.info("${outputFile}: is file: ${outputFile.isFile()}")
         while (!outputFile.isFile() && ++attempts < 10) {
