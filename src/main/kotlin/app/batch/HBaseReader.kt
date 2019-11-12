@@ -70,18 +70,11 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val scan = Scan().apply {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
-
             scanner = table.getScanner(scan)
-
-            purgeManifestFolder()
+            //manifestPurger.purgeManifestFolder()
         }
 
         return scanner!!
-    }
-
-    fun purgeManifestFolder() {
-
-
     }
 
     private var scanner: ResultScanner? = null

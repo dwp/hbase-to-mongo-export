@@ -1,6 +1,7 @@
 package app.batch
 
 import app.domain.DecryptedRecord
+import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import com.google.gson.Gson
@@ -27,7 +28,8 @@ class Validator {
                 val timeAsLong = lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
                 // Code reaches here only if the id and time are not nulls
-                return DecryptedRecord(jsonObject, db, collection)
+                val manifestRecord = ManifestRecord(id!!.asString, timeAsLong!!, db, collection, "EXPORT")
+                return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
             val ex = BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)

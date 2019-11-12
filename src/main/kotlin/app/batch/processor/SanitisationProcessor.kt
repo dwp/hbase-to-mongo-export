@@ -23,8 +23,8 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, String> {
     }
 
     fun sanitiseCollectionSpecific(input: DecryptedRecord): String {
-        val db = input.db
-        val collection = input.collection
+        val db = input.manifestRecord.db
+        val collection = input.manifestRecord.collection
         val dbObject = input.dbObject
         if ((db == "penalties-and-deductions" && collection == "sanction")
                 || (db == "core" && collection == "healthAndDisabilityDeclaration")

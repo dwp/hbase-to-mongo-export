@@ -15,7 +15,7 @@ class BeforeStepListener : StepExecutionListener {
     @Autowired
     private lateinit var s3Client: AmazonS3
 
-    @Value("\${s3.manifest.bucket}")
+    @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String
 
     @Value("\${s3.manifest.prefix.folder}")

@@ -1,6 +1,7 @@
 package app.batch.processor
 
 import app.domain.DecryptedRecord
+import app.domain.ManifestRecord
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.assertj.core.api.Assertions.assertThat
@@ -27,14 +28,15 @@ import org.springframework.test.context.junit4.SpringRunner
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2"
+    "aws.region=eu-west-2",
+    "s3.manifest.prefix.folder"
 ])
 class SanitisationProcessorTest {
 
     @Test
     fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
         val jsonWithRemovableChars = "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
-        val input = DecryptedRecord(Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java), "db", "collection")
+        val input = DecryptedRecord(Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java), ManifestRecord("",0,"db", "collection", "EXPORT"))
         val expectedOutput = """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
 
         val actualOutput = sanitisationProcessor.process(input)
@@ -44,25 +46,25 @@ class SanitisationProcessorTest {
     @Test
     fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
         val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
-        val input = DecryptedRecord(Gson().fromJson(data, JsonObject::class.java), "db", "collection")
+        val input = DecryptedRecord(Gson().fromJson(data, JsonObject::class.java), ManifestRecord("",0,"db", "collection", "EXPORT"))
         val actualOutput = sanitisationProcessor.process(input)
         assertThat(actualOutput).isEqualTo(data)
     }
 
     @Test
     fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollections() {
-        var input = DecryptedRecord(getInputDBObject(), "penalties-and-deductions", "sanction")
+        var input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"penalties-and-deductions", "sanction", "EXPORT"))
         var expected = getOutputDBObject()
         var actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
 
         assertTrue(expected == actual)
 
-        input = DecryptedRecord(getInputDBObject(), "core", "healthAndDisabilityDeclaration")
+        input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"penalties-and-deductions", "sanction", "EXPORT"))
         expected = getOutputDBObject()
         actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
         assertEquals(expected, actual)
 
-        input = DecryptedRecord(getInputDBObject(), "accepted-data", "healthAndDisabilityCircumstances")
+        input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"penalties-and-deductions", "sanction", "EXPORT"))
         expected = getOutputDBObject()
         actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
         assertEquals(expected, actual)
@@ -70,7 +72,7 @@ class SanitisationProcessorTest {
 
     @Test
     fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
-        val input = DecryptedRecord(getInputDBObject(), "some-other-db", "collectionName")
+        val input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"db", "collection", "EXPORT"))
         val expected = getOutputDBObject()
         val actual = sanitisationProcessor.process(input)
 
