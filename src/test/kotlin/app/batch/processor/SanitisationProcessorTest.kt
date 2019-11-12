@@ -39,7 +39,7 @@ class SanitisationProcessorTest {
         val input = DecryptedRecord(Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java), ManifestRecord("",0,"db", "collection", "EXPORT"))
         val expectedOutput = """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
 
-        val actualOutput = sanitisationProcessor.process(input)
+        val actualOutput = sanitisationProcessor.process(input)?.dbObjectAsString
         assertThat(actualOutput).isEqualTo(expectedOutput)
     }
 
@@ -47,26 +47,26 @@ class SanitisationProcessorTest {
     fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
         val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
         val input = DecryptedRecord(Gson().fromJson(data, JsonObject::class.java), ManifestRecord("",0,"db", "collection", "EXPORT"))
-        val actualOutput = sanitisationProcessor.process(input)
+        val actualOutput = sanitisationProcessor.process(input)?.dbObjectAsString
         assertThat(actualOutput).isEqualTo(data)
     }
 
     @Test
-    fun testSanitisationProcessor_RemovesDesiredCharsFromSpecificCollections() {
+    fun testSanitisationProcessor_RemovesDsesiredCharsFromSpecificCollections() {
         var input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"penalties-and-deductions", "sanction", "EXPORT"))
         var expected = getOutputDBObject()
-        var actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
+        var actual = sanitisationProcessor.process(input)?.dbObjectAsString
 
         assertTrue(expected == actual)
 
         input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"penalties-and-deductions", "sanction", "EXPORT"))
         expected = getOutputDBObject()
-        actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
+        actual = sanitisationProcessor.process(input)?.dbObjectAsString
         assertEquals(expected, actual)
 
         input = DecryptedRecord(getInputDBObject(), ManifestRecord("",0,"penalties-and-deductions", "sanction", "EXPORT"))
         expected = getOutputDBObject()
-        actual = sanitisationProcessor.process(input)?.trimMargin()?.trimIndent()
+        actual = sanitisationProcessor.process(input)?.dbObjectAsString
         assertEquals(expected, actual)
     }
 

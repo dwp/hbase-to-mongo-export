@@ -1,5 +1,7 @@
 package app.batch
 
+import app.domain.ManifestRecord
+import app.domain.Record
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.junit.Test
@@ -43,15 +45,15 @@ class S3DirectoryWriterTest {
     @Test
     fun testWriteData() {
 
-        val listOfLists: MutableList<MutableList<String>> = mutableListOf()
+        val listOfLists: MutableList<MutableList<Record>> = mutableListOf()
         var total = 0
 
         for (i in 1..10) {
-            val list: MutableList<String> = mutableListOf()
+            val list: MutableList<Record> = mutableListOf()
             for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
-                list.add(item)
+                list.add(Record(item, ManifestRecord("", 0, "", "", "")))
                 total += item.length
             }
             listOfLists.add(list)

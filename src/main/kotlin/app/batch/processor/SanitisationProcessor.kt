@@ -1,6 +1,7 @@
 package app.batch.processor
 
 import app.domain.DecryptedRecord
+import app.domain.Record
 import app.exceptions.DataKeyServiceUnavailableException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -9,17 +10,18 @@ import org.springframework.stereotype.Component
 
 // See https://projects.ucd.gpn.gov.uk/browse/DW-2374
 @Component
-class SanitisationProcessor : ItemProcessor<DecryptedRecord, String> {
+class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
 
     val replacementRegex = """(?<!\\)\\[r|n]""".toRegex()
 
     @Throws(DataKeyServiceUnavailableException::class)
-    override fun process(item: DecryptedRecord): String? {
+    override fun process(item: DecryptedRecord): Record? {
         val output = sanitiseCollectionSpecific(item)
-        return output.replace("$", "d_")
+        val replacedOutput =  output.replace("$", "d_")
                 .replace("\\u0000", "")
                 .replace("_archivedDateTime", "_removedDateTime")
                 .replace("_archived", "_removed")
+        return Record(replacedOutput, item.manifestRecord)
     }
 
     fun sanitiseCollectionSpecific(input: DecryptedRecord): String {

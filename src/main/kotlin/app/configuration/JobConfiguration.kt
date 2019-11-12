@@ -2,6 +2,7 @@ package app.configuration
 
 import app.batch.ManifestPurger
 import app.domain.DecryptedRecord
+import app.domain.Record
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
@@ -38,7 +39,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
     @Bean
     fun step() =
             stepBuilderFactory.get("step")
-                    .chunk<SourceRecord, String>(10)
+                    .chunk<SourceRecord, Record>(10)
                     .reader(itemReader)
                     .faultTolerant()
                     .skip(MissingFieldException::class.java)
@@ -50,8 +51,8 @@ class JobConfiguration : DefaultBatchConfigurer() {
                     //.listener(BeforeStepListener)
                     .build()
 
-    fun itemProcessor(): ItemProcessor<SourceRecord, String> =
-            CompositeItemProcessor<SourceRecord, String>().apply {
+    fun itemProcessor(): ItemProcessor<SourceRecord, Record> =
+            CompositeItemProcessor<SourceRecord, Record>().apply {
                 setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
             }
 
@@ -71,10 +72,10 @@ class JobConfiguration : DefaultBatchConfigurer() {
     lateinit var decryptionProcessor: ItemProcessor<SourceRecord, DecryptedRecord>
 
     @Autowired
-    lateinit var sanitisationProcessor: ItemProcessor<DecryptedRecord, String>
+    lateinit var sanitisationProcessor: ItemProcessor<DecryptedRecord, Record>
 
     @Autowired
-    lateinit var itemWriter: ItemWriter<String>
+    lateinit var itemWriter: ItemWriter<Record>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory

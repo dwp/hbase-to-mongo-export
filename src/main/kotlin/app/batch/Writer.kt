@@ -1,23 +1,23 @@
 package app.batch
 
+import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
-import com.amazonaws.AmazonServiceException
-import com.amazonaws.SdkClientException
-import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
-import java.io.*
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
 
 abstract class Writer(private val keyService: KeyService,
-                      private val cipherService: CipherService) : ItemWriter<String> {
+                      private val cipherService: CipherService) : ItemWriter<Record> {
 
-    override fun write(items: MutableList<out String>) {
+    override fun write(items: MutableList<out Record>) {
         chunkData(items)
     }
 
@@ -25,8 +25,8 @@ abstract class Writer(private val keyService: KeyService,
     abstract fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String)
     abstract fun writeManifest(filePath: String, fileBytes: ByteArray)
 
-    private fun chunkData(items: MutableList<out String>) {
-        items.map { "$it\n" }.forEach { item ->
+    private fun chunkData(items: MutableList<out Record>) {
+        items.map { "${it.dbObjectAsString}\n" }.forEach { item ->
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
                 //writeOutputToManifest()
@@ -53,8 +53,8 @@ abstract class Writer(private val keyService: KeyService,
                 }
 
                 val encryptionResult =
-                    this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
-                        byteArrayOutputStream.toByteArray())
+                        this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
+                                byteArrayOutputStream.toByteArray())
 
                 val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
 
@@ -90,7 +90,7 @@ abstract class Writer(private val keyService: KeyService,
 
                 val dataBytes = byteArrayOutputStream.toByteArray()
 
-               writeManifest(dataFile, dataBytes)
+                writeManifest(dataFile, dataBytes)
 
             }
 
@@ -99,19 +99,19 @@ abstract class Writer(private val keyService: KeyService,
     }
 
     private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
-        if (compressOutput) {
-            CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-                BufferedOutputStream(outputStream))
-        } else {
-            BufferedOutputStream(outputStream)
-        }
+            if (compressOutput) {
+                CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
+                        BufferedOutputStream(outputStream))
+            } else {
+                BufferedOutputStream(outputStream)
+            }
 
     protected fun metadataPath(number: Int): String =
-        "${outputLocation()}/$topicName-%06d.metadata".format(number)
+            "${outputLocation()}/$topicName-%06d.metadata".format(number)
 
     private fun outputName(number: Int): String =
-        """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
-            .format(number)
+            """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+                    .format(number)
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
