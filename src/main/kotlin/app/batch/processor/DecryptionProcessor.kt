@@ -20,7 +20,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
         try {
-            logger.info("Processing '$item'.")
+            logger.info("Processing item '$item'.")
             val decryptedKey = keyService.decryptKey(
                     item.encryption.keyEncryptionKeyId,
                     item.encryption.encryptedEncryptionKey)

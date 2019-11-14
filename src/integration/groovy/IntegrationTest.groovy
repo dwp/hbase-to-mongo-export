@@ -6,7 +6,7 @@ import org.apache.log4j.PatternLayout
 import spock.lang.Specification
 import groovy.io.FileType
 
-class IntegrationTest extends Specification {
+    class IntegrationTest extends Specification {
 
     Logger log
 
@@ -53,7 +53,7 @@ class IntegrationTest extends Specification {
                 // Get a reader for the input file
                 new File( f.path ).withReader { r ->
                     // And write data from the input into the output
-                    w << r << '\n'
+                    w << r
                 }
             }
         }

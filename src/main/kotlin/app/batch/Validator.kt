@@ -28,7 +28,7 @@ class Validator {
                 val timeAsLong = lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
                 // Code reaches here only if the id and time are not nulls
-                val manifestRecord = ManifestRecord(id!!.asString, timeAsLong!!, db, collection, "EXPORT")
+                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong!!, db, collection, "EXPORT")
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
@@ -47,7 +47,6 @@ class Validator {
             val parsingException = "Exception occurred while parsing decrypted db object"
             throw Exception(parsingException)
         }
-        return null
     }
 
     fun retrieveId(jsonObject: JsonObject): JsonObject? {

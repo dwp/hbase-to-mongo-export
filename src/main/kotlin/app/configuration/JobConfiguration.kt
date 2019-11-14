@@ -1,6 +1,5 @@
 package app.configuration
 
-import app.batch.ManifestPurger
 import app.domain.DecryptedRecord
 import app.domain.Record
 import app.domain.SourceRecord
@@ -48,22 +47,12 @@ class JobConfiguration : DefaultBatchConfigurer() {
                     .skipLimit(Integer.MAX_VALUE)
                     .processor(itemProcessor())
                     .writer(itemWriter)
-                    //.listener(BeforeStepListener)
                     .build()
 
     fun itemProcessor(): ItemProcessor<SourceRecord, Record> =
             CompositeItemProcessor<SourceRecord, Record>().apply {
                 setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
             }
-
-    @Bean
-    @Profile("dummyS3Client", "realS3Client")
-    fun purgeManifest() {
-        manifestPurger.purgeManifestFolder()
-    }
-
-    @Autowired
-    lateinit var manifestPurger: ManifestPurger
 
     @Autowired
     lateinit var itemReader: ItemReader<SourceRecord>

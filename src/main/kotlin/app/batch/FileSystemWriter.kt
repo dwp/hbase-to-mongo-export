@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
 import org.slf4j.Logger
@@ -16,13 +17,12 @@ import java.nio.file.Paths
 @Profile("outputToFile")
 class FileSystemWriter(keyService: KeyService,
                        cipherService: CipherService) : Writer(keyService, cipherService){
+    override fun writeManifest(manifestRecords: MutableList<ManifestRecord>) {
+    }
+
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
         logger.info("writing tooooooo $filePath")
         Files.write(Paths.get(filePath), fileBytes)
-    }
-
-    override fun writeManifest(filePath: String, fileBytes: ByteArray) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun outputLocation(): String {

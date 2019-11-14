@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
@@ -23,16 +24,17 @@ abstract class Writer(private val keyService: KeyService,
 
     abstract fun outputLocation(): String
     abstract fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String)
-    abstract fun writeManifest(filePath: String, fileBytes: ByteArray)
+    abstract fun writeManifest(manifestRecords: MutableList<ManifestRecord>)
 
     private fun chunkData(items: MutableList<out Record>) {
-        items.map { "${it.dbObjectAsString}\n" }.forEach { item ->
+        items.forEach { it ->
+            val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
-                //writeOutputToManifest()
+                logger.info("current batch manifest ${currentBatchManifest.map { it.id }.joinToString { "," }}")
             }
             currentBatch.append(item)
-            currentBatchManifest.append(item)
+            currentBatchManifest.add(it.manifestRecord)
             batchSizeBytes += item.length
         }
     }
@@ -40,8 +42,8 @@ abstract class Writer(private val keyService: KeyService,
     open fun writeOutput() {
         if (batchSizeBytes > 0) {
 
-            val dataFile = outputName(++currentOutputFileNumber)
-            logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
+            val fileName = outputName(++currentOutputFileNumber)
+            logger.info("Processing file $fileName with batchSizeBytes='$batchSizeBytes'.")
 
             if (encryptOutput) {
                 val dataKeyResult = keyService.batchDataKey()
@@ -58,7 +60,7 @@ abstract class Writer(private val keyService: KeyService,
 
                 val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
 
-                writeToTarget(dataFile, dataBytes, encryptionResult.initialisationVector, dataKeyResult.ciphertextDataKey, dataKeyResult.dataKeyEncryptionKeyId)
+                writeToTarget(fileName, dataBytes, encryptionResult.initialisationVector, dataKeyResult.ciphertextDataKey, dataKeyResult.dataKeyEncryptionKeyId)
 
             } else {
                 //no encryption
@@ -66,35 +68,15 @@ abstract class Writer(private val keyService: KeyService,
                 bufferedOutputStream(byteArrayOutputStream).use {
                     it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
                 }
-                writeToTarget(dataFile, byteArrayOutputStream.toByteArray(), "", "", "")
+                writeToTarget(fileName, byteArrayOutputStream.toByteArray(), "", "", "")
             }
+
+            writeManifest(currentBatchManifest)
 
             this.currentBatch = StringBuilder()
             this.batchSizeBytes = 0
-        }
-    }
+            this.currentBatchManifest = mutableListOf()
 
-    fun writeOutputToManifest() {
-
-        if (batchSizeBytes > 0) {
-
-            val dataFile = outputName(++currentOutputFileNumber)
-            logger.info("Processing file $dataFile with batchSizeBytes='$batchSizeBytes'.")
-
-            if (encryptOutput) {
-                val byteArrayOutputStream = ByteArrayOutputStream()
-
-                bufferedOutputStream(byteArrayOutputStream).use {
-                    it.write(this.currentBatchManifest.toString().toByteArray(StandardCharsets.UTF_8))
-                }
-
-                val dataBytes = byteArrayOutputStream.toByteArray()
-
-                writeManifest(dataFile, dataBytes)
-
-            }
-
-            this.currentBatchManifest = StringBuilder()
         }
     }
 
@@ -126,7 +108,7 @@ abstract class Writer(private val keyService: KeyService,
     protected lateinit var topicName: String // i.e. "db.user.data"
 
     private var currentBatch = StringBuilder()
-    private var currentBatchManifest = StringBuilder()
+    private var currentBatchManifest = mutableListOf<ManifestRecord>()
     private var batchSizeBytes = 0
     protected var currentOutputFileNumber = 0
 

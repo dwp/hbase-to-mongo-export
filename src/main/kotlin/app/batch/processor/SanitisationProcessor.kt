@@ -21,7 +21,10 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
                 .replace("\\u0000", "")
                 .replace("_archivedDateTime", "_removedDateTime")
                 .replace("_archived", "_removed")
-        return Record(replacedOutput, item.manifestRecord)
+
+        val manifestRecord = item.manifestRecord
+        logger.info("Sanitized record : ${manifestRecord.id} ${manifestRecord.timestamp}")
+        return Record(replacedOutput, manifestRecord)
     }
 
     fun sanitiseCollectionSpecific(input: DecryptedRecord): String {

@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
 import org.slf4j.Logger
@@ -18,9 +19,8 @@ import java.nio.file.Paths
 @Profile("outputToDirectory")
 class DirectoryWriter(keyService: KeyService,
                       cipherService: CipherService) : Writer(keyService, cipherService) {
+    override fun writeManifest(manifestRecords: MutableList<ManifestRecord>) {
 
-    override fun writeManifest(filePath: String, fileBytes: ByteArray) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun outputLocation(): String = outputDirectory
