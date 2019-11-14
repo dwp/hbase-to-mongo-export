@@ -17,10 +17,10 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: DecryptedRecord): Record? {
         val output = sanitiseCollectionSpecific(item)
-        val replacedOutput =  output.replace("$", "d_")
-                .replace("\\u0000", "")
-                .replace("_archivedDateTime", "_removedDateTime")
-                .replace("_archived", "_removed")
+        val replacedOutput = output.replace("$", "d_")
+            .replace("\\u0000", "")
+            .replace("_archivedDateTime", "_removedDateTime")
+            .replace("_archived", "_removed")
 
         val manifestRecord = item.manifestRecord
         logger.info("Sanitized record : ${manifestRecord.id} ${manifestRecord.timestamp}")
@@ -32,8 +32,8 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
         val collection = input.manifestRecord.collection
         val dbObject = input.dbObject
         if ((db == "penalties-and-deductions" && collection == "sanction")
-                || (db == "core" && collection == "healthAndDisabilityDeclaration")
-                || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
+            || (db == "core" && collection == "healthAndDisabilityDeclaration")
+            || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
             logger.debug("Sanitising output for db: {} and collection: {}", db, collection)
             return dbObject.toString().replace(replacementRegex, "")
         }

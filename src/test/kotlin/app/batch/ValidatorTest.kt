@@ -23,11 +23,11 @@ class ValidatorTest {
         val decryptedDbObject = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183Z\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": {\"\$date\": \"2018-12-14T15:01:02.000+0000\"}}\n"
 
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"), 10, encryptionBlock, "dbObject", "db", "collection")
-        val decrypted =  validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
+        val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         assertNotNull(decrypted)
     }
 
@@ -37,9 +37,9 @@ class ValidatorTest {
         "00001".toByteArray()
 
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"), 10, encryptionBlock, "dbObject", "db", "collection")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
@@ -64,9 +64,9 @@ class ValidatorTest {
     @Test
     fun Should_Log_Error_If_DbObject_Doesnt_Have_Id() {
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id1":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": {
@@ -96,9 +96,9 @@ class ValidatorTest {
     @Test
     fun Should_Log_Error_If_DbObject_Doesnt_Have_LastUpdatedTimestamp() {
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime1": {
@@ -115,9 +115,9 @@ class ValidatorTest {
     @Test
     fun Should_Log_Error_If_lastModifiedDateTime_Doesnt_Have_Dollar_Date() {
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": {
@@ -134,9 +134,9 @@ class ValidatorTest {
     @Test
     fun Should_Log_Error_If_lastModifiedDateTime_Date_Doesnt_Have_Valid_Format() {
         val encryptionBlock: EncryptionBlock =
-                EncryptionBlock("keyEncryptionKeyId",
-                        "initialisationVector",
-                        "encryptedEncryptionKey")
+            EncryptionBlock("keyEncryptionKeyId",
+                "initialisationVector",
+                "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": {

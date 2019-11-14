@@ -104,7 +104,7 @@ class HBaseReaderTest {
 
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
-                expected.toString(), actual.toString())
+            expected.toString(), actual.toString())
     }
 
     @Test(expected = MissingFieldException::class)

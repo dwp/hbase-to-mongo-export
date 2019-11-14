@@ -67,11 +67,11 @@ class Validator {
         return lastUpdatedTimestamp
     }
 
-    fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject) : Long{
+    fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject): Long {
         val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
         if (null != date) {
-           return  df.parse(date.getAsString()).time
+            return df.parse(date.getAsString()).time
         } else {
             val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
             throw Exception(dateNotFound)

@@ -41,6 +41,6 @@ data class SourceRecord(val hbaseRowId: ByteArray,
 
 data class DecryptedRecord(val dbObject: JsonObject, val manifestRecord: ManifestRecord)
 
-data class ManifestRecord(val id: String, val timestamp : Long, val db: String, val collection: String, val source: String)
+data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String, val source: String)
 
 data class Record(val dbObjectAsString: String, val manifestRecord: ManifestRecord)

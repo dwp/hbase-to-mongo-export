@@ -48,7 +48,7 @@ class S3DirectoryWriterTest {
 
 
     @Before
-    fun setUp(){
+    fun setUp() {
         Mockito.reset(s3Client)
     }
 
@@ -78,14 +78,14 @@ class S3DirectoryWriterTest {
     }
 
     @Test
-    fun testManifestFileFormat(){
+    fun testManifestFileFormat() {
         val expected = "test-manifest-exporter/db.core.addressDeclaration-000004.csv"
         val actual = s3DirectoryWriter.generateManifestFileFormat()
         assertEquals(expected, actual)
     }
 
     @Test
-    fun testCSVManifestGeneration(){
+    fun testCSVManifestGeneration() {
         val manifestRecord1 = ManifestRecord("\"_id\":{\"declarationId\": \"1234567890\"}", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "EXPORT")
         val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT")
         val list = mutableListOf<ManifestRecord>()
@@ -93,12 +93,12 @@ class S3DirectoryWriterTest {
         list.add(manifestRecord2)
         val actual = s3DirectoryWriter.generateEscapedCSV(list)
         val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\",100000000,\"dbwithcomma,\",\"collectionwithdoublequote\"\"\",EXPORT\n" +
-                "id2,200000000,db2,collection2,EXPORT"
+            "id2,200000000,db2,collection2,EXPORT"
         assertEquals(expected, actual)
     }
 
     @Test
-    fun testManifest(){
+    fun testManifest() {
         val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "EXPORT")
         val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT")
         val list = mutableListOf<ManifestRecord>()
@@ -106,11 +106,11 @@ class S3DirectoryWriterTest {
         list.add(manifestRecord2)
         s3DirectoryWriter.writeManifest(list)
         Mockito.verify(s3Client, Mockito.times(1))
-                .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
+            .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
     }
 
     @Test
-    fun testManifestFileMetadataGeneration(){
+    fun testManifestFileMetadataGeneration() {
         val manifestFileName = "test-manifest-exporter/db.core.addressDeclaration.csv"
         val actual = s3DirectoryWriter.generateManifestFileMetadata(manifestFileName, 1024)
         assertEquals("binary/octetstream", actual.contentType)

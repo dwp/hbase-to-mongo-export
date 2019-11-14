@@ -18,7 +18,6 @@ class HbaseToMongoExportSpec {
 
     private val log = Logger.getLogger(HbaseToMongoExportSpec::class.toString())
 
-
     @Autowired
     private lateinit var s3Client: AmazonS3
 

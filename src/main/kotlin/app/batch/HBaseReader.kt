@@ -71,7 +71,6 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
             scanner = table.getScanner(scan)
-            //manifestPurger.purgeManifestFolder()
         }
 
         return scanner!!

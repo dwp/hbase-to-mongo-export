@@ -28,31 +28,31 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
     fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
-            jobBuilderFactory.get("nightlyExportBatchJob")
-                    .incrementer(RunIdIncrementer())
-                    .listener(listener)
-                    .flow(step)
-                    .end()
-                    .build()
+        jobBuilderFactory.get("nightlyExportBatchJob")
+            .incrementer(RunIdIncrementer())
+            .listener(listener)
+            .flow(step)
+            .end()
+            .build()
 
     @Bean
     fun step() =
-            stepBuilderFactory.get("step")
-                    .chunk<SourceRecord, Record>(10)
-                    .reader(itemReader)
-                    .faultTolerant()
-                    .skip(MissingFieldException::class.java)
-                    .skip(DecryptionFailureException::class.java)
-                    .skip(BadDecryptedDataException::class.java)
-                    .skipLimit(Integer.MAX_VALUE)
-                    .processor(itemProcessor())
-                    .writer(itemWriter)
-                    .build()
+        stepBuilderFactory.get("step")
+            .chunk<SourceRecord, Record>(10)
+            .reader(itemReader)
+            .faultTolerant()
+            .skip(MissingFieldException::class.java)
+            .skip(DecryptionFailureException::class.java)
+            .skip(BadDecryptedDataException::class.java)
+            .skipLimit(Integer.MAX_VALUE)
+            .processor(itemProcessor())
+            .writer(itemWriter)
+            .build()
 
     fun itemProcessor(): ItemProcessor<SourceRecord, Record> =
-            CompositeItemProcessor<SourceRecord, Record>().apply {
-                setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
-            }
+        CompositeItemProcessor<SourceRecord, Record>().apply {
+            setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
+        }
 
     @Autowired
     lateinit var itemReader: ItemReader<SourceRecord>

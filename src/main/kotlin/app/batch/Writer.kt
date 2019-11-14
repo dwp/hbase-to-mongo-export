@@ -55,8 +55,8 @@ abstract class Writer(private val keyService: KeyService,
                 }
 
                 val encryptionResult =
-                        this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
-                                byteArrayOutputStream.toByteArray())
+                    this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
+                        byteArrayOutputStream.toByteArray())
 
                 val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
 
@@ -81,19 +81,19 @@ abstract class Writer(private val keyService: KeyService,
     }
 
     private fun bufferedOutputStream(outputStream: OutputStream): OutputStream =
-            if (compressOutput) {
-                CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-                        BufferedOutputStream(outputStream))
-            } else {
-                BufferedOutputStream(outputStream)
-            }
+        if (compressOutput) {
+            CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
+                BufferedOutputStream(outputStream))
+        } else {
+            BufferedOutputStream(outputStream)
+        }
 
     protected fun metadataPath(number: Int): String =
-            "${outputLocation()}/$topicName-%06d.metadata".format(number)
+        "${outputLocation()}/$topicName-%06d.metadata".format(number)
 
     private fun outputName(number: Int): String =
-            """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
-                    .format(number)
+        """${outputLocation()}/$topicName-%06d.txt${if (compressOutput) ".bz2" else ""}${if (encryptOutput) ".enc" else ""}"""
+            .format(number)
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0

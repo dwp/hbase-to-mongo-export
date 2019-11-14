@@ -6,7 +6,7 @@ services:
     ports:
       - 9090:9090
       - 9095:9095
-      - 127.0.0.1:2181:2181
+      - 2181:2181
       - 16201:16201
     container_name: hbase
 
@@ -79,7 +79,7 @@ services:
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
       --file.output=/opt/hbase-to-mongo-export/data
-      --output.batch.size.max.bytes=500
+      --output.batch.size.max.bytes=2048
       --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
       --identity.key.password=changeit
