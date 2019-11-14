@@ -2,8 +2,12 @@ package app.batch
 
 import app.domain.ManifestRecord
 import app.domain.Record
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.Appender
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
+import com.nhaarman.mockitokotlin2.*
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -107,6 +111,26 @@ class S3DirectoryWriterTest {
         s3DirectoryWriter.writeManifest(list)
         Mockito.verify(s3Client, Mockito.times(1))
             .putObject(ArgumentMatchers.any(PutObjectRequest::class.java))
+    }
+
+    @Test
+    fun testManifestLogsException(){
+
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
+        doThrow(RuntimeException()).whenever(s3DirectoryWriter).generateManifestFileFormat()
+        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "EXPORT")
+        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT")
+        val list = mutableListOf<ManifestRecord>()
+        list.add(manifestRecord1)
+        list.add(manifestRecord2)
+        s3DirectoryWriter.writeManifest(list)
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(1)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        Assert.assertTrue(formattedMessages.contains("Exception while writing ids: 'id1:id2' of db: 'db1, collection: collection1' to manifest files in S3"))
+
     }
 
     @Test

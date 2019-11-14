@@ -91,7 +91,8 @@ class S3DirectoryWriter(keyService: KeyService,
 
             s3Client.putObject(request)
         } catch (e: Exception) {
-            logger.error("Exception while writing manifest files to S3", e)
+            val joinedIds = manifestRecords.map{it.id}.joinToString(":")
+            logger.error("Exception while writing ids: '${joinedIds}' of db: '${manifestRecords[0].db}, collection: ${manifestRecords[0].collection}' to manifest files in S3", e)
         }
     }
 
