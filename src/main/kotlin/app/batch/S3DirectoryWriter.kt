@@ -80,14 +80,14 @@ class S3DirectoryWriter(keyService: KeyService,
 
             val manifestFileBytes = byteArrayOutputStream.toByteArray()
             val bytesSize = manifestFileBytes.size.toLong()
-            logger.info("Writing file 's3://$s3BucketName/$manifestFileName' of '$bytesSize' bytes.")
+            logger.info("Writing file 's3://$s3ManifestBucketName/$manifestFileName' of '$bytesSize' bytes.")
 
             val inputStream = ByteArrayInputStream(manifestFileBytes)
             val bufferedInputStream = BufferedInputStream(inputStream)
 
             val manifestFileMetadata = generateManifestFileMetadata(manifestFileName, bytesSize)
 
-            val request = PutObjectRequest(s3BucketName, manifestFileName, bufferedInputStream, manifestFileMetadata)
+            val request = PutObjectRequest(s3ManifestBucketName, manifestFileName, bufferedInputStream, manifestFileMetadata)
 
             s3Client.putObject(request)
         } catch (e: Exception) {
@@ -127,6 +127,9 @@ class S3DirectoryWriter(keyService: KeyService,
 
     @Value("\${s3.manifest.prefix.folder}")
     private lateinit var s3ManifestPrefixFolder: String
+
+    @Value("\${s3.manifest.bucket}")
+    private lateinit var s3ManifestBucketName: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriter::class.toString())

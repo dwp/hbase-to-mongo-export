@@ -5,6 +5,7 @@ aws_default_region=eu-west-2
 aws_secret_access_key=DummyKey
 aws_access_key_id=DummyKey
 s3_bucket=demobucket
+s3_manifest_bucket=manifestbucket
 s3_prefix_folder=test-exporter
 data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
@@ -59,6 +60,7 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
@@ -75,6 +77,7 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
@@ -95,6 +98,7 @@ restart: ## Restart hbase and other services
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
@@ -109,6 +113,7 @@ down: ## Bring down the hbase and other services
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
@@ -130,6 +135,7 @@ integration-tests: ## (Re-)Run the integration tests in a Docker container
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
@@ -146,6 +152,7 @@ hbase-shell: ## Open an Hbase shell onto the running hbase container
 		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
 		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
 		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
@@ -182,6 +189,7 @@ local-all-collections-test: build-jar ## Build a local jar, then run it repeat t
 		./read-topics-csv.sh \
 			topics-test.csv \
 			$(s3_bucket) \
+			$(s3_manifest_bucket) \
 			$(local_s3_service_endpoint) \
 			$(aws_access_key_id) \
 			$(aws_secret_access_key) \

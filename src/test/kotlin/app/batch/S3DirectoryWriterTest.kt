@@ -45,7 +45,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "s3.manifest.prefix.folder=test-manifest-exporter"
+    "s3.manifest.prefix.folder=test-manifest-exporter",
+    "s3.manifest.bucket=manifestbucket"
 ])
 
 class S3DirectoryWriterTest {
