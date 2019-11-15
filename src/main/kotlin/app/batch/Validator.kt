@@ -1,6 +1,7 @@
 package app.batch
 
 import app.domain.DecryptedRecord
+import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import com.google.gson.Gson
@@ -22,11 +23,13 @@ class Validator {
         try {
             val jsonObject = parseDecrypted(decrypted)
             if (null != jsonObject) {
-                retrieveId(jsonObject)
+                val id = retrieveId(jsonObject)
                 val lastUpdatedTimestamp = retrievelastUpdatedTimestamp(jsonObject)
-                lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
+                val timeAsLong = lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
-                return DecryptedRecord(jsonObject, db, collection)
+                // Code reaches here only if the id and time are not nulls
+                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong!!, db, collection, "EXPORT")
+                return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
             val ex = BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
@@ -64,11 +67,11 @@ class Validator {
         return lastUpdatedTimestamp
     }
 
-    fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject) {
+    fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject): Long {
         val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
         if (null != date) {
-            df.parse(date.getAsString()).time
+            return df.parse(date.getAsString()).time
         } else {
             val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
             throw Exception(dateNotFound)

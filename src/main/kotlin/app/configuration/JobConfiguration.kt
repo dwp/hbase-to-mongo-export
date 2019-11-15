@@ -1,6 +1,7 @@
 package app.configuration
 
 import app.domain.DecryptedRecord
+import app.domain.Record
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
@@ -27,31 +28,31 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
     fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
-            jobBuilderFactory.get("nightlyExportBatchJob")
-                    .incrementer(RunIdIncrementer())
-                    .listener(listener)
-                    .flow(step)
-                    .end()
-                    .build()
+        jobBuilderFactory.get("nightlyExportBatchJob")
+            .incrementer(RunIdIncrementer())
+            .listener(listener)
+            .flow(step)
+            .end()
+            .build()
 
     @Bean
     fun step() =
-            stepBuilderFactory.get("step")
-                    .chunk<SourceRecord, String>(10)
-                    .reader(itemReader)
-                    .faultTolerant()
-                    .skip(MissingFieldException::class.java)
-                    .skip(DecryptionFailureException::class.java)
-                    .skip(BadDecryptedDataException::class.java)
-                    .skipLimit(Integer.MAX_VALUE)
-                    .processor(itemProcessor())
-                    .writer(itemWriter)
-                    .build()
+        stepBuilderFactory.get("step")
+            .chunk<SourceRecord, Record>(10)
+            .reader(itemReader)
+            .faultTolerant()
+            .skip(MissingFieldException::class.java)
+            .skip(DecryptionFailureException::class.java)
+            .skip(BadDecryptedDataException::class.java)
+            .skipLimit(Integer.MAX_VALUE)
+            .processor(itemProcessor())
+            .writer(itemWriter)
+            .build()
 
-    fun itemProcessor(): ItemProcessor<SourceRecord, String> =
-            CompositeItemProcessor<SourceRecord, String>().apply {
-                setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
-            }
+    fun itemProcessor(): ItemProcessor<SourceRecord, Record> =
+        CompositeItemProcessor<SourceRecord, Record>().apply {
+            setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
+        }
 
     @Autowired
     lateinit var itemReader: ItemReader<SourceRecord>
@@ -60,10 +61,10 @@ class JobConfiguration : DefaultBatchConfigurer() {
     lateinit var decryptionProcessor: ItemProcessor<SourceRecord, DecryptedRecord>
 
     @Autowired
-    lateinit var sanitisationProcessor: ItemProcessor<DecryptedRecord, String>
+    lateinit var sanitisationProcessor: ItemProcessor<DecryptedRecord, Record>
 
     @Autowired
-    lateinit var itemWriter: ItemWriter<String>
+    lateinit var itemWriter: ItemWriter<Record>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory

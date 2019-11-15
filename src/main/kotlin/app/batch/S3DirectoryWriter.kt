@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.AmazonServiceException
@@ -7,6 +8,7 @@ import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +16,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
 
 // See also https://github.com/aws/aws-sdk-java
 
@@ -62,6 +67,56 @@ class S3DirectoryWriter(keyService: KeyService,
         }
     }
 
+    override fun writeManifest(manifestRecords: MutableList<ManifestRecord>) {
+
+        try {
+            val manifestFileName = generateManifestFileFormat()
+            val manifestFileContent = generateEscapedCSV(manifestRecords)
+
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            BufferedOutputStream(byteArrayOutputStream).use {
+                it.write(manifestFileContent.toByteArray(StandardCharsets.UTF_8))
+            }
+
+            val manifestFileBytes = byteArrayOutputStream.toByteArray()
+            val bytesSize = manifestFileBytes.size.toLong()
+            logger.info("Writing file 's3://$s3ManifestBucketName/$manifestFileName' of '$bytesSize' bytes.")
+
+            val inputStream = ByteArrayInputStream(manifestFileBytes)
+            val bufferedInputStream = BufferedInputStream(inputStream)
+
+            val manifestFileMetadata = generateManifestFileMetadata(manifestFileName, bytesSize)
+
+            val request = PutObjectRequest(s3ManifestBucketName, manifestFileName, bufferedInputStream, manifestFileMetadata)
+
+            s3Client.putObject(request)
+        } catch (e: Exception) {
+            val joinedIds = manifestRecords.map{it.id}.joinToString(":")
+            logger.error("Exception while writing ids: '${joinedIds}' of db: '${manifestRecords[0].db}, collection: ${manifestRecords[0].collection}' to manifest files in S3", e)
+        }
+    }
+
+    fun generateManifestFileFormat(): String {
+       return "${s3ManifestPrefixFolder}/$topicName-%06d.csv".format(currentOutputFileNumber)
+    }
+
+    fun generateEscapedCSV(manifestRecords: MutableList<ManifestRecord>): String {
+        val manifestData = manifestRecords.map { "${escape(it.id)},${escape(it.timestamp.toString())},${escape(it.db)},${escape(it.collection)},${escape(it.source)}" }
+        return  manifestData.joinToString("\n")
+    }
+
+    fun generateManifestFileMetadata(manifestFileName: String, bytesSize: Long): ObjectMetadata {
+        val metadata = ObjectMetadata()
+        metadata.contentType = "binary/octetstream"
+        metadata.addUserMetadata("x-amz-meta-title", manifestFileName)
+        metadata.contentLength = bytesSize
+        return metadata
+    }
+
+    private fun escape(value: String): String {
+       return StringEscapeUtils.escapeCsv(value)
+    }
+
     override fun outputLocation(): String = s3PrefixFolder
 
     @Value("\${s3.bucket}")
@@ -69,6 +124,12 @@ class S3DirectoryWriter(keyService: KeyService,
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String //i.e. "mongo-export-2019-06-23"
+
+    @Value("\${s3.manifest.prefix.folder}")
+    private lateinit var s3ManifestPrefixFolder: String
+
+    @Value("\${s3.manifest.bucket}")
+    private lateinit var s3ManifestBucketName: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3DirectoryWriter::class.toString())

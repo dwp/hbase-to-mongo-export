@@ -56,6 +56,7 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.9")
     implementation("org.springframework.retry:spring-retry")
     implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.apache.commons:commons-text:1.8")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")

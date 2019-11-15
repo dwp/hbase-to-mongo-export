@@ -23,5 +23,15 @@ echo ""
 
 echo "--s3 bucket ${S3_BUCKET} done--"
 
+echo "Creating bucket ${S3_MANIFEST_BUCKET}"
+aws --endpoint-url="${S3_SERVICE_ENDPOINT}" s3 mb "s3://${S3_MANIFEST_BUCKET}" --region "${AWS_REGION}"
+echo ""
+
+echo "Setting up ACL for ${S3_MANIFEST_BUCKET}"
+aws --endpoint-url="${S3_SERVICE_ENDPOINT}" s3api put-bucket-acl --bucket "${S3_MANIFEST_BUCKET}" --acl public-read
+echo ""
+
+echo "--s3 manifest bucket ${S3_MANIFEST_BUCKET} done--"
+
 # it only works with 18.03 + docker engine
 # https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach

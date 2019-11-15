@@ -28,15 +28,15 @@ class S3DummyConfiguration {
             .build()
     }
 
-    @Value("\${aws.region}")
+    @Value("\${aws.region:eu-west-2}")
     private lateinit var region: String
 
-    @Value("\${s3.service.endpoint}")
+    @Value("\${s3.service.endpoint:http://s3-dummy:4572}")
     private lateinit var serviceEndpoint: String
 
-    @Value("\${s3.access.key}")
+    @Value("\${s3.access.key:something}")
     private lateinit var accessKey: String
 
-    @Value("\${s3.secret.key}")
+    @Value("\${s3.secret.key:something}")
     private lateinit var secretKey: String
 }

@@ -36,6 +36,7 @@ services:
       - AWS_ACCESS_KEY_ID=DummyKey
       - AWS_SECRET_ACCESS_KEY=DummySecret
       - S3_BUCKET=${S3_BUCKET}
+      - S3_MANIFEST_BUCKET=${S3_MANIFEST_BUCKET}
 
   hbase-populate:
     image: hbase-populate
@@ -78,7 +79,7 @@ services:
       --topic.name=db.penalties-and-deductions.sanction
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --data.key.service.url=https://dks-standalone-https:8443
-      --file.output=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
+      --file.output=/opt/hbase-to-mongo-export/data
       --output.batch.size.max.bytes=2048
       --identity.keystore=certs/keystore.jks
       --identity.store.password=changeit
@@ -86,6 +87,8 @@ services:
       --identity.store.alias=cid
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
+      --encrypt.output=false
+      --compress.output=false
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -136,7 +139,7 @@ services:
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
-      --topic.name=db.core.addressDeclaration
+      --topic.name=db.penalties-and-deductions.sanction
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --encrypt.output=true
       --compress.output=true
@@ -154,6 +157,8 @@ services:
       --s3.service.endpoint=http://s3-dummy:4572
       --s3.access.key=DummyKey
       --s3.secret.key=DummySecret
+      --s3.manifest.prefix.folder=test-manifest-exporter
+      --s3.manifest.bucket=manifestbucket
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
@@ -168,9 +173,11 @@ services:
       - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "gradle --rerun-tasks integration"
     environment:
-      - FILE_NAME=/opt/hbase-to-mongo-export/data/ucdata-file-output.txt
+      - FILE_NAME=/opt/hbase-to-mongo-export/data
       - EXPECTED_TIMESTAMP=10
       - EXPECTED_LINE_COUNT=7
+      - SPRING_PROFILES_ACTIVE=dummyS3Client
+      - SPRING_CONFIG_LOCATION=application_integration.properties
 
   dks-standalone-http:
     image: dks-standalone-http

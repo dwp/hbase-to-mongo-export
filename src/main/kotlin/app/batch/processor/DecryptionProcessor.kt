@@ -15,32 +15,32 @@ import org.springframework.stereotype.Component
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
                           private val keyService: KeyService, private val validator: Validator) :
-        ItemProcessor<SourceRecord, DecryptedRecord> {
+    ItemProcessor<SourceRecord, DecryptedRecord> {
 
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
         try {
-            logger.info("Processing '$item'.")
+            logger.info("Processing item '$item'.")
             val decryptedKey = keyService.decryptKey(
-                    item.encryption.keyEncryptionKeyId,
-                    item.encryption.encryptedEncryptionKey)
+                item.encryption.keyEncryptionKeyId,
+                item.encryption.encryptedEncryptionKey)
             val decrypted =
-                    cipherService.decrypt(
-                            decryptedKey,
-                            item.encryption.initializationVector,
-                            item.dbObject)
+                cipherService.decrypt(
+                    decryptedKey,
+                    item.encryption.initializationVector,
+                    item.dbObject)
             return validator.skipBadDecryptedRecords(item, decrypted)
         } catch (e: DataKeyServiceUnavailableException) {
             throw e
         } catch (e: Exception) {
             logger.error("Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
             throw DecryptionFailureException(
-                    "database-unknown",
-                    "collection-unknown",
-                    item.hbaseRowId,
-                    item.hbaseTimestamp,
-                    item.encryption.keyEncryptionKeyId,
-                    e)
+                "database-unknown",
+                "collection-unknown",
+                item.hbaseRowId,
+                item.hbaseTimestamp,
+                item.encryption.keyEncryptionKeyId,
+                e)
         }
     }
 
