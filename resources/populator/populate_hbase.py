@@ -8,7 +8,7 @@ import os
 import time
 import uuid
 
-import happybase 
+import happybase
 import requests
 import thriftpy2
 
@@ -106,16 +106,16 @@ def main():
                         column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
                         obj = {column_family_qualifier: json.dumps(value)}
                         data_table.put(record_id, obj, timestamp=int(timestamp))
-                        print("Saved record %s timestamp %s topic %s in table %s"
-                              .format(record_id, timestamp, topic_name, args.data_table_name))
+                        print("Saved record '{}' timestamp '{}' topic '{}' in table '{}'."
+                               .format(record_id, timestamp, topic_name, args.data_table_name))
 
                         topics_table.counter_inc(
                             topic_name, TOPIC_LIST_COLUMN_FAMILY_QUALIFIER, 1)
-                        print("Updated count of topic %s in table %s"
+                        print("Updated count of topic '{}' in table '{}'."
                               .format(topic_name, args.topics_table_name))
 
                     else:
-                        print("Skipped record %s as dbObject was missing".format(record_id))
+                        print("Skipped record '{}' as dbObject was missing.".format(record_id))
 
                 if args.dump_table_contents:
                     for key, data in data_table.scan():
@@ -137,7 +137,7 @@ def encrypt(key, plaintext):
     initialisation_vector = Random.new().read(AES.block_size)
     iv_int = int(binascii.hexlify(initialisation_vector), 16)
     counter = Counter.new(AES.block_size * 8, initial_value=iv_int)
-    aes = AES.new(key.encode("utf8"), AES.MODE_CTR, counter=counter)
+    aes = AES.new(base64.b64decode(key), AES.MODE_CTR, counter=counter)
     ciphertext = aes.encrypt(plaintext.encode("utf8"))
     return (base64.b64encode(initialisation_vector),
             base64.b64encode(ciphertext))

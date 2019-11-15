@@ -62,7 +62,8 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate s3-dummy s3-bucket-provision hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate s3-dummy s3-bucket-provision; \
+		docker-compose build --no-cache hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
