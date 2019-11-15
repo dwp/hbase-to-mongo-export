@@ -44,7 +44,6 @@ class Validator {
             val parsingException = "Exception occurred while parsing decrypted db object"
             throw Exception(parsingException)
         }
-        return null
     }
 
     fun retrieveId(jsonObject: JsonObject): JsonObject? {
@@ -80,8 +79,3 @@ class Validator {
         val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())
     }
 }
-
-
-
-
-
