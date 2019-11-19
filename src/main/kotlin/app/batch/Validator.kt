@@ -68,14 +68,28 @@ class Validator {
     }
 
     fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject): Long {
-        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
         val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
-        if (null != date) {
-            return df.parse(date.getAsString()).time
-        } else {
+        if (null == date) {
             val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
             throw Exception(dateNotFound)
         }
+
+        val timestampAsStr = date.getAsString()
+        val validTimestamps = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+            )
+
+        validTimestamps.forEach {
+            try {
+                val df = SimpleDateFormat(it)
+                return df.parse(timestampAsStr).time
+            }
+            catch (e: Exception) {
+                logger.debug("'$timestampAsStr' did not match date format '$it'")
+            }
+        }
+        throw Exception("Unparseable date: \"$timestampAsStr\"")
     }
 
     companion object {
