@@ -89,7 +89,7 @@ class Validator {
                 logger.debug("'$timestampAsStr' did not match date format '$it'")
             }
         }
-        throw Exception("Unparseable date: $timestampAsStr")
+        throw Exception("Unparseable date: \"$timestampAsStr\"")
     }
 
     companion object {
