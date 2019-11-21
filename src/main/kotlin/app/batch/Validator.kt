@@ -6,6 +6,7 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -59,10 +60,10 @@ class Validator {
         return id
     }
 
-    fun retrievelastUpdatedTimestamp(jsonObject: JsonObject): JsonObject? {
+    fun retrievelastUpdatedTimestamp(jsonObject: JsonObject): JsonPrimitive? {
         val jo = jsonObject.get("_lastModifiedDateTime")
         logger.info("Getting _lastModifiedDateTime field is '$jo'.")
-        val lastUpdatedTimestamp = jsonObject.getAsJsonObject("_lastModifiedDateTime")
+        val lastUpdatedTimestamp = jsonObject.getAsJsonPrimitive("_lastModifiedDateTime")
         if (null == lastUpdatedTimestamp) {
             val _lastModifiedDateTimeNotFound = "_lastModifiedDateTime not found in the decrypted db object"
             throw Exception(_lastModifiedDateTimeNotFound)
@@ -70,14 +71,9 @@ class Validator {
         return lastUpdatedTimestamp
     }
 
-    fun validateTimestampFormat(lastUpdatedTimestamp: JsonObject): Long {
-        val date = lastUpdatedTimestamp.getAsJsonPrimitive("\$date")
-        if (null == date) {
-            val dateNotFound = "\$date in _lastModifiedDateTime not found in the decrypted db object"
-            throw Exception(dateNotFound)
-        }
+    fun validateTimestampFormat(lastUpdatedTimestamp: JsonPrimitive): Long {
 
-        val timestampAsStr = date.getAsString()
+        val timestampAsStr = lastUpdatedTimestamp.getAsString()
         val validTimestamps = listOf(
                 "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
                 "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
