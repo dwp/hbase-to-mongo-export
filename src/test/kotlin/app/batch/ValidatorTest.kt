@@ -20,7 +20,8 @@ class ValidatorTest {
 
     @Test
     fun Should_Process_If_Decrypted_DbObject_Is_A_Valid_Json() {
-        val decryptedDbObject = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183Z\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": {\"\$date\": \"2018-12-14T15:01:02.000+0000\"}}\n"
+        val decryptedDbObject = """{"_id": {"someId": "RANDOM_GUID", "declarationId": 1234}, "type": "addressDeclaration", "contractId": 1234, "addressNumber": {"type": "AddressLine", "cryptoId": 1234}, "addressLine2": null, "townCity": {"type": "AddressLine", "cryptoId": 1234}, "postcode": "SM5 2LE", "processId": 1234, "effectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "paymentEffectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "createdDateTime": {"${"$"}date": "2015-03-20T12:23:25.183Z", "_archivedDateTime": "should be replaced by _archivedDateTime"}, "_version": 2, "_archived": "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"}
+"""
 
         val encryptionBlock: EncryptionBlock =
             EncryptionBlock("keyEncryptionKeyId",
@@ -52,9 +53,7 @@ class ValidatorTest {
 
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {
-                        "${'$'}date": "2018-12-14T15:01:02.000+0000"
-                    }
+                   "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val idJsonObject = validator.retrieveId(jsonObject!!)
@@ -69,9 +68,7 @@ class ValidatorTest {
                 "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id1":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {
-                        "${'$'}date": "2018-12-14T15:01:02.000+0000"
-                    }
+                   "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
                 }"""
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"), 10, encryptionBlock, "dbObject", "db", "collection")
         val exception = shouldThrow<BadDecryptedDataException> {
@@ -84,9 +81,7 @@ class ValidatorTest {
     fun Should_Retrieve_LastupdatedTimestamp_If_DbObject_Is_A_Valid_Json() {
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {
-                        "${'$'}date": "2018-12-14T15:01:02.000+0000"
-                    }
+                   "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val idJsonObject = validator.retrievelastUpdatedTimestamp(jsonObject!!)
@@ -101,34 +96,13 @@ class ValidatorTest {
                 "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime1": {
-                        "${'$'}date": "2018-12-14T15:01:02.000+0000"
-                    }
+                   "_lastModifiedDateTime1": "2018-12-14T15:01:02.000+0000"
                 }"""
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"), 10, encryptionBlock, "dbObject", "db", "collection")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
         exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason '_lastModifiedDateTime not found in the decrypted db object'"
-    }
-
-    @Test
-    fun Should_Log_Error_If_lastModifiedDateTime_Doesnt_Have_Dollar_Date() {
-        val encryptionBlock: EncryptionBlock =
-            EncryptionBlock("keyEncryptionKeyId",
-                "initialisationVector",
-                "encryptedEncryptionKey")
-        val decryptedDbObject = """{
-                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {
-                        "${'#'}date": "2018-12-14T15:01:02.000+0000"
-                    }
-                }"""
-        val sourceRecord = SourceRecord(generateFourByteChecksum("00001"), 10, encryptionBlock, "dbObject", "db", "collection")
-        val exception = shouldThrow<BadDecryptedDataException> {
-            validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
-        }
-        exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason '\$date in _lastModifiedDateTime not found in the decrypted db object'"
     }
 
     @Test
@@ -139,9 +113,7 @@ class ValidatorTest {
                 "encryptedEncryptionKey")
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {
-                        "${'$'}date": "2018-12-14"
-                    }
+                   "_lastModifiedDateTime": "2018-12-14"
                 }"""
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"), 10, encryptionBlock, "dbObject", "db", "collection")
         val exception = shouldThrow<BadDecryptedDataException> {
@@ -160,7 +132,7 @@ class ValidatorTest {
 
     @Test
     fun Should_Retrieve_LastupdatedTimestamp_If_DbObject_Is_A_Valid_Json2() {
-        val decryptedDbObject = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183Z\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": {\"\$date\": \"2018-12-14T15:01:02.000+0000\"}}\n"
+        val decryptedDbObject = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183Z\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": \"2018-12-14T15:01:02.000+0000\"}\n"
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val idJsonObject = validator.retrievelastUpdatedTimestamp(jsonObject!!)
         assertNotNull(idJsonObject)
@@ -168,7 +140,7 @@ class ValidatorTest {
 
     @Test
     fun should_Convert_Timestamp_To_Long_With_Timezone() {
-        val jsonString = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183+0000\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": {\"\$date\": \"2018-12-14T15:01:02.000+0000\"}}\n"
+        val jsonString = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183+0000\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": \"2018-12-14T15:01:02.000+0000\"}\n"
         val decrypted = validator.parseDecrypted(jsonString)
         val timestamp = validator.retrievelastUpdatedTimestamp(decrypted!!)
         val timeAsLong = validator.validateTimestampFormat(timestamp!!)
@@ -177,7 +149,34 @@ class ValidatorTest {
 
     @Test
     fun should_Convert_Timestamp_To_Long_Without_Timezone() {
-        val jsonString = "{\"_id\": {\"someId\": \"RANDOM_GUID\", \"declarationId\": 1234}, \"type\": \"addressDeclaration\", \"contractId\": 1234, \"addressNumber\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"addressLine2\": null, \"townCity\": {\"type\": \"AddressLine\", \"cryptoId\": 1234}, \"postcode\": \"SM5 2LE\", \"processId\": 1234, \"effectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"paymentEffectiveDate\": {\"type\": \"SPECIFIC_EFFECTIVE_DATE\", \"date\": 20150320, \"knownDate\": 20150320}, \"createdDateTime\": {\"\$date\": \"2015-03-20T12:23:25.183Z\", \"_archivedDateTime\": \"should be replaced by _archivedDateTime\"}, \"_version\": 2, \"_archived\": \"should be replaced by _removed\", \"unicodeNull\": \"\\u0000\", \"unicodeNullwithText\": \"some\\u0000text\", \"lineFeedChar\": \"\\n\", \"lineFeedCharWithText\": \"some\\ntext\", \"carriageReturn\": \"\\r\", \"carriageReturnWithText\": \"some\\rtext\", \"carriageReturnLineFeed\": \"\\r\\n\", \"carriageReturnLineFeedWithText\": \"some\\r\\ntext\", \"_lastModifiedDateTime\": {\"\$date\": \"2018-12-14T15:01:02.000+0000\"}}\n"
+        val jsonString = """{
+            "_id": {"someId": "RANDOM_GUID", "declarationId": 1234}, 
+            "type": "addressDeclaration", 
+            "contractId": 1234, 
+            "addressNumber": {
+                "type": "AddressLine", "cryptoId": 1234
+            }, 
+            "addressLine2": null, 
+            "townCity": {
+                "type": "AddressLine", 
+                "cryptoId": 1234
+            }, 
+            "postcode": "SM5 2LE", 
+            "processId": 1234, 
+            "effectiveDate": {
+                "type": "SPECIFIC_EFFECTIVE_DATE", 
+                "date": 20150320, 
+                "knownDate": 20150320}, 
+                "paymentEffectiveDate": {
+                    "type": "SPECIFIC_EFFECTIVE_DATE", 
+                    "date": 20150320, "knownDate": 20150320}, 
+                    "createdDateTime": {
+                        "${"$"}date": "2015-03-20T12:23:25.183Z", 
+                        "_archivedDateTime": "should be replaced by _archivedDateTime"}, 
+                        "_version": 2, 
+                        "_archived": 
+                        "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime":"2018-12-14T15:01:02.000+0000"}
+"""
         val decrypted = validator.parseDecrypted(jsonString)
         val timestamp = validator.retrievelastUpdatedTimestamp(decrypted!!)
         val timeAsLong = validator.validateTimestampFormat(timestamp!!)
