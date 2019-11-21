@@ -22,6 +22,7 @@ class Validator {
         val collection = item.collection
         try {
             val jsonObject = parseDecrypted(decrypted)
+            logger.info("Successfully parsed decrypted object.")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
                 val lastUpdatedTimestamp = retrievelastUpdatedTimestamp(jsonObject)
@@ -59,6 +60,8 @@ class Validator {
     }
 
     fun retrievelastUpdatedTimestamp(jsonObject: JsonObject): JsonObject? {
+        val jo = jsonObject.get("_lastModifiedDateTime")
+        logger.info("Getting _lastModifiedDateTime field is '$jo'.")
         val lastUpdatedTimestamp = jsonObject.getAsJsonObject("_lastModifiedDateTime")
         if (null == lastUpdatedTimestamp) {
             val _lastModifiedDateTimeNotFound = "_lastModifiedDateTime not found in the decrypted db object"
