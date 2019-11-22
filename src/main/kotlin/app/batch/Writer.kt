@@ -78,7 +78,8 @@ abstract class Writer(private val keyService: KeyService,
                 this.batchSizeBytes = 0
                 this.currentBatchManifest = mutableListOf()
             } catch (e: Exception) {
-                logger.error("Exception while writing snapshot file '$fileName' to s3")
+                logger.error("Exception while writing snapshot file '$fileName' to s3", e)
+                e.printStackTrace()
             }
         }
     }
