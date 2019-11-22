@@ -80,7 +80,6 @@ abstract class Writer(private val keyService: KeyService,
             } catch (e: Exception) {
                 logger.error("Exception while writing snapshot file '$fileName' to s3")
             }
-
         }
     }
 
