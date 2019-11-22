@@ -43,7 +43,6 @@ class S3DirectoryWriter(keyService: KeyService,
         // i.e. /mongo-export-2019-06-23/db.user.data-0001.metadata
         val objKeyName: String = filePath
 
-        try {
             // Upload a file as a new object with ContentType and title specified.
             val metadata = ObjectMetadata()
             metadata.contentType = "binary/octetstream"
@@ -56,15 +55,6 @@ class S3DirectoryWriter(keyService: KeyService,
             val request = PutObjectRequest(s3BucketName, objKeyName, bufferedInputStream, metadata)
 
             s3Client.putObject(request)
-        } catch (e: AmazonServiceException) {
-            // The call was transmitted successfully, but Amazon S3 couldn't process
-            // it, so it returned an error response.
-            e.printStackTrace()
-        } catch (e: SdkClientException) {
-            // Amazon S3 couldn't be contacted for a response, or the client
-            // couldn't parse the response from Amazon S3.
-            e.printStackTrace()
-        }
     }
 
     override fun writeManifest(manifestRecords: MutableList<ManifestRecord>) {
