@@ -45,37 +45,41 @@ abstract class Writer(private val keyService: KeyService,
             val fileName = outputName(++currentOutputFileNumber)
             logger.info("Processing file $fileName with batchSizeBytes='$batchSizeBytes'.")
 
-            if (encryptOutput) {
-                val dataKeyResult = keyService.batchDataKey()
-                logger.info("dataKeyResult: '$dataKeyResult'.")
-                val byteArrayOutputStream = ByteArrayOutputStream()
+            try {
+                if (encryptOutput) {
+                    val dataKeyResult = keyService.batchDataKey()
+                    logger.info("dataKeyResult: '$dataKeyResult'.")
+                    val byteArrayOutputStream = ByteArrayOutputStream()
 
-                bufferedOutputStream(byteArrayOutputStream).use {
-                    it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
+                    bufferedOutputStream(byteArrayOutputStream).use {
+                        it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
+                    }
+
+                    val encryptionResult =
+                        this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
+                            byteArrayOutputStream.toByteArray())
+
+                    val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
+
+                    writeToTarget(fileName, dataBytes, encryptionResult.initialisationVector, dataKeyResult.ciphertextDataKey, dataKeyResult.dataKeyEncryptionKeyId)
+
+                } else {
+                    //no encryption
+                    val byteArrayOutputStream = ByteArrayOutputStream()
+                    bufferedOutputStream(byteArrayOutputStream).use {
+                        it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
+                    }
+                    writeToTarget(fileName, byteArrayOutputStream.toByteArray(), "", "", "")
                 }
 
-                val encryptionResult =
-                    this.cipherService.encrypt(dataKeyResult.plaintextDataKey,
-                        byteArrayOutputStream.toByteArray())
+                writeManifest(currentBatchManifest)
 
-                val dataBytes = encryptionResult.encrypted.toByteArray(StandardCharsets.US_ASCII)
-
-                writeToTarget(fileName, dataBytes, encryptionResult.initialisationVector, dataKeyResult.ciphertextDataKey, dataKeyResult.dataKeyEncryptionKeyId)
-
-            } else {
-                //no encryption
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                bufferedOutputStream(byteArrayOutputStream).use {
-                    it.write(this.currentBatch.toString().toByteArray(StandardCharsets.UTF_8))
-                }
-                writeToTarget(fileName, byteArrayOutputStream.toByteArray(), "", "", "")
+                this.currentBatch = StringBuilder()
+                this.batchSizeBytes = 0
+                this.currentBatchManifest = mutableListOf()
+            } catch (e: Exception) {
+                logger.error("Exception while writing snapshot file '$fileName' to s3")
             }
-
-            writeManifest(currentBatchManifest)
-
-            this.currentBatch = StringBuilder()
-            this.batchSizeBytes = 0
-            this.currentBatchManifest = mutableListOf()
 
         }
     }
