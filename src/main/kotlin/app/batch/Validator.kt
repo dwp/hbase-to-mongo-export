@@ -26,7 +26,7 @@ class Validator {
             logger.info("Successfully parsed decrypted object.")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
-                val lastUpdatedTimestamp = retrievelastUpdatedTimestamp(jsonObject)
+                val lastUpdatedTimestamp = retrieveLastUpdatedTimestamp(jsonObject)
                 val timeAsLong = lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
                 // Code reaches here only if the id and time are not nulls
@@ -60,15 +60,23 @@ class Validator {
         return id
     }
 
-    fun retrievelastUpdatedTimestamp(jsonObject: JsonObject): JsonPrimitive? {
-        val jo = jsonObject.get("_lastModifiedDateTime")
-        logger.info("Getting _lastModifiedDateTime field is '$jo'.")
-        val lastUpdatedTimestamp = jsonObject.getAsJsonPrimitive("_lastModifiedDateTime")
-        if (null == lastUpdatedTimestamp) {
-            val _lastModifiedDateTimeNotFound = "_lastModifiedDateTime not found in the decrypted db object"
-            throw Exception(_lastModifiedDateTimeNotFound)
+    fun retrieveLastUpdatedTimestamp(jsonObject: JsonObject): JsonPrimitive? {
+        val lastModifiedElement = jsonObject.get("_lastModifiedDateTime")
+        logger.info("Getting '_lastModifiedDateTime' field is '$lastModifiedElement'.")
+
+        return if (lastModifiedElement != null) {
+            if (lastModifiedElement.isJsonPrimitive) {
+                lastModifiedElement.asJsonPrimitive
+            }
+            else {
+                val asObject = lastModifiedElement.asJsonObject
+                val dateSubField = "\$date"
+                asObject.getAsJsonPrimitive(dateSubField)
+            }
         }
-        return lastUpdatedTimestamp
+        else {
+            throw Exception("'_lastModifiedDateTime' field not found in the decrypted db object")
+        }
     }
 
     fun validateTimestampFormat(lastUpdatedTimestamp: JsonPrimitive): Long {
