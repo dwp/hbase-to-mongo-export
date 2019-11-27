@@ -134,6 +134,28 @@ class ValidatorTest {
         exception.message shouldBe "Exception in processing the decrypted record id '00001' in db 'db' in collection 'collection' with the reason 'Unparseable date: \"2018-12-14\"'"
     }
 
+    @Test
+    fun Should_Retrieve_Type_When_Type_Field_Valid() {
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "@type": "TEST_TYPE"
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val typeString = validator.retrieveType(jsonObject!!)
+        typeString shouldBe "TEST_TYPE"
+    }
+
+    @Test
+    fun Should_Retrieve_Default_Type_When_Missing_Type_Field() {
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "@type1": "TEST_TYPE"
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val typeString = validator.retrieveType(jsonObject!!)
+        typeString shouldBe validator.defaultType
+    }
+
     private fun generateFourByteChecksum(input: String): ByteArray {
         val bytes = input.toByteArray()
         val checksum = CRC32()
