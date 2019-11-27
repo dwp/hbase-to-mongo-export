@@ -15,7 +15,7 @@ import java.util.*
 
 @Component
 class Validator {
-    defaultType = "TYPE_NOT_SET"
+    val defaultType = "TYPE_NOT_SET"
     
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
@@ -31,7 +31,8 @@ class Validator {
                 val timeAsLong = lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
                 // Code reaches here only if the id and time are not nulls
-                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong!!, db, collection, "EXPORT")
+                val externalSource = retrieveType(jsonObject)
+                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong!!, db, collection, "EXPORT", externalSource)
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
@@ -105,7 +106,7 @@ class Validator {
         logger.info("Getting '@type' field is '$typeElement'.")
 
         if (typeElement != null) {
-            return typeElement   
+            return typeElement.getAsString()
         }
         return defaultType
     }
