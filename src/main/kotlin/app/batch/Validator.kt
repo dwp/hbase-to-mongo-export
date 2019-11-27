@@ -15,7 +15,8 @@ import java.util.*
 
 @Component
 class Validator {
-
+    defaultType = "TYPE_NOT_SET"
+    
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
         val hbaseRowId = String(hbaseRowKey)
@@ -98,6 +99,17 @@ class Validator {
         }
         throw Exception("Unparseable date: \"$timestampAsStr\"")
     }
+
+    fun retrieveType(jsonObject: JsonObject): String {
+        val typeElement = jsonObject.get("@type")
+        logger.info("Getting '@type' field is '$typeElement'.")
+
+        if (typeElement != null) {
+            return typeElement   
+        }
+        return defaultType
+    }
+
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())

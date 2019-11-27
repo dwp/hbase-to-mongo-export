@@ -91,7 +91,7 @@ class S3DirectoryWriter(keyService: KeyService,
     }
 
     fun generateEscapedCSV(manifestRecords: MutableList<ManifestRecord>): String {
-        val manifestData = manifestRecords.map { "${escape(it.id)},${escape(it.timestamp.toString())},${escape(it.db)},${escape(it.collection)},${escape(it.source)}" }
+        val manifestData = manifestRecords.map { "${escape(it.id)},${escape(it.timestamp.toString())},${escape(it.db)},${escape(it.collection)},${escape(it.source)},${escape(it.externalSource)}" }
         return  manifestData.joinToString("\n")
     }
 
