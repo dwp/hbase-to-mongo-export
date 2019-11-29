@@ -16,7 +16,7 @@ import java.util.*
 @Component
 class Validator {
     val defaultType = "TYPE_NOT_SET"
-    
+
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
         val hbaseRowId = String(hbaseRowKey)
@@ -24,7 +24,7 @@ class Validator {
         val collection = item.collection
         try {
             val jsonObject = parseDecrypted(decrypted)
-            logger.info("Successfully parsed decrypted object.")
+            logger.debug("Successfully parsed decrypted object.")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
                 val lastUpdatedTimestamp = retrieveLastUpdatedTimestamp(jsonObject)
@@ -64,7 +64,7 @@ class Validator {
 
     fun retrieveLastUpdatedTimestamp(jsonObject: JsonObject): JsonPrimitive? {
         val lastModifiedElement = jsonObject.get("_lastModifiedDateTime")
-        logger.info("Getting '_lastModifiedDateTime' field is '$lastModifiedElement'.")
+        logger.debug("Getting '_lastModifiedDateTime' field is '$lastModifiedElement'.")
 
         return if (lastModifiedElement != null) {
             if (lastModifiedElement.isJsonPrimitive) {
@@ -103,7 +103,7 @@ class Validator {
 
     fun retrieveType(jsonObject: JsonObject): String {
         val typeElement = jsonObject.get("@type")
-        logger.info("Getting '@type' field is '$typeElement'.")
+        logger.debug("Getting '@type' field is '$typeElement'.")
 
         if (typeElement != null) {
             return typeElement.getAsString()

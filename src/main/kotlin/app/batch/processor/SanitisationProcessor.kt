@@ -23,7 +23,7 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
             .replace("_archived", "_removed")
 
         val manifestRecord = item.manifestRecord
-        logger.info("Sanitized record : ${manifestRecord.id} ${manifestRecord.timestamp}")
+        logger.debug("Sanitized record : ${manifestRecord.id} ${manifestRecord.timestamp}")
         return Record(replacedOutput, manifestRecord)
     }
 
