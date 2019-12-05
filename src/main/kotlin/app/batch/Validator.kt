@@ -28,6 +28,7 @@ class Validator {
                 val id = retrieveId(jsonObject)
                 val timeAsLong = timestampAsLong(item.lastModified)
                 val externalSource = retrieveType(jsonObject)
+                jsonObject.addProperty("timestamp", item.hbaseTimestamp)
                 val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong!!, db, collection, "EXPORT", externalSource)
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
