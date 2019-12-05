@@ -20,9 +20,11 @@ import com.google.common.collect.Iterables;
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
+    var count = 0
     override fun read(): SourceRecord? {
-        return scanner().next()?.let { result ->
-
+        
+        scanner().next()?.let { result ->
+            count++
             val idBytes = result.row
             result.advance() //move pointer to the first cell
             val timestamp = result.current().timestamp
@@ -57,6 +59,10 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
             return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection)
         }
+
+        logger.info("Finished processing of $count records for topic $topicName")
+
+        return null
     }
 
     fun resetScanner() {
@@ -73,10 +79,6 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
             scanner = table.getScanner(scan)
-            scanner?.let { 
-                val count = Iterables.size(it)
-                logger.info("Retrieved '$count' rows from table for topic '$topicName'")
-            }
         }
 
         return scanner!!

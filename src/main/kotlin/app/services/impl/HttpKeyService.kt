@@ -79,7 +79,6 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
         backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
-        logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
