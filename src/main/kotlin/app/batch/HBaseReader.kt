@@ -73,9 +73,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
             scanner = table.getScanner(scan)
-
-            if (scanner != null) {
-                val count = Iterables.size(scanner!!)
+            scanner?.let { 
+                val count = Iterables.size(it)
                 logger.info("Retrieved '$count' rows from table for topic '$topicName'")
             }
         }
