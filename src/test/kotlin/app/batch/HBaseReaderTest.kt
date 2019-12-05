@@ -63,6 +63,7 @@ class HBaseReaderTest {
 
         hbaseReader.resetScanner()
 
+        val lastModified = "2019-07-04T07:27:35.104+0000"
         val cellData = """
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
@@ -98,13 +99,122 @@ class HBaseReaderTest {
         given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject, "core", "addressDeclaration")
+        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+                "core", "addressDeclaration",lastModified)
 
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
             expected.toString(), actual.toString())
+    }
+
+    @Test
+    fun testReadModifiedIsObject() {
+        val table: Table = Mockito.mock(Table::class.java)
+        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
+        val result: Result = Mockito.mock(Result::class.java)
+        val current: Cell = Mockito.mock(Cell::class.java)
+        val dateKey = "\$date"
+        hbaseReader.resetScanner()
+
+        val lastModified = "2019-07-04T07:27:35.104+0000"
+        val cellData = """
+            |{
+            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+            |  "@type": "V4",
+            |  "message": {
+            |    "db": "core",
+            |    "collection": "addressDeclaration",
+            |    "_id": {
+            |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+            |    },
+            |    "_timeBasedHash": "hashhhhhhhhhh",
+            |    "@type": "MONGO_INSERT",
+            |    "_lastModifiedDateTime": {
+            |       $dateKey: "$lastModified"
+            |    },
+            |    "encryption": {
+            |      "encryptionKeyId": "$encryptionKeyId",
+            |      "encryptedEncryptionKey": "$encryptedEncryptionKey",
+            |      "initialisationVector": "$initialisationVector",
+            |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
+            |    },
+            |    "dbObject": "$dbObject"
+            |  },
+            |  "version": "core-4.master.9790",
+            |  "timestamp": "$timestamp"
+            |}""".trimMargin()
+
+        given(current.timestamp).willReturn(10)
+        given(result.row).willReturn(rowId.toByteArray())
+        given(result.current()).willReturn(current)
+        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(scanner.next()).willReturn(result)
+        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
+        given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
+
+        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
+        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+                "core", "addressDeclaration", lastModified)
+
+        val actual = hbaseReader.read()
+
+        assertEquals(expected.dbObject, actual?.dbObject)
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+                expected.toString(), actual.toString())
+    }
+    @Test
+    fun testReadModifiedIsAbsent() {
+        val table: Table = Mockito.mock(Table::class.java)
+        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
+        val result: Result = Mockito.mock(Result::class.java)
+        val current: Cell = Mockito.mock(Cell::class.java)
+        hbaseReader.resetScanner()
+
+        val cellData = """
+            |{
+            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+            |  "@type": "V4",
+            |  "message": {
+            |    "db": "core",
+            |    "collection": "addressDeclaration",
+            |    "_id": {
+            |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+            |    },
+            |    "_timeBasedHash": "hashhhhhhhhhh",
+            |    "@type": "MONGO_INSERT",
+            |    "encryption": {
+            |      "encryptionKeyId": "$encryptionKeyId",
+            |      "encryptedEncryptionKey": "$encryptedEncryptionKey",
+            |      "initialisationVector": "$initialisationVector",
+            |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
+            |    },
+            |    "dbObject": "$dbObject"
+            |  },
+            |  "version": "core-4.master.9790",
+            |  "timestamp": "$timestamp"
+            |}""".trimMargin()
+
+        given(current.timestamp).willReturn(10)
+        given(result.row).willReturn(rowId.toByteArray())
+        given(result.current()).willReturn(current)
+        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(scanner.next()).willReturn(result)
+        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
+        given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
+
+        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
+        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z")
+
+        val actual = hbaseReader.read()
+
+        assertEquals(expected.dbObject, actual?.dbObject)
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+                expected.toString(), actual.toString())
     }
 
     @Test(expected = MissingFieldException::class)

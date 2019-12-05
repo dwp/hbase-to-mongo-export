@@ -6,7 +6,6 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -27,10 +26,7 @@ class Validator {
             logger.debug("Successfully parsed decrypted object.")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
-                val lastUpdatedTimestamp = retrieveLastUpdatedTimestamp(jsonObject)
-                val timeAsLong = lastUpdatedTimestamp?.let { validateTimestampFormat(lastUpdatedTimestamp) }
-                jsonObject.addProperty("timestamp", item.hbaseTimestamp)
-                // Code reaches here only if the id and time are not nulls
+                val timeAsLong = timestampAsLong(item.lastModified)
                 val externalSource = retrieveType(jsonObject)
                 val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong!!, db, collection, "EXPORT", externalSource)
                 return DecryptedRecord(jsonObject, manifestRecord)
@@ -62,28 +58,9 @@ class Validator {
         return id
     }
 
-    fun retrieveLastUpdatedTimestamp(jsonObject: JsonObject): JsonPrimitive? {
-        val lastModifiedElement = jsonObject.get("_lastModifiedDateTime")
-        logger.debug("Getting '_lastModifiedDateTime' field is '$lastModifiedElement'.")
 
-        return if (lastModifiedElement != null) {
-            if (lastModifiedElement.isJsonPrimitive) {
-                lastModifiedElement.asJsonPrimitive
-            }
-            else {
-                val asObject = lastModifiedElement.asJsonObject
-                val dateSubField = "\$date"
-                asObject.getAsJsonPrimitive(dateSubField)
-            }
-        }
-        else {
-            throw Exception("'_lastModifiedDateTime' field not found in the decrypted db object")
-        }
-    }
+    fun timestampAsLong(lastUpdatedTimestamp: String): Long {
 
-    fun validateTimestampFormat(lastUpdatedTimestamp: JsonPrimitive): Long {
-
-        val timestampAsStr = lastUpdatedTimestamp.getAsString()
         val validTimestamps = listOf(
                 "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
                 "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
@@ -92,13 +69,13 @@ class Validator {
         validTimestamps.forEach {
             try {
                 val df = SimpleDateFormat(it)
-                return df.parse(timestampAsStr).time
+                return df.parse(lastUpdatedTimestamp).time
             }
             catch (e: Exception) {
-                logger.debug("'$timestampAsStr' did not match date format '$it'")
+                logger.debug("'$lastUpdatedTimestamp' did not match date format '$it'")
             }
         }
-        throw Exception("Unparseable date: \"$timestampAsStr\"")
+        throw Exception("Unparseable date: \"$lastUpdatedTimestamp\"")
     }
 
     fun retrieveType(jsonObject: JsonObject): String {
