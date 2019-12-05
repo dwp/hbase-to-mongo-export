@@ -15,6 +15,7 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
+import com.google.common.collect.Iterables;
 
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
@@ -72,6 +73,11 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
             scanner = table.getScanner(scan)
+
+            if (scanner != null) {
+                val count = Iterables.size(scanner!!)
+                logger.info("Retrieved '$count' rows from table for topic '$topicName'")
+            }
         }
 
         return scanner!!
