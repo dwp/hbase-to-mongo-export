@@ -45,3 +45,4 @@ rad/
 venv/
 .DS_Store
 *.csv
+env/

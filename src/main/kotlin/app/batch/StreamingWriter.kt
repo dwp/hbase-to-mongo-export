@@ -176,4 +176,3 @@ class StreamingWriter: ItemWriter<Record> {
         val logger: Logger = LoggerFactory.getLogger(StreamingWriter::class.toString())
     }
 }
-
