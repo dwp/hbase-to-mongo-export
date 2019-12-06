@@ -73,6 +73,7 @@ class StreamingWriter: ItemWriter<Record> {
                 contentLength = data.size.toLong()
             }
 
+            logger.info("Putting '$objectKey' size '${data.size}' into '$exportBucket'.")
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
