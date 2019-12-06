@@ -1,4 +1,4 @@
-package app.batch
+package app.batch.legacy
 
 import app.domain.Record
 import org.springframework.batch.item.ItemWriter

@@ -1,4 +1,4 @@
-package app.batch
+package app.batch.legacy
 
 import app.domain.ManifestRecord
 import app.services.CipherService

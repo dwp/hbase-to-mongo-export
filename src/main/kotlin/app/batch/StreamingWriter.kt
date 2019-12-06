@@ -58,7 +58,6 @@ class StreamingWriter: ItemWriter<Record> {
                 println("WOOOOO: $it")
             }
             // TODO: write to s3
-            // TODO: flush at the end
         }
         currentOutputStream = encryptingOutputStream()
         batchSizeBytes = 0
