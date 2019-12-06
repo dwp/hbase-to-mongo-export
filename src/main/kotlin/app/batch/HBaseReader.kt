@@ -26,6 +26,13 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         
         scanner().next()?.let { result ->
             count++
+
+            if(count % 10000 == 0) {
+                logger.info("Processed $count records for topic $topicName")
+            }
+
+            logger.info("Finished processing of $count records for topic $topicName")
+
             val idBytes = result.row
             result.advance() //move pointer to the first cell
             val timestamp = result.current().timestamp
