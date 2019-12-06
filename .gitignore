@@ -44,3 +44,4 @@ rad/
 *.pem
 venv/
 .DS_Store
+*.csv

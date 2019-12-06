@@ -1,8 +1,11 @@
 package app.domain
 
 import com.google.gson.JsonObject
+import org.apache.commons.text.StringEscapeUtils
 import java.io.BufferedOutputStream
+import java.io.BufferedWriter
 import java.io.ByteArrayOutputStream
+import java.io.File
 
 data class EncryptionBlock(val keyEncryptionKeyId: String,
                            val initializationVector: String,
@@ -57,8 +60,19 @@ data class Record(val dbObjectAsString: String, val manifestRecord: ManifestReco
 data class EncryptingOutputStream(private val outputStream: BufferedOutputStream,
                                   val target: ByteArrayOutputStream,
                                   val dataKeyResult: DataKeyResult,
-                                  val initialisationVector: String) {
+                                  val initialisationVector: String,
+                                  val manifestFile: File,
+                                  private val manifestWriter: BufferedWriter) {
     fun write(data: ByteArray) = outputStream.write(data)
     fun data() = target.toByteArray()
-    fun close() = outputStream.close()
+
+    fun close() {
+        outputStream.close()
+        manifestWriter.close()
+    }
+
+    fun writeManifestRecord(manifestRecord: ManifestRecord) = manifestWriter.write(csv(manifestRecord))
+    private fun csv(manifestRecord: ManifestRecord) =
+            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
+    private fun escape(value: String) =  StringEscapeUtils.escapeCsv(value)
 }

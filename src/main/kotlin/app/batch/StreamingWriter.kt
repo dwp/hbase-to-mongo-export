@@ -33,7 +33,6 @@ import javax.crypto.spec.SecretKeySpec
 @Profile("streamingWriter")
 class StreamingWriter: ItemWriter<Record> {
 
-
     init {
         Security.addProvider(BouncyCastleProvider())
     }
@@ -47,6 +46,8 @@ class StreamingWriter: ItemWriter<Record> {
             }
             currentOutputStream!!.write(item.toByteArray())
             batchSizeBytes += item.length
+            it.manifestRecord
+            currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
     }
 
@@ -79,7 +80,7 @@ class StreamingWriter: ItemWriter<Record> {
                 s3.putObject(request)
             }
 
-            // TODO: write manifest to s3
+            StreamingManifestWriter().sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
         }
         currentOutputStream = encryptingOutputStream()
         batchSizeBytes = 0
@@ -99,9 +100,17 @@ class StreamingWriter: ItemWriter<Record> {
         val cipherOutputStream = CipherOutputStream(byteArrayOutputStream, cipher)
         val compressingStream =
                 CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, cipherOutputStream)
-        return EncryptingOutputStream(BufferedOutputStream(compressingStream),
-                byteArrayOutputStream, keyResponse,
-                Base64.getEncoder().encodeToString(initialisationVector))
+
+        val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
+        val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
+
+        return EncryptingOutputStream(
+                BufferedOutputStream(compressingStream),
+                byteArrayOutputStream,
+                keyResponse,
+                Base64.getEncoder().encodeToString(initialisationVector),
+                manifestFile,
+                manifestWriter)
     }
 
     private fun encryptingCipher(key: Key, initialisationVector: ByteArray) =
@@ -109,20 +118,20 @@ class StreamingWriter: ItemWriter<Record> {
                 init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(initialisationVector))
             }
 
-    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
-                                      initialisationVector: String): BufferedReader {
-        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
-        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
-        val cipherInputStream = CipherInputStream(inputStream, cipher)
-        val decompressingStream =
-                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
-        return BufferedReader(InputStreamReader(decompressingStream))
-    }
-
-    private fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
-            cipherInstanceProvider.cipherInstance().apply {
-                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
-            }
+//    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
+//                                      initialisationVector: String): BufferedReader {
+//        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
+//        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
+//        val cipherInputStream = CipherInputStream(inputStream, cipher)
+//        val decompressingStream =
+//                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
+//        return BufferedReader(InputStreamReader(decompressingStream))
+//    }
+//
+//    private fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
+//            cipherInstanceProvider.cipherInstance().apply {
+//                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
+//            }
 
 
     private var currentOutputStream: EncryptingOutputStream? = null
@@ -159,6 +168,9 @@ class StreamingWriter: ItemWriter<Record> {
 
     @Value("\${topic.name}")
     private lateinit var topicName: String
+
+    @Value("\${manifest.output.directory:.}")
+    private lateinit var manifestOutputDirectory: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingWriter::class.toString())
