@@ -8,6 +8,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.KeyService
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -51,13 +54,31 @@ class StreamingWriter: ItemWriter<Record> {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
-            val inputStream = decryptingInputStream(ByteArrayInputStream(data),
-                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
+//            val inputStream = decryptingInputStream(ByteArrayInputStream(data),
+//                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
+//
+//            inputStream.forEachLine {
+//                println("WOOOOO: $it")
+//            }
 
-            inputStream.forEachLine {
-                println("WOOOOO: $it")
+            val inputStream = ByteArrayInputStream(data)
+            val bufferedInputStream = BufferedInputStream(inputStream)
+            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.bz2.enc".format(currentBatch)
+            val metadata = ObjectMetadata().apply {
+                contentType = "binary/octetstream"
+                addUserMetadata("x-amz-meta-title", objectKey)
+                addUserMetadata("iv", currentOutputStream!!.initialisationVector)
+                addUserMetadata("cipherText", currentOutputStream!!.dataKeyResult.ciphertextDataKey)
+                addUserMetadata("dataKeyEncryptionKeyId", currentOutputStream!!.dataKeyResult.dataKeyEncryptionKeyId)
+                contentLength = data.size.toLong()
             }
-            // TODO: write to s3
+
+            bufferedInputStream.use {
+                val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
+                s3.putObject(request)
+            }
+
+            // TODO: write manifest to s3
         }
         currentOutputStream = encryptingOutputStream()
         batchSizeBytes = 0
@@ -116,6 +137,9 @@ class StreamingWriter: ItemWriter<Record> {
 
     @Autowired
     private lateinit var secureRandom: SecureRandom
+
+    @Autowired
+    private lateinit var s3: AmazonS3
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
