@@ -55,12 +55,15 @@ class StreamingWriter: ItemWriter<Record> {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
-//            val inputStream = decryptingInputStream(ByteArrayInputStream(data),
+//            val decryptingInputStream = decryptingInputStream(ByteArrayInputStream(data),
 //                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
 //
-//            inputStream.forEachLine {
-//                println("WOOOOO: $it")
+//            var decompressedSize =  0
+//            decryptingInputStream.forEachLine {
+//                decompressedSize += it.length
 //            }
+//
+//            println("decompressedSize: $decompressedSize")
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
@@ -74,7 +77,8 @@ class StreamingWriter: ItemWriter<Record> {
                 contentLength = data.size.toLong()
             }
 
-            logger.info("Putting '$objectKey' size '${data.size}' into '$exportBucket'.")
+            logger.info("""Putting '$objectKey' size '${data.size}' into '$exportBucket', 
+                        |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin())
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
@@ -118,20 +122,20 @@ class StreamingWriter: ItemWriter<Record> {
                 init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(initialisationVector))
             }
 
-//    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
-//                                      initialisationVector: String): BufferedReader {
-//        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
-//        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
-//        val cipherInputStream = CipherInputStream(inputStream, cipher)
-//        val decompressingStream =
-//                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
-//        return BufferedReader(InputStreamReader(decompressingStream))
-//    }
-//
-//    private fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
-//            cipherInstanceProvider.cipherInstance().apply {
-//                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
-//            }
+    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
+                                      initialisationVector: String): BufferedReader {
+        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
+        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
+        val cipherInputStream = CipherInputStream(inputStream, cipher)
+        val decompressingStream =
+                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
+        return BufferedReader(InputStreamReader(decompressingStream))
+    }
+
+    private fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
+            cipherInstanceProvider.cipherInstance().apply {
+                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
+            }
 
 
     private var currentOutputStream: EncryptingOutputStream? = null
