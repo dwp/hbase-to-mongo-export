@@ -2,6 +2,7 @@ package app.batch
 
 import app.configuration.CipherInstanceProvider
 import app.domain.DataKeyResult
+import app.domain.EncryptingOutputStream
 import java.security.Security
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import app.domain.ManifestRecord
@@ -46,14 +47,15 @@ class StreamingWriter: ItemWriter<Record> {
         }
     }
 
-    private fun writeOutput() {
+    fun writeOutput() {
         if (batchSizeBytes > 0) {
-            val data = currentOutputStream?.data()
+            currentOutputStream!!.close()
+            val data = currentOutputStream!!.data()
             val inputStream = decryptingInputStream(ByteArrayInputStream(data),
                     currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
 
             inputStream.forEachLine {
-                print(it)
+                println("WOOOOO: $it")
             }
             // TODO: write to s3
             // TODO: flush at the end
@@ -89,11 +91,11 @@ class StreamingWriter: ItemWriter<Record> {
     private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
                                       initialisationVector: String): BufferedReader {
         val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
-        val decompressingStream =
-                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, inputStream)
         val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
-        val cipherInputStream = CipherInputStream(decompressingStream, cipher)
-        return BufferedReader(InputStreamReader(cipherInputStream))
+        val cipherInputStream = CipherInputStream(inputStream, cipher)
+        val decompressingStream =
+                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
+        return BufferedReader(InputStreamReader(decompressingStream))
     }
 
     private fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
@@ -139,10 +141,3 @@ class StreamingWriter: ItemWriter<Record> {
     }
 }
 
-data class EncryptingOutputStream(private val outputStream: BufferedOutputStream,
-                                  val target: ByteArrayOutputStream,
-                                  val dataKeyResult: DataKeyResult,
-                                  val initialisationVector: String) {
-    fun write(data: ByteArray) = outputStream.write(data)
-    fun data() = target.toByteArray()
-}

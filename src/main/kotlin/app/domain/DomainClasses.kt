@@ -1,6 +1,8 @@
 package app.domain
 
 import com.google.gson.JsonObject
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
 
 data class EncryptionBlock(val keyEncryptionKeyId: String,
                            val initializationVector: String,
@@ -51,3 +53,12 @@ data class DecryptedRecord(val dbObject: JsonObject, val manifestRecord: Manifes
 data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String, val source: String, val externalSource: String)
 
 data class Record(val dbObjectAsString: String, val manifestRecord: ManifestRecord)
+
+data class EncryptingOutputStream(private val outputStream: BufferedOutputStream,
+                                  val target: ByteArrayOutputStream,
+                                  val dataKeyResult: DataKeyResult,
+                                  val initialisationVector: String) {
+    fun write(data: ByteArray) = outputStream.write(data)
+    fun data() = target.toByteArray()
+    fun close() = outputStream.close()
+}
