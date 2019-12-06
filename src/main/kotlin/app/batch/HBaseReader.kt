@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 import com.google.common.collect.Iterables;
+import com.google.gson.JsonPrimitive
 
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
@@ -37,7 +38,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val db = messageInfo.getAsJsonPrimitive("db")?.asString
             val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
-
+            val lastModified = lastModifiedDateTime(messageInfo)
             val encryptionInfo = messageInfo.getAsJsonObject("encryption")
             val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
             val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
@@ -57,12 +58,30 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection)
+            return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified)
         }
 
         logger.info("Finished processing of $count records for topic $topicName")
 
         return null
+    }
+
+    fun lastModifiedDateTime(messageObject: JsonObject): String {
+        val lastModifiedElement = messageObject.get("_lastModifiedDateTime")
+        val epoch = "1980-01-01T00:00:00.000Z"
+        return if (lastModifiedElement != null) {
+            if (lastModifiedElement.isJsonPrimitive) {
+                lastModifiedElement.asJsonPrimitive.asString
+            }
+            else {
+                val asObject = lastModifiedElement.asJsonObject
+                val dateSubField = "\$date"
+                asObject.getAsJsonPrimitive(dateSubField)?.asString ?: epoch
+            }
+        }
+        else {
+            epoch
+        }
     }
 
     fun resetScanner() {

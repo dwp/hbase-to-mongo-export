@@ -15,7 +15,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
                         val encryption: EncryptionBlock,
                         var dbObject: String,
                         var db: String,
-                        var collection: String) {
+                        var collection: String,
+                        val lastModified: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -26,6 +27,9 @@ data class SourceRecord(val hbaseRowId: ByteArray,
         if (hbaseTimestamp != other.hbaseTimestamp) return false
         if (encryption != other.encryption) return false
         if (dbObject != other.dbObject) return false
+        if (db != other.db) return false
+        if (collection != other.collection) return false
+        if (lastModified != other.lastModified) return false
 
         return true
     }
@@ -35,6 +39,9 @@ data class SourceRecord(val hbaseRowId: ByteArray,
         result = 31 * result + hbaseTimestamp.hashCode()
         result = 31 * result + encryption.hashCode()
         result = 31 * result + dbObject.hashCode()
+        result = 31 * result + db.hashCode()
+        result = 31 * result + collection.hashCode()
+        result = 31 * result + lastModified.hashCode()
         return result
     }
 }
