@@ -55,15 +55,15 @@ class StreamingWriter: ItemWriter<Record> {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
-//            val decryptingInputStream = decryptingInputStream(ByteArrayInputStream(data),
-//                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
-//
-//            var decompressedSize =  0
-//            decryptingInputStream.forEachLine {
-//                decompressedSize += it.length
-//            }
-//
-//            println("decompressedSize: $decompressedSize")
+            val decryptingInputStream = decryptingInputStream(ByteArrayInputStream(data),
+                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
+
+            var decompressedSize =  0
+            decryptingInputStream.forEachLine {
+                decompressedSize += it.length
+            }
+
+            println("decompressedSize: $decompressedSize")
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
@@ -78,7 +78,8 @@ class StreamingWriter: ItemWriter<Record> {
             }
 
             logger.info("""Putting '$objectKey' size '${data.size}' into '$exportBucket', 
-                        |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin())
+                        |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
+                    .replace("\n", ""))
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)

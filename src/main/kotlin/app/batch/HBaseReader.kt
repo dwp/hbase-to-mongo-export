@@ -25,7 +25,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     override fun read() =
         scanner.next()?.let { result ->
             count++
-            if(count % 10000 == 0) {
+            if (count % 10000 == 0) {
                 logger.info("Processed $count records for topic $topicName")
             }
             val idBytes = result.row
@@ -76,21 +76,6 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             epoch
         }
     }
-
-//    @Synchronized
-//    fun scanner(): ResultScanner {
-//        if (scanner == null) {
-//            logger.info("Getting '$dataTableName' table from '$connection'.")
-//            logger.info("columnFamily: '$columnFamily', topicName: '$topicName'.")
-//            val table = connection.getTable(TableName.valueOf(dataTableName))
-//            val scan = Scan().apply {
-//                addColumn(columnFamily.toByteArray(), topicName.toByteArray())
-//            }
-//            scanner = table.getScanner(scan)
-//        }
-//
-//        return scanner!!
-//    }
 
     private val scanner: ResultScanner by lazy {
         logger.info("Getting '$dataTableName' table from '$connection'.")
