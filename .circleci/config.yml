@@ -76,6 +76,7 @@ jobs:
             export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
             export S3_BUCKET=dummy-bucket
             export S3_PREFIX_FOLDER=dummy-folder
+            export S3_MANIFEST_BUCKET=manifestbucket
             export AWS_DEFAULT_REGION=dummy-region
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
