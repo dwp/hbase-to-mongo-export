@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets
 // See also https://github.com/aws/aws-sdk-java
 
 @Component
-@Profile("outputToS3")
+@Profile("legacyOutputToS3")
 class S3DirectoryWriter(keyService: KeyService,
                         cipherService: CipherService) : Writer(keyService, cipherService) {
 

@@ -31,7 +31,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Component
-@Profile("streamingWriter")
+@Profile("outputToS3")
 class StreamingWriter(private val cipherService: CipherService,
                       private val keyService: KeyService,
                       private val secureRandom: SecureRandom,
