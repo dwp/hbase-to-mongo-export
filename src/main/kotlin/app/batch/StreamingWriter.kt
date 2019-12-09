@@ -7,6 +7,7 @@ import java.security.Security
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import app.domain.ManifestRecord
 import app.domain.Record
+import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
@@ -31,7 +32,11 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 @Profile("streamingWriter")
-class StreamingWriter: ItemWriter<Record> {
+class StreamingWriter(private val cipherService: CipherService,
+                      private val keyService: KeyService,
+                      private val secureRandom: SecureRandom,
+                      private val s3: AmazonS3,
+                      private val streamingManifestWriter: StreamingManifestWriter): ItemWriter<Record> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -55,15 +60,15 @@ class StreamingWriter: ItemWriter<Record> {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
-            val decryptingInputStream = decryptingInputStream(ByteArrayInputStream(data),
-                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
-
-            var decompressedSize =  0
-            decryptingInputStream.forEachLine {
-                decompressedSize += it.length
-            }
-
-            println("decompressedSize: $decompressedSize")
+//            val decryptingInputStream = decryptingInputStream(ByteArrayInputStream(data),
+//                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
+//
+//            var decompressedSize =  0
+//            decryptingInputStream.forEachLine {
+//                decompressedSize += it.length
+//            }
+//
+//            println("decompressedSize: $decompressedSize")
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
@@ -85,7 +90,7 @@ class StreamingWriter: ItemWriter<Record> {
                 s3.putObject(request)
             }
 
-            StreamingManifestWriter().sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
+            streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
         }
         currentOutputStream = encryptingOutputStream()
         batchSizeBytes = 0
@@ -97,15 +102,12 @@ class StreamingWriter: ItemWriter<Record> {
         val keyResponse = keyService.batchDataKey()
         val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
         val byteArrayOutputStream = ByteArrayOutputStream()
-
         val initialisationVector = ByteArray(16).apply {
             secureRandom.nextBytes(this)
         }
-        val cipher = encryptingCipher(key, initialisationVector)
-        val cipherOutputStream = CipherOutputStream(byteArrayOutputStream, cipher)
+        val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
         val compressingStream =
                 CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, cipherOutputStream)
-
         val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
@@ -118,43 +120,23 @@ class StreamingWriter: ItemWriter<Record> {
                 manifestWriter)
     }
 
-    private fun encryptingCipher(key: Key, initialisationVector: ByteArray) =
-            cipherInstanceProvider.cipherInstance().apply {
-                init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(initialisationVector))
-            }
 
-    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
-                                      initialisationVector: String): BufferedReader {
-        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
-        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
-        val cipherInputStream = CipherInputStream(inputStream, cipher)
-        val decompressingStream =
-                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
-        return BufferedReader(InputStreamReader(decompressingStream))
-    }
-
-    private fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
-            cipherInstanceProvider.cipherInstance().apply {
-                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
-            }
+//    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
+//                                      initialisationVector: String): BufferedReader {
+//        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
+//        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
+//        val cipherInputStream = CipherInputStream(inputStream, cipher)
+//        val decompressingStream =
+//                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
+//        return BufferedReader(InputStreamReader(decompressingStream))
+//    }
+//
 
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 1
     private var batchSizeBytes = 0
     private var currentBatchManifest = mutableListOf<ManifestRecord>()
-
-    @Autowired
-    private lateinit var cipherInstanceProvider: CipherInstanceProvider
-
-    @Autowired
-    private lateinit var keyService: KeyService
-
-    @Autowired
-    private lateinit var secureRandom: SecureRandom
-
-    @Autowired
-    private lateinit var s3: AmazonS3
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
