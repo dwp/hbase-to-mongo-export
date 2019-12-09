@@ -85,6 +85,7 @@ def main():
                         if db_object != "CORRUPT":
                             value['message']['dbObject'] = ""
                             record = unique_decrypted_db_object()
+                            value['message']['_lastModifiedDateTime'] = record['_lastModifiedDateTime']
                             record_string = json.dumps(record)
                             [iv, encrypted_record] = encrypt(encryption_key,
                                                              record_string)
@@ -103,9 +104,13 @@ def main():
                         else:
                             value['message']['encryption']['initialisationVector'] = "PHONEYVECTOR"
 
+
+
+
                         column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
                         obj = {column_family_qualifier: json.dumps(value)}
                         data_table.put(record_id, obj, timestamp=int(timestamp))
+                        print(json.dumps(value, indent=4))
                         print("Saved record '{}' timestamp '{}' topic '{}' in table '{}'."
                                .format(record_id, timestamp, topic_name, args.data_table_name))
 
@@ -148,6 +153,7 @@ def decrypted_db_object():
         "_id": {
             "someId": "RANDOM_GUID"
         },
+        "@type": "V4",
         "type": "addressDeclaration",
         "contractId": "RANDOM_GUID",
         "addressNumber": {
