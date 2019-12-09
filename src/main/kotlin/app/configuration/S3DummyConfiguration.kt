@@ -31,7 +31,7 @@ class S3DummyConfiguration {
     @Value("\${aws.region:eu-west-2}")
     private lateinit var region: String
 
-    @Value("\${s3.service.endpoint:http://s3-dummy:4572}")
+    @Value("\${s3.service.endpoint}")
     private lateinit var serviceEndpoint: String
 
     @Value("\${s3.access.key:something}")

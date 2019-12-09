@@ -95,6 +95,7 @@ jobs:
             docker-compose up -d hbase-to-mongo-export-file
             sleep 5
             docker-compose up hbase-to-mongo-export-itest
+            docker ps -a
 
   publish-github-release:
     docker:
