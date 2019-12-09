@@ -13,10 +13,20 @@ import org.springframework.context.annotation.Profile
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.SecureRandom
+import javax.crypto.Cipher
 
 
 @Configuration
 class ContextConfiguration {
+
+    @Bean
+    fun cipherInstanceProvider(): CipherInstanceProvider {
+        return object : CipherInstanceProvider {
+            override fun cipherInstance(): Cipher {
+                return Cipher.getInstance("AES/CTR/NoPadding", "BC")
+            }
+        }
+    }
 
     @Bean
     @Profile("insecureHttpClient")

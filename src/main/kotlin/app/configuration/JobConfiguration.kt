@@ -17,6 +17,7 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.support.CompositeItemProcessor
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -38,7 +39,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
     @Bean
     fun step() =
         stepBuilderFactory.get("step")
-            .chunk<SourceRecord, Record>(10)
+            .chunk<SourceRecord, Record>(chunkSize.toInt())
             .reader(itemReader)
             .faultTolerant()
             .skip(MissingFieldException::class.java)
@@ -71,4 +72,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
+
+    @Value("\${chunk.size:10000}")
+    lateinit var chunkSize: String
 }

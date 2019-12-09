@@ -22,16 +22,13 @@ import com.google.gson.JsonPrimitive
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
     var count = 0
-    override fun read(): SourceRecord? {
-        
+    override fun read() =
         scanner().next()?.let { result ->
             count++
 
             if(count % 10000 == 0) {
                 logger.info("Processed $count records for topic $topicName")
             }
-
-            logger.info("Finished processing of $count records for topic $topicName")
 
             val idBytes = result.row
             result.advance() //move pointer to the first cell
@@ -65,13 +62,9 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            return SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified)
+            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified)
         }
 
-        logger.info("Finished processing of $count records for topic $topicName")
-
-        return null
-    }
 
     fun lastModifiedDateTime(messageObject: JsonObject): String {
         val lastModifiedElement = messageObject.get("_lastModifiedDateTime")

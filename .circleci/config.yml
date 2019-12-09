@@ -76,6 +76,7 @@ jobs:
             export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
             export S3_BUCKET=dummy-bucket
             export S3_PREFIX_FOLDER=dummy-folder
+            export S3_MANIFEST_BUCKET=manifestbucket
             export AWS_DEFAULT_REGION=dummy-region
             export AWS_ACCESS_KEY_ID=dummy-key
             export AWS_SECRET_ACCESS_KEY=dummy-secret
@@ -90,10 +91,10 @@ jobs:
             cd -
             ./gradlew build
             docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
-            docker-compose up -d hbase hbase-populate dks-standalone-http dks-standalone-https
-            sleep 5
-            docker-compose up -d hbase-to-mongo-export-file
-            sleep 5
+            docker-compose up -d hbase hbase-populate dks-standalone-http dks-standalone-https s3-dummy
+            sleep 30
+            docker-compose up s3-bucket-provision
+            docker-compose up hbase-to-mongo-export-file hbase-to-mongo-export-s3
             docker-compose up hbase-to-mongo-export-itest
 
   publish-github-release:

@@ -1,5 +1,6 @@
 package app.batch
 
+import app.batch.legacy.S3DirectoryWriter
 import app.domain.ManifestRecord
 import app.domain.Record
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -24,7 +25,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyDataKeyService", "phoneyCipherService", "unitTest", "outputToS3")
+@ActiveProfiles("phoneyDataKeyService", "phoneyCipherService", "unitTest", "legacyOutputToS3")
 @SpringBootTest
 @TestPropertySource(properties = [
     "directory.output=ephemera",
