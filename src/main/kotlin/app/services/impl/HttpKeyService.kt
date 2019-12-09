@@ -43,11 +43,9 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     override fun batchDataKey(): DataKeyResult {
         try {
             val dksUrl = "$dataKeyServiceUrl/datakey"
-            logger.info("dataKeyServiceUrl: '$dksUrl'.")
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet(dksUrl)).use { response ->
                     val statusCode = response.statusLine.statusCode
-                    logger.info("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
@@ -58,6 +56,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         result
                     }
                     else {
+                        logger.warn("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                         throw DataKeyServiceUnavailableException("data key service returned status code '$statusCode'.")
                     }
                 }

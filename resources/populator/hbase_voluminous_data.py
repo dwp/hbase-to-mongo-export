@@ -43,7 +43,6 @@ def main():
         db_name = value['message']['db']
         collection_name = value['message']['collection']
         topic_name = "db." + db_name + "." + collection_name
-        print("Creating record %s timestamp %s topic %s in table %s".format(record_id, timestamp, topic_name, args.data_table_name))
         record = unique_decrypted_db_object()
         record_string = json.dumps(record)
         [iv, encrypted_record] = encrypt(encryption_key, record_string)
@@ -51,7 +50,6 @@ def main():
         value['message']['encryption']['keyEncryptionKeyId'] = master_key_id
         value['message']['encryption']['encryptedEncryptionKey'] = encrypted_key
         value['message']['dbObject'] = encrypted_record.decode('ascii')
-        print(value)
         column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
         obj = {column_family_qualifier: json.dumps(value)}
         data_table.put(record_id, obj, timestamp=int(timestamp))

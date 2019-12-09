@@ -60,15 +60,6 @@ class StreamingWriter(private val cipherService: CipherService,
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
-//            val decryptingInputStream = decryptingInputStream(ByteArrayInputStream(data),
-//                    currentOutputStream!!.dataKeyResult, currentOutputStream!!.initialisationVector)
-//
-//            var decompressedSize =  0
-//            decryptingInputStream.forEachLine {
-//                decompressedSize += it.length
-//            }
-//
-//            println("decompressedSize: $decompressedSize")
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
@@ -119,19 +110,6 @@ class StreamingWriter(private val cipherService: CipherService,
                 manifestFile,
                 manifestWriter)
     }
-
-
-//    private fun decryptingInputStream(inputStream: InputStream, keyResponse: DataKeyResult,
-//                                      initialisationVector: String): BufferedReader {
-//        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
-//        val cipher = decryptingCipher(key, Base64.getDecoder().decode(initialisationVector))
-//        val cipherInputStream = CipherInputStream(inputStream, cipher)
-//        val decompressingStream =
-//                CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, cipherInputStream)
-//        return BufferedReader(InputStreamReader(decompressingStream))
-//    }
-//
-
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 1

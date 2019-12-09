@@ -105,9 +105,7 @@ class StreamingWriterTest {
         Mockito.verify(streamingWriter, times(5)).writeOutput()
         Mockito.verify(s3, times(4)).putObject(putObjectRequest.capture())
         Mockito.verify(streamingManifestWriter, times(4)).sendManifest(any(), any(), any(), any())
-
-//        Assert.assertEquals(100, putObjectRequest.firstValue.metadata.contentLength)
-    }
+   }
 
     @Test
     fun testManifestWrittenFaithfully() {
