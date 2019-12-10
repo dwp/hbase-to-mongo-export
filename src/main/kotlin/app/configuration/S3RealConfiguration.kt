@@ -1,5 +1,6 @@
 package app.configuration
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
@@ -25,9 +26,13 @@ class S3RealConfiguration {
         return AmazonS3ClientBuilder.standard()
             .withCredentials(DefaultAWSCredentialsProviderChain())
             .withRegion(clientRegion)
+            .withClientConfiguration(ClientConfiguration().withSocketTimeout(socketTimeOut.toInt()))
             .build()
     }
 
     @Value("\${aws.region}")
     private lateinit var region: String
+
+    @Value("\${s3.socket.timeout:1800000}")
+    private lateinit var socketTimeOut: String
 }
