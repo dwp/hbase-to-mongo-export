@@ -117,7 +117,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${topic.name}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
-    @Value("\${scan.cache.size:100000}")
+    @Value("\${scan.cache.size:10000}")
     private lateinit var scanCacheSize: String
 
     @Value("\${data.table.name}")
