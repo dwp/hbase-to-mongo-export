@@ -1,5 +1,6 @@
 package app.batch
 
+import app.configuration.CompressionInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.ManifestRecord
 import app.domain.Record
@@ -14,7 +15,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
@@ -40,6 +40,9 @@ import java.security.SecureRandom
 class StreamingWriterTest {
 
     @MockBean
+    private lateinit var compressionInstanceProvider: CompressionInstanceProvider
+
+    @MockBean
     private lateinit var cipherService: CipherService
 
     @MockBean
@@ -56,8 +59,14 @@ class StreamingWriterTest {
 
     @Test
     fun testDbObjectWrittenFaithfully() {
-        val dataKeyResult = dataKeyResult()
+
         val byteArrayOutputStream = ByteArrayOutputStream()
+        val os = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, byteArrayOutputStream)
+        given(compressionInstanceProvider.compressionExtension()).willReturn("bz2")
+        given(compressionInstanceProvider.compressorOutputStream(any<OutputStream>())).willReturn(os)
+
+        val dataKeyResult = dataKeyResult()
+
         given(keyService.batchDataKey()).willReturn(dataKeyResult)
         given(cipherService.cipherOutputStream(any<Key>(), any<ByteArray>(), any<OutputStream>()))
                 .willReturn(byteArrayOutputStream)
@@ -79,6 +88,14 @@ class StreamingWriterTest {
     fun testObjectsAreChunkedAccordingToMaxChunkSize() {
         val dataKeyResult = dataKeyResult()
         val byteArrayOutputStream = ByteArrayOutputStream()
+        given(compressionInstanceProvider.compressionExtension()).willReturn("bz2")
+        val ongoingStubbing = given(compressionInstanceProvider.compressorOutputStream(any<OutputStream>()))
+                .willReturn(CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, byteArrayOutputStream))
+
+        for (i in 1..10) {
+            ongoingStubbing.willReturn(CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, byteArrayOutputStream))
+        }
+
         given(keyService.batchDataKey()).willReturn(dataKeyResult)
         given(cipherService.cipherOutputStream(any<Key>(), any<ByteArray>(), any<OutputStream>()))
                 .willReturn(byteArrayOutputStream)
@@ -96,7 +113,9 @@ class StreamingWriterTest {
             listOfLists.add(list)
         }
 
+        println()
         listOfLists.forEach {
+            println("Writing: ${it}")
             streamingWriter.write(it)
         }
 
@@ -114,6 +133,11 @@ class StreamingWriterTest {
         given(keyService.batchDataKey()).willReturn(dataKeyResult)
         given(cipherService.cipherOutputStream(any<Key>(), any<ByteArray>(), any<OutputStream>()))
                 .willReturn(byteArrayOutputStream)
+
+        val sink = ByteArrayOutputStream()
+        val os = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, sink)
+        given(compressionInstanceProvider.compressionExtension()).willReturn("bz2")
+        given(compressionInstanceProvider.compressorOutputStream(any<OutputStream>())).willReturn(os)
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
         val record = Record(dbObject, manifestRecord)

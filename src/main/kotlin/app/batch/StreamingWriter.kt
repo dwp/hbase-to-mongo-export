@@ -1,10 +1,7 @@
 package app.batch
 
-import app.configuration.CipherInstanceProvider
-import app.domain.DataKeyResult
+import app.configuration.CompressionInstanceProvider
 import app.domain.EncryptingOutputStream
-import java.security.Security
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
@@ -12,22 +9,18 @@ import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
-import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
 import java.security.Key
 import java.security.SecureRandom
+import java.security.Security
 import java.util.*
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
-import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Component
@@ -36,7 +29,8 @@ class StreamingWriter(private val cipherService: CipherService,
                       private val keyService: KeyService,
                       private val secureRandom: SecureRandom,
                       private val s3: AmazonS3,
-                      private val streamingManifestWriter: StreamingManifestWriter): ItemWriter<Record> {
+                      private val streamingManifestWriter: StreamingManifestWriter,
+                      private val compressionInstanceProvider: CompressionInstanceProvider): ItemWriter<Record> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -63,7 +57,7 @@ class StreamingWriter(private val cipherService: CipherService,
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
-            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.bz2.enc".format(currentBatch)
+            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)
@@ -97,8 +91,7 @@ class StreamingWriter(private val cipherService: CipherService,
             secureRandom.nextBytes(this)
         }
         val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
-        val compressingStream =
-                CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, cipherOutputStream)
+        val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
         val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 

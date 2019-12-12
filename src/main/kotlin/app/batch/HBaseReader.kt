@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonPrimitive
+import org.apache.hadoop.hbase.HConstants
 
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
@@ -97,9 +98,14 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val scan = Scan().apply {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
+
+            if (scanCacheSize.toInt() > 0) {
+                scan.caching = scanCacheSize.toInt()
+            }
+
+            logger.info("Scan cache size: '${scan.caching}'.")
             scanner = table.getScanner(scan)
         }
-
         return scanner!!
     }
 
@@ -110,6 +116,9 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
 
     @Value("\${topic.name}")
     private lateinit var topicName: String // i.e. "db.user.data"
+
+    @Value("\${scan.cache.size:10000}")
+    private lateinit var scanCacheSize: String
 
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String

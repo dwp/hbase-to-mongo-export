@@ -47,7 +47,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.apache.hbase:hbase-client:2.2.0")
     implementation("com.google.code.gson:gson:2.8.5")
-    implementation("org.apache.commons:commons-compress:1.5")
+    implementation("org.apache.commons:commons-compress:1.19")
     implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
     implementation("commons-codec:commons-codec:1.12")
     implementation("org.spockframework:spock-core:1.3-groovy-2.5")

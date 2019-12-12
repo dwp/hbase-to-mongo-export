@@ -62,10 +62,7 @@ class Validator {
 
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
 
-        val validTimestamps = listOf(
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
-            )
+        val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
         validTimestamps.forEach {
             try {
