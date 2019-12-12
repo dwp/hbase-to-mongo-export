@@ -1,6 +1,7 @@
 package app.batch
 
 import app.configuration.CipherInstanceProvider
+import app.configuration.CompressionInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.EncryptingOutputStream
 import java.security.Security
@@ -41,7 +42,8 @@ class StreamingWriter(private val cipherService: CipherService,
                       private val keyService: KeyService,
                       private val secureRandom: SecureRandom,
                       private val s3: AmazonS3,
-                      private val streamingManifestWriter: StreamingManifestWriter): ItemWriter<Record> {
+                      private val streamingManifestWriter: StreamingManifestWriter,
+                      private val compressionInstanceProvider: CompressionInstanceProvider): ItemWriter<Record> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -68,7 +70,7 @@ class StreamingWriter(private val cipherService: CipherService,
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
-            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.${compressionExtension()}.enc".format(currentBatch)
+            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)
@@ -102,8 +104,7 @@ class StreamingWriter(private val cipherService: CipherService,
             secureRandom.nextBytes(this)
         }
         val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
-        val compressingStream = compressorOutputStream(cipherOutputStream)
-        logger.info("compressingStream: ${compressingStream}.")
+        val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
         val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
@@ -115,31 +116,6 @@ class StreamingWriter(private val cipherService: CipherService,
                 manifestFile,
                 manifestWriter)
     }
-
-    private fun compressorOutputStream(cipherOutputStream: OutputStream): CompressorOutputStream {
-        return if (useFramedLz4.toBoolean()) {
-            FramedLZ4CompressorOutputStream(cipherOutputStream);
-        }
-        else if (useBlockedLz4.toBoolean()) {
-            BlockLZ4CompressorOutputStream(cipherOutputStream);
-        }
-        else {
-            val compressionAlgorithm = if (useGzip.toBoolean()) {
-                CompressorStreamFactory.GZIP
-            }
-            else {
-                CompressorStreamFactory.BZIP2
-            }
-            CompressorStreamFactory().createCompressorOutputStream(
-                    compressionAlgorithm, cipherOutputStream)
-        }
-    }
-
-    private fun compressionExtension() =
-            if (useFramedLz4.toBoolean() || useBlockedLz4.toBoolean()) "lz4"
-            else if (useGzip.toBoolean()) "gz"
-            else "bz2"
-
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 1
