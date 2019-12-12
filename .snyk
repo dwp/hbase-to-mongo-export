@@ -43,4 +43,8 @@ ignore:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
         expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMGOOGLEPROTOBUF-173761:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
 patch: {}
