@@ -106,7 +106,6 @@
         - image: circleci/openjdk:8-jdk
       steps:
         - checkout
-        # First snyk scan only looks for sev:high and will fail if found
         - snyk/scan:
             organization: dwp-dataworks
             severity-threshold: high
@@ -118,13 +117,11 @@
         - image: circleci/openjdk:8-jdk
       steps:
         - checkout
-        # Second snyk scan examines Docker container for sev:high and will fail if found
         - snyk/scan:
             organization: dwp-dataworks
-            docker-image-name: '$IMAGE_NAME:latest'
             severity-threshold: high
-            target-file: Dockerfile
-            project: '${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}-docker'
+            target-file: build.gradle.kts
+            project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
 
 
     publish-github-release:
