@@ -103,7 +103,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 scan.caching = scanCacheSize.toInt()
             }
 
-            logger.info("scan.caching: '${scan.caching}'.")
+            logger.info("Scan cache size: '${scan.caching}'.")
             scanner = table.getScanner(scan)
         }
         return scanner!!

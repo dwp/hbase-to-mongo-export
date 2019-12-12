@@ -1,11 +1,7 @@
 package app.batch
 
-import app.configuration.CipherInstanceProvider
 import app.configuration.CompressionInstanceProvider
-import app.domain.DataKeyResult
 import app.domain.EncryptingOutputStream
-import java.security.Security
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
@@ -13,27 +9,18 @@ import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
-import org.apache.commons.compress.compressors.CompressorOutputStream
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorInputStream
-import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorOutputStream
-import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream
-import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
 import java.security.Key
 import java.security.SecureRandom
+import java.security.Security
 import java.util.*
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
-import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Component
@@ -142,15 +129,6 @@ class StreamingWriter(private val cipherService: CipherService,
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
-
-    @Value("\${use.blocked.lz4:false}")
-    private lateinit var useBlockedLz4: String
-
-    @Value("\${use.framed.lz4:false}")
-    private lateinit var useFramedLz4: String
-
-    @Value("\${use.gzip:false}")
-    private lateinit var useGzip: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingWriter::class.toString())
