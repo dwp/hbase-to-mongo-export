@@ -12,7 +12,12 @@ import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import org.apache.commons.compress.compressors.CompressorOutputStream
 import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorInputStream
+import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorOutputStream
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
@@ -63,7 +68,7 @@ class StreamingWriter(private val cipherService: CipherService,
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
-            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.bz2.enc".format(currentBatch)
+            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.${compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)
@@ -97,8 +102,8 @@ class StreamingWriter(private val cipherService: CipherService,
             secureRandom.nextBytes(this)
         }
         val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
-        val compressingStream =
-                CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, cipherOutputStream)
+        val compressingStream = compressorOutputStream(cipherOutputStream)
+        logger.info("compressingStream: ${compressingStream}.")
         val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
@@ -110,6 +115,31 @@ class StreamingWriter(private val cipherService: CipherService,
                 manifestFile,
                 manifestWriter)
     }
+
+    private fun compressorOutputStream(cipherOutputStream: OutputStream): CompressorOutputStream {
+        return if (useFramedLz4.toBoolean()) {
+            FramedLZ4CompressorOutputStream(cipherOutputStream);
+        }
+        else if (useBlockedLz4.toBoolean()) {
+            BlockLZ4CompressorOutputStream(cipherOutputStream);
+        }
+        else {
+            val compressionAlgorithm = if (useGzip.toBoolean()) {
+                CompressorStreamFactory.GZIP
+            }
+            else {
+                CompressorStreamFactory.BZIP2
+            }
+            CompressorStreamFactory().createCompressorOutputStream(
+                    compressionAlgorithm, cipherOutputStream)
+        }
+    }
+
+    private fun compressionExtension() =
+            if (useFramedLz4.toBoolean() || useBlockedLz4.toBoolean()) "lz4"
+            else if (useGzip.toBoolean()) "gz"
+            else "bz2"
+
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 1
@@ -136,6 +166,15 @@ class StreamingWriter(private val cipherService: CipherService,
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
+
+    @Value("\${use.blocked.lz4:false}")
+    private lateinit var useBlockedLz4: String
+
+    @Value("\${use.framed.lz4:false}")
+    private lateinit var useFramedLz4: String
+
+    @Value("\${use.gzip:false}")
+    private lateinit var useGzip: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingWriter::class.toString())
