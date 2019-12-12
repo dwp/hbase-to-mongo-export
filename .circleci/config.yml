@@ -3,6 +3,10 @@
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
 version: 2
+
+orbs:
+  snyk: snyk/snyk@0.0.8
+
 jobs:
   build:
     docker:
@@ -97,6 +101,28 @@ jobs:
             docker-compose up hbase-to-mongo-export-file hbase-to-mongo-export-s3
             docker-compose up hbase-to-mongo-export-itest
 
+  snyk-pr:
+    steps:
+      - checkout
+      # First snyk scan only looks for sev:high and will fail if found
+      - snyk/scan:
+          organization: dwp-dataworks
+          severity-threshold: high
+          target-file: build.gradle.kts
+          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
+
+  snyk-master:
+    steps:
+      - checkout
+      # Second snyk scan examines Docker container for sev:high and will fail if found
+      - snyk/scan:
+          organization: dwp-dataworks
+          docker-image-name: '$IMAGE_NAME:latest'
+          severity-threshold: high
+          target-file: Dockerfile
+          project: '${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}-docker'
+
+
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
@@ -128,6 +154,18 @@ workflows:
       - integration-test:
           requires:
             - build
+      - snyk-pr:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: master
+      - snyk-master:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
       - publish-github-release:
           requires:
             - integration-test
