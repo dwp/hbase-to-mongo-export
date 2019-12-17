@@ -72,7 +72,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -103,7 +103,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
@@ -135,7 +135,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
