@@ -105,7 +105,7 @@ class HBaseReaderTest {
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
             expected.toString(), actual.toString())
     }
 
@@ -162,7 +162,7 @@ class HBaseReaderTest {
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
     }
     @Test
@@ -213,7 +213,7 @@ class HBaseReaderTest {
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
     }
 
