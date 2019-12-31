@@ -1,5 +1,11 @@
 package app.utils
 
+/**
+Please see notes in the file under test (LoggerUtils) and it's class LoggerLayoutAppender.
+ */
+
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.spi.ILoggingEvent
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.*
 import org.junit.Test
@@ -30,31 +36,47 @@ import org.springframework.test.context.junit4.SpringRunner
 class LoggerUtilsTest {
 
     @Test
-    fun testSemiFormattedTuples_willFormatAllTuples_WhenCalledWithoutMatchingKeyValuePairs() {
+    fun testFormattedTimestamp_WillUseDefaultFormat() {
+        assertEquals("01:00:00.000", formattedTimestamp(0))
+        assertEquals("08:29:03.210", formattedTimestamp(9876543210))
+        assertEquals("07:12:55.807", formattedTimestamp(Long.MAX_VALUE))
+    }
+
+    @Test
+    fun testSemiFormattedTuples_WillFormatAsPartialJson_WhenCalledWithoutMatchingKeyValuePairs() {
         assertEquals(
                 "my-message",
                 semiFormattedTuples("my-message"))
     }
 
     @Test
-    fun testSemiFormattedTuples_willFormatAllTuples_WhenCalledWithMatchingKeyValuePairs() {
+    fun testSemiFormattedTuples_WillFormatAsPartialJson_WhenCalledWithMatchingKeyValuePairs() {
         assertEquals(
                 "my-message\", \"key1\":\"value1\", \"key2\":\"value2",
                 semiFormattedTuples("my-message", "key1", "value1", "key2", "value2"))
     }
 
     @Test
-    fun testSemiFormattedTuples_willFailWithException_WhenCalledWithoutMatchingKeyValuePairs() {
+    fun testSemiFormattedTuples_WillEscapeJsonInMessageAndTupleValues_WhenCalled() {
+        assertEquals(
+                "message-\", \"key-unchanged\":\"value-\"",
+                semiFormattedTuples("my-message", "key-unchanged", "value1"))
+    }
+
+    @Test
+    fun testSemiFormattedTuples_WillFailWithException_WhenCalledWithoutMatchingKeyValuePairs() {
         try {
             semiFormattedTuples("my-message", "key1")
             fail("Expected an IllegalArgumentException")
         } catch (expected: IllegalArgumentException) {
-            assertEquals("Must have matched key-value pairs but had 1 argument(s)", expected.message)
+            assertEquals(
+                    "Must have matched key-value pairs but had 1 argument(s)",
+                    expected.message)
         }
     }
 
     @Test
-    fun testLoggerUtils_Debug_willFormatAllTuples_WhenCalled() {
+    fun testLoggerUtils_Debug_WillFormatAsPartialJson_WhenCalled() {
         val mockLogger: org.slf4j.Logger = mock()
 
         logDebug(mockLogger, "main-message", "key1", "value1", "key2", "value2")
@@ -64,7 +86,7 @@ class LoggerUtilsTest {
     }
 
     @Test
-    fun testLoggerUtils_Info_willFormatAllTuples_WhenCalled() {
+    fun testLoggerUtils_Info_WillFormatAsPartialJson_WhenCalled() {
         val mockLogger: org.slf4j.Logger = mock()
 
         logInfo(mockLogger, "main-message", "key1", "value1", "key2", "value2")
@@ -74,7 +96,7 @@ class LoggerUtilsTest {
     }
 
     @Test
-    fun testLoggerUtils_Error_willFormatAllTuples_WhenCalled() {
+    fun testLoggerUtils_Error_WillFormatAsPartialJson_WhenCalled() {
         val mockLogger: org.slf4j.Logger = mock()
 
         logError(mockLogger, "main-message", "key1", "value1", "key2", "value2")
@@ -84,7 +106,7 @@ class LoggerUtilsTest {
     }
 
     @Test
-    fun testLoggerUtils_Error_willFormatAllTuples_WhenCalledWithKeyValuePairsAndException() {
+    fun testLoggerUtils_Error_WillFormatAsPartialJson_WhenCalledWithKeyValuePairsAndException() {
         val mockLogger: org.slf4j.Logger = mock()
         val exception = RuntimeException("boom")
 
@@ -94,4 +116,48 @@ class LoggerUtilsTest {
         verifyNoMoreInteractions(mockLogger)
     }
 
+    @Test
+    fun testLoggerLayoutAppender_WillReturnEmpty_WhenCalledWithNothing() {
+        val result = LoggerLayoutAppender().doLayout(null)
+        assertEquals("", result)
+    }
+
+    @Test
+    fun testLoggerLayoutAppender_WillReturnSkinnyJson_WhenCalledWithEmptyEvent() {
+        val result = LoggerLayoutAppender().doLayout(mock<ILoggingEvent>())
+        assertEquals(
+                "{ timestamp:\"01:00:00.000\", thread:\"null\", log_level:\"null\", logger:\"null\", application:\"HTME\", message:\"null\" }\n",
+                result)
+    }
+
+    @Test
+    fun testLoggerLayoutAppender_WillFormatAsJson_WhenCalledWithVanillaMessage() {
+        val mockEvent = mock<ILoggingEvent>()
+        whenever(mockEvent.timeStamp).thenReturn(9876543210)
+        whenever(mockEvent.level).thenReturn(Level.WARN)
+        whenever(mockEvent.threadName).thenReturn("betty")
+        whenever(mockEvent.loggerName).thenReturn("mavis")
+        whenever(mockEvent.formattedMessage).thenReturn("your-message")
+
+        val result = LoggerLayoutAppender().doLayout(mockEvent)
+        assertEquals(
+                "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"your-message\" }\n",
+                result)
+    }
+
+    @Test
+    fun testLoggerLayoutAppender_WillFormatAsJson_WhenCalledWithEmbeddedTokenMessage() {
+        val mockEvent = mock<ILoggingEvent>()
+        whenever(mockEvent.timeStamp).thenReturn(9876543210)
+        whenever(mockEvent.level).thenReturn(Level.WARN)
+        whenever(mockEvent.threadName).thenReturn("betty")
+        whenever(mockEvent.loggerName).thenReturn("mavis")
+        val embeddedTokens = semiFormattedTuples("my-message", "key1", "value1", "key2", "value2")
+        whenever(mockEvent.formattedMessage).thenReturn(embeddedTokens)
+
+        val result = LoggerLayoutAppender().doLayout(mockEvent)
+        assertEquals(
+                "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"my-message\", \"key1\":\"value1\", \"key2\":\"value2\" }\n",
+                result)
+    }
 }
