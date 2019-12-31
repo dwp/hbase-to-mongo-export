@@ -113,9 +113,7 @@ class StreamingWriterTest {
             listOfLists.add(list)
         }
 
-        println()
         listOfLists.forEach {
-            println("Writing: ${it}")
             streamingWriter.write(it)
         }
 
