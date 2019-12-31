@@ -50,7 +50,6 @@ class HBaseReaderTest {
 
     @Before
     fun reset() {
-        logger.info("Resetting '$connection'.")
         Mockito.reset(connection)
     }
 
@@ -267,10 +266,6 @@ class HBaseReaderTest {
 
     @Autowired
     private lateinit var connection: Connection
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseReaderTest::class.toString())
-    }
 
 }
 

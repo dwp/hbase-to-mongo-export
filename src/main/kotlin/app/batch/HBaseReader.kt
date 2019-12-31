@@ -3,6 +3,8 @@ package app.batch
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
+import app.utils.logging.logError
+import app.utils.logging.logInfo
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.hadoop.hbase.TableName
@@ -15,9 +17,6 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
-import com.google.common.collect.Iterables;
-import com.google.gson.JsonPrimitive
-import org.apache.hadoop.hbase.HConstants
 
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
@@ -28,7 +27,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             count++
 
             if(count % 10000 == 0) {
-                logger.info("Processed $count records for topic $topicName")
+                logInfo(logger, "Processed $count records for topic $topicName")
             }
 
             val idBytes = result.row
@@ -50,15 +49,15 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
 
             if (encryptedDbObject.isNullOrEmpty()) {
-                logger.error("'$idBytes' missing dbObject field, skipping this record.")
+                logError(logger, "'$idBytes' missing dbObject field, skipping this record.")
                 throw MissingFieldException(idBytes, "dbObject")
             }
             if (db.isNullOrEmpty()) {
-                logger.error("'$idBytes' missing db field, skipping this record.")
+                logError(logger, "'$idBytes' missing db field, skipping this record.")
                 throw MissingFieldException(idBytes, "db")
             }
             if (collection.isNullOrEmpty()) {
-                logger.error("'$idBytes' missing collection field, skipping this record.")
+                logError(logger, "'$idBytes' missing collection field, skipping this record.")
                 throw MissingFieldException(idBytes, "collection")
             }
 
@@ -92,8 +91,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            logger.info("Getting '$dataTableName' table from '$connection'.")
-            logger.info("columnFamily: '$columnFamily', topicName: '$topicName'.")
+            logInfo(logger, "Getting '$dataTableName' table from '$connection'.")
+            logInfo(logger, "columnFamily: '$columnFamily', topicName: '$topicName'.")
             val table = connection.getTable(TableName.valueOf(dataTableName))
             val scan = Scan().apply {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
@@ -105,9 +104,9 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
 
             scan.maxResultSize = Long.MAX_VALUE
             scan.cacheBlocks = false
-            logger.info("Scan cache size: '${scan.caching}'.")
+            logInfo(logger, "Scan cache size: '${scan.caching}'.")
 
-            logger.info("cache blocks: '${scan.cacheBlocks}'.")
+            logInfo(logger, "cache blocks: '${scan.cacheBlocks}'.")
             scanner = table.getScanner(scan)
         }
         return scanner!!

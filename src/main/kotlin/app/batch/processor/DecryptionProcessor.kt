@@ -7,6 +7,8 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logDebug
+import app.utils.logging.logError
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
@@ -20,7 +22,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
         try {
-            logger.debug("Processing item '$item'.")
+            logDebug(logger, "Processing item '$item'.")
             val decryptedKey = keyService.decryptKey(
                 item.encryption.keyEncryptionKeyId,
                 item.encryption.encryptedEncryptionKey)
@@ -33,7 +35,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
         } catch (e: DataKeyServiceUnavailableException) {
             throw e
         } catch (e: Exception) {
-            logger.error("Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
+            logError(logger, "Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
             throw DecryptionFailureException(
                 "database-unknown",
                 "collection-unknown",

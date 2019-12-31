@@ -16,8 +16,6 @@ import java.io.Reader
 @ContextConfiguration(classes = [S3DummyConfiguration::class])
 class HbaseToMongoExportSpec {
 
-    private val log = Logger.getLogger(HbaseToMongoExportSpec::class.toString())
-
     @Autowired
     private lateinit var s3Client: AmazonS3
 

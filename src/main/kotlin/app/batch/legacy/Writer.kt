@@ -4,6 +4,8 @@ import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logInfo
+import app.utils.logging.logError
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,7 +33,7 @@ abstract class Writer(private val keyService: KeyService,
             val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
-                logger.info("current batch manifest ${currentBatchManifest.map { it.id }.joinToString { "," }}")
+                logInfo(logger, "current batch manifest ${currentBatchManifest.map { it.id }.joinToString { "," }}")
             }
             currentBatch.append(item)
             currentBatchManifest.add(it.manifestRecord)
@@ -43,12 +45,12 @@ abstract class Writer(private val keyService: KeyService,
         if (batchSizeBytes > 0) {
 
             val fileName = outputName(++currentOutputFileNumber)
-            logger.info("Processing file $fileName with batchSizeBytes='$batchSizeBytes'.")
+            logInfo(logger, "Processing file $fileName with batchSizeBytes='$batchSizeBytes'.")
 
             try {
                 if (encryptOutput) {
                     val dataKeyResult = keyService.batchDataKey()
-                    logger.info("dataKeyResult: '$dataKeyResult'.")
+                    logInfo(logger, "dataKeyResult: '$dataKeyResult'.")
                     val byteArrayOutputStream = ByteArrayOutputStream()
 
                     bufferedOutputStream(byteArrayOutputStream).use {
@@ -78,7 +80,7 @@ abstract class Writer(private val keyService: KeyService,
                 this.batchSizeBytes = 0
                 this.currentBatchManifest = mutableListOf()
             } catch (e: Exception) {
-                logger.error("Exception while writing snapshot file '$fileName' to s3", e)
+                logError(logger, "Exception while writing snapshot file '$fileName' to s3", e)
                 e.printStackTrace()
             }
         }

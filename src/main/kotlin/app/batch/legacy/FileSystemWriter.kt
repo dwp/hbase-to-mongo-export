@@ -3,6 +3,7 @@ package app.batch.legacy
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logInfo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -19,7 +20,7 @@ class FileSystemWriter(keyService: KeyService,
     }
 
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
-        logger.info("writing to $filePath")
+        logInfo(logger, "writing to $filePath")
         Files.write(Paths.get(filePath), fileBytes)
     }
 

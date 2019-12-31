@@ -1,4 +1,4 @@
-package app.utils
+package app.utils.logging
 
 /**
 Please see notes in the file under test (LoggerUtils) and it's class LoggerLayoutAppender.
@@ -161,7 +161,6 @@ class LoggerUtilsTest {
                 "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"my-message\", \"key1\":\"value1\", \"key2\":\"value2\" }\n",
                 result)
     }
-
 
     @Test
     fun testLoggerLayoutAppender_ShouldNotEscapeTheJsonMessage_AsThatWouldMessWithOurCustomStaticLogMethodsWhichDo() {

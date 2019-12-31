@@ -116,26 +116,16 @@ class DirectoryWriterChunkingTest {
 
         outputs.forEach { outputFile ->
             val fileName = outputFile.name
-            logger.info("Checking $fileName.")
-
             val expectedSize = expectedSizes[fileName]
-
             outputFile.length().toInt().also { actualSize ->
-                logger.info("Checking that $fileName actual size $actualSize is the expected size $expectedSize")
                 assertEquals("File $fileName actual size $actualSize should be $expectedSize", expectedSize, actualSize)
             }
-
         }
-
     }
 
     @Autowired
     private lateinit var directoryWriter: DirectoryWriter
 
     private val outputDirectoryPath = "ephemera"
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(DirectoryWriterChunkingTest::class.toString())
-    }
 
 }

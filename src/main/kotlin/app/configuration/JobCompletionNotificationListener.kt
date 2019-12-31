@@ -5,6 +5,7 @@ import app.batch.legacy.FileSystemWriter
 import app.batch.legacy.S3DirectoryWriter
 import app.batch.StreamingWriter
 import app.domain.Record
+import app.utils.logging.logInfo
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
@@ -17,18 +18,18 @@ class JobCompletionNotificationListener(private val writer: ItemWriter<Record>) 
     override fun afterJob(jobExecution: JobExecution) {
         if (writer is StreamingWriter) {
             writer.writeOutput()
-            logger.info("Finished through StreamingWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished through StreamingWriter, status : '${jobExecution.status}'.")
         } else if (writer is DirectoryWriter) {
             writer.writeOutput()
-            logger.info("Finished through DirectoryWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished through DirectoryWriter, status : '${jobExecution.status}'.")
         } else if (writer is S3DirectoryWriter) {
             writer.writeOutput()
-            logger.info("Finished through S3DirectoryWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished through S3DirectoryWriter, status : '${jobExecution.status}'.")
         } else  if (writer is FileSystemWriter) {
             writer.writeOutput()
-            logger.info("Finished through FileSystemWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished through FileSystemWriter, status : '${jobExecution.status}'.")
         }
-        logger.info("Finished, status: '${jobExecution.status}'.")
+        logInfo(logger, "Finished, status: '${jobExecution.status}'.")
     }
 
     companion object {

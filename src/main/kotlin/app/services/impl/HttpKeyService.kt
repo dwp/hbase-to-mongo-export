@@ -5,6 +5,8 @@ import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
+import app.utils.logging.logDebug
+import app.utils.logging.logWarn
 import com.google.gson.Gson
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -56,7 +58,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         result
                     }
                     else {
-                        logger.warn("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
+                        logWarn(logger, "dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                         throw DataKeyServiceUnavailableException("data key service returned status code '$statusCode'.")
                     }
                 }
@@ -86,12 +88,12 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
-                    logger.debug("Calling dataKeyServiceUrl: '$dksUrl'.")
+                    logDebug(logger, "Calling dataKeyServiceUrl: '$dksUrl'.")
                     val httpPost = HttpPost(dksUrl)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logger.debug("dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
+                        logDebug(logger, "dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity

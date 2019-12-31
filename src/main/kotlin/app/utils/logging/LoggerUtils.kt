@@ -1,4 +1,4 @@
-package app.utils
+package app.utils.logging
 
 /**
 This file had simple json logging utils extending SLF4J in a standard way.
@@ -6,9 +6,9 @@ It brings all our changes into one code module and one test file, and allows us 
 resources/logback.xml file so that all vagaries are in code and unit-testable; one "just" does this:
 
 <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-  <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-    <layout class="app.utils.LoggerLayoutAppender" />
-  </encoder>
+<encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+<layout class="app.utils.logging.LoggerLayoutAppender" />
+</encoder>
 </appender>
 
 See http://logback.qos.ch/manual/layouts.html for examples.
@@ -32,6 +32,11 @@ fun logDebug(logger: Logger, message: String, vararg tuples: String) {
 fun logInfo(logger: Logger, message: String, vararg tuples: String) {
     val semiFormatted = semiFormattedTuples(message, *tuples)
     logger.info(semiFormatted)
+}
+
+fun logWarn(logger: Logger, message: String, vararg tuples: String) {
+    val semiFormatted = semiFormattedTuples(message, *tuples)
+    logger.warn(semiFormatted)
 }
 
 fun logError(logger: Logger, message: String, vararg tuples: String) {

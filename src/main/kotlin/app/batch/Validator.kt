@@ -4,6 +4,8 @@ import app.domain.DecryptedRecord
 import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
+import app.utils.logging.logDebug
+import app.utils.logging.logError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.slf4j.Logger
@@ -23,7 +25,7 @@ class Validator {
         val collection = item.collection
         try {
             val jsonObject = parseDecrypted(decrypted)
-            logger.debug("Successfully parsed decrypted object.")
+            logDebug(logger, "Successfully parsed decrypted object.")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
                 val timeAsLong = timestampAsLong(item.lastModified)
@@ -34,7 +36,7 @@ class Validator {
             }
         } catch (e: Exception) {
             val ex = BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
-            logger.error(ex.message)
+            logError(logger, ex.message!!)
             throw ex
         }
         return null
@@ -70,7 +72,7 @@ class Validator {
                 return df.parse(lastUpdatedTimestamp).time
             }
             catch (e: Exception) {
-                logger.debug("'$lastUpdatedTimestamp' did not match date format '$it'")
+                logDebug(logger, "'$lastUpdatedTimestamp' did not match date format '$it'")
             }
         }
         throw Exception("Unparseable date: \"$lastUpdatedTimestamp\"")
@@ -78,7 +80,7 @@ class Validator {
 
     fun retrieveType(jsonObject: JsonObject): String {
         val typeElement = jsonObject.get("@type")
-        logger.debug("Getting '@type' field is '$typeElement'.")
+        logDebug(logger, "Getting '@type' field is '$typeElement'.")
 
         if (typeElement != null) {
             return typeElement.getAsString()

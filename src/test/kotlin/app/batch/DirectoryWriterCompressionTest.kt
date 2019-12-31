@@ -86,7 +86,6 @@ class DirectoryWriterCompressionTest {
         val filenameRegex = Regex("""(\d+)\.\w+\.txt.bz2$""")
 
         outputs.forEach {
-            logger.info("Checking $it.")
             if (it.endsWith(".txt.bz2")) {
                 val match = filenameRegex.find(it)
 
@@ -113,9 +112,5 @@ class DirectoryWriterCompressionTest {
     private lateinit var directoryWriter: DirectoryWriter
 
     private val outputDirectoryPath = "ephemera"
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(DirectoryWriterCompressionTest::class.toString())
-    }
 
 }

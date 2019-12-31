@@ -6,6 +6,7 @@ import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -67,7 +68,7 @@ class StreamingWriter(private val cipherService: CipherService,
                 contentLength = data.size.toLong()
             }
 
-            logger.info("""Putting '$objectKey' size '${data.size}' into '$exportBucket', 
+            logInfo(logger, """Putting '$objectKey' size '${data.size}' into '$exportBucket', 
                         |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
                     .replace("\n", ""))
             bufferedInputStream.use {
