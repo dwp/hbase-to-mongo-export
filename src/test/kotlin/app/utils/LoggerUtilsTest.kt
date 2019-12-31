@@ -59,8 +59,9 @@ class LoggerUtilsTest {
     @Test
     fun testSemiFormattedTuples_WillEscapeJsonInMessageAndTupleValues_WhenCalled() {
         assertEquals(
-                "message-\", \"key-unchanged\":\"value-\"",
-                semiFormattedTuples("my-message", "key-unchanged", "value1"))
+                "This is almost unreadable, but a necessary test, sorry!",
+                "message-\\/:'!@\\u00A3\$%^&*()\\n\\t\\r\", \"key-unchanged\":\"value-\\/:!@\\u00A3\$%^&*()\\n\\t\\r",
+                semiFormattedTuples("message-/:'!@£\$%^&*()\n\t\r", "key-unchanged", "value-/:!@£\$%^&*()\n\t\r"))
     }
 
     @Test
@@ -158,6 +159,23 @@ class LoggerUtilsTest {
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
                 "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"my-message\", \"key1\":\"value1\", \"key2\":\"value2\" }\n",
+                result)
+    }
+
+
+    @Test
+    fun testLoggerLayoutAppender_ShouldNotEscapeTheJsonMessage_AsThatWouldMessWithOurCustomStaticLogMethodsWhichDo() {
+        val mockEvent = mock<ILoggingEvent>()
+        whenever(mockEvent.timeStamp).thenReturn(9876543210)
+        whenever(mockEvent.level).thenReturn(Level.WARN)
+        whenever(mockEvent.threadName).thenReturn("betty")
+        whenever(mockEvent.loggerName).thenReturn("mavis")
+        whenever(mockEvent.formattedMessage).thenReturn("message-/:'!@")
+
+        val result = LoggerLayoutAppender().doLayout(mockEvent)
+        assertEquals(
+                "The standard logger should not escape json characters that Spring or AWS-utils might send it, sorry",
+                "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"message-/:'!@\" }\n",
                 result)
     }
 }
