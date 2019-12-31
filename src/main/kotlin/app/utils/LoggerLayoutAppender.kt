@@ -3,30 +3,28 @@ package app.utils
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.LayoutBase;
+import java.text.SimpleDateFormat
+import java.util.*
 
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
 
+    private val sdf = SimpleDateFormat("HH:mm:ss.SSS")
+
     override fun doLayout(event: ILoggingEvent?): String {
-        /*
-        StringBuffer sbuf = new StringBuffer(128);
-        sbuf.append(event.getTimeStamp() - event.getLoggingContextVO.getBirthTime());
-        sbuf.append(" ");
-        sbuf.append(event.getLevel());
-        sbuf.append(" [");
-        sbuf.append(event.getThreadName());
-        sbuf.append("] ");
-        sbuf.append(event.getLoggerName();
-        sbuf.append(" - ");
-        sbuf.append(event.getFormattedMessage());
-        sbuf.append(CoreConstants.LINE_SEP);
-        return sbuf.toString();
-         */
         if (event == null) {
             return ""
         }
-        //val result = "{ timestamp:\"%d{HH:mm:ss.SSS}\", thread:\"%thread\", log_level:\"%level\", logger:\"%logger{32}\", application:\"HTME\", message:\"%msg\" }%n</pattern>"
-        val result = "{ timestamp:\"${event.timeStamp}\", thread:\"${event.threadName}\", log_level:\"${event.level}\", logger:\"${event.loggerName}\", application:\"HTME\", message:\"${event.formattedMessage}\" }"
+        val dateTime = getDateTime(event.timeStamp)
+        val result = "{ timestamp:\"$dateTime\", thread:\"${event.threadName}\", log_level:\"${event.level}\", logger:\"${event.loggerName}\", application:\"HTME\", message:\"${event.formattedMessage}\" }"
         return result + CoreConstants.LINE_SEPARATOR
     }
 
+    fun getDateTime(epocTime: Long): String {
+        try {
+            val netDate = Date(epocTime)
+            return sdf.format(netDate)
+        } catch (e: Exception) {
+            throw e
+        }
+    }
 }
