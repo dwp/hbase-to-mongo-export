@@ -15,6 +15,7 @@ See http://logback.qos.ch/manual/layouts.html for examples.
  */
 
 import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.classic.spi.ThrowableProxyUtil
 import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.LayoutBase
 import org.apache.commons.text.StringEscapeUtils
@@ -23,12 +24,29 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val defaultFormat = SimpleDateFormat("DD-MM-YYYYTHH:mm:ss.SSS")
-private val hostname = InetAddress.getLocalHost().hostName
-private val environment = System.getProperty("environment", "NOT_SET")
-private val application = System.getProperty("application", "NOT_SET")
-private val app_version = System.getProperty("app_version", "NOT_SET")
-private val component = System.getProperty("component", "NOT_SET")
+
+private val defaultFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS") // 2001-07-04T12:08:56.235
+private var hostname = InetAddress.getLocalHost().hostName
+private var environment = System.getProperty("environment", "NOT_SET")
+private var application = System.getProperty("application", "NOT_SET")
+private var app_version = System.getProperty("app_version", "NOT_SET")
+private var component = System.getProperty("component", "NOT_SET")
+
+fun useLoggerDefaultValues() {
+    hostname = InetAddress.getLocalHost().hostName
+    environment = System.getProperty("environment", "NOT_SET")
+    application = System.getProperty("application", "NOT_SET")
+    app_version = System.getProperty("app_version", "NOT_SET")
+    component = System.getProperty("component", "NOT_SET")
+}
+
+fun testOverrides(host: String, env: String, app: String, version: String, comp: String) {
+    hostname = host
+    environment = env
+    application = app
+    app_version = version
+    component = comp
+}
 
 fun logDebug(logger: Logger, message: String, vararg tuples: String) {
     val semiFormatted = semiFormattedTuples(message, *tuples)
@@ -83,30 +101,48 @@ fun formattedTimestamp(epochTime: Long): String {
     }
 }
 
+fun inlineStackTrace(fullTrace: String): String {
+    return try {
+        fullTrace.replace("\n", " | ").replace("\t", " ").replace("$", "\\$")
+    } catch (ex: java.lang.Exception) {
+        fullTrace
+    }
+}
+
+fun throwableProxyEventToString(event: ILoggingEvent): String{
+    val throwableProxy = event.throwableProxy
+    if (throwableProxy != null) {
+        val throwableStr = ThrowableProxyUtil.asString(throwableProxy)
+        val inlined = inlineStackTrace(throwableStr)
+        return "\"exception\"=\"$inlined\", "
+    }
+    return ""
+}
+
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
 
     private val staticData = "\"hostname\"=\"$hostname\", " +
         "\"environment\"=\"$environment\", " +
         "\"application\"=\"$application\", " +
         "\"app_version\"=\"$app_version\", " +
-        "\"component\"=\"$component\", "
+        "\"component\"=\"$component\""
 
     override fun doLayout(event: ILoggingEvent?): String {
         if (event == null) {
             return ""
         }
         val dateTime = formattedTimestamp(event.timeStamp)
-        val result = "{ " +
+        val resultPrefix = "{ " +
             "\"timestamp\":\"$dateTime\", " +
-            staticData +
             "\"thread\":\"${event.threadName}\", " +
             "\"log_level\":\"${event.level}\", " +
-            "\"logger\":\"${event.loggerName}\", " +
-            "\"message\":\"${event.formattedMessage}\" " +
-            "}"
+            "\"logger\":\"${event.loggerName}\", "
+        val resultSuffix = staticData +
+            " }" + CoreConstants.LINE_SEPARATOR
+        val messageResult = "\"message\":\"${event.formattedMessage}\", "
+        val exceptionResult = throwableProxyEventToString(event)
 
-        return result + CoreConstants.LINE_SEPARATOR
+        return resultPrefix + messageResult + exceptionResult + resultSuffix
     }
-
 }
 

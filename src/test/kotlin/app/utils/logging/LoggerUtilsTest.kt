@@ -6,10 +6,14 @@ Please see notes in the file under test (LoggerUtils) and it's class LoggerLayou
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.classic.spi.IThrowableProxy
+import ch.qos.logback.classic.spi.ThrowableProxy
+import ch.qos.logback.classic.spi.ThrowableProxyUtil
 import com.nhaarman.mockitokotlin2.*
+import io.kotlintest.specs.AbstractAnnotationSpec
+import org.junit.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -36,33 +40,43 @@ import org.springframework.test.context.junit4.SpringRunner
 ])
 class LoggerUtilsTest {
 
+    @Before
+    fun setup() {
+        testOverrides("test-host", "test-env", "my-app", "v1", "tests")
+    }
+
+    @After
+    fun tearDown() {
+        useLoggerDefaultValues()
+    }
+
     @Test
     fun testFormattedTimestamp_WillUseDefaultFormat() {
-        assertEquals("01:00:00.000", formattedTimestamp(0))
-        assertEquals("08:29:03.210", formattedTimestamp(9876543210))
-        assertEquals("07:12:55.807", formattedTimestamp(Long.MAX_VALUE))
+        assertEquals("1970-01-01T01:00:00.000", formattedTimestamp(0))
+        assertEquals("1973-03-01T23:29:03.210", formattedTimestamp(99876543210))
+        assertEquals("292278994-08-17T07:12:55.807", formattedTimestamp(Long.MAX_VALUE))
     }
 
     @Test
     fun testSemiFormattedTuples_WillFormatAsPartialJson_WhenCalledWithoutMatchingKeyValuePairs() {
         assertEquals(
-                "my-message",
-                semiFormattedTuples("my-message"))
+            "my-message",
+            semiFormattedTuples("my-message"))
     }
 
     @Test
     fun testSemiFormattedTuples_WillFormatAsPartialJson_WhenCalledWithMatchingKeyValuePairs() {
         assertEquals(
-                "my-message\", \"key1\":\"value1\", \"key2\":\"value2",
-                semiFormattedTuples("my-message", "key1", "value1", "key2", "value2"))
+            "my-message\", \"key1\":\"value1\", \"key2\":\"value2",
+            semiFormattedTuples("my-message", "key1", "value1", "key2", "value2"))
     }
 
     @Test
     fun testSemiFormattedTuples_WillEscapeJsonInMessageAndTupleValues_WhenCalled() {
         assertEquals(
-                "This is almost unreadable, but a necessary test, sorry!",
-                "message-\\/:'!@\\u00A3\$%^&*()\\n\\t\\r\", \"key-unchanged\":\"value-\\/:!@\\u00A3\$%^&*()\\n\\t\\r",
-                semiFormattedTuples("message-/:'!@£\$%^&*()\n\t\r", "key-unchanged", "value-/:!@£\$%^&*()\n\t\r"))
+            "This is almost unreadable, but a necessary test, sorry!",
+            "message-\\/:'!@\\u00A3\$%^&*()\\n\\t\\r\", \"key-unchanged\":\"value-\\/:!@\\u00A3\$%^&*()\\n\\t\\r",
+            semiFormattedTuples("message-/:'!@£\$%^&*()\n\t\r", "key-unchanged", "value-/:!@£\$%^&*()\n\t\r"))
     }
 
     @Test
@@ -72,8 +86,8 @@ class LoggerUtilsTest {
             fail("Expected an IllegalArgumentException")
         } catch (expected: IllegalArgumentException) {
             assertEquals(
-                    "Must have matched key-value pairs but had 1 argument(s)",
-                    expected.message)
+                "Must have matched key-value pairs but had 1 argument(s)",
+                expected.message)
         }
     }
 
@@ -128,8 +142,8 @@ class LoggerUtilsTest {
     fun testLoggerLayoutAppender_WillReturnSkinnyJson_WhenCalledWithEmptyEvent() {
         val result = LoggerLayoutAppender().doLayout(mock<ILoggingEvent>())
         assertEquals(
-                "{ timestamp:\"01:00:00.000\", thread:\"null\", log_level:\"null\", logger:\"null\", application:\"HTME\", message:\"null\" }\n",
-                result)
+            "{ \"timestamp\":\"1970-01-01T01:00:00.000\", \"thread\":\"null\", \"log_level\":\"null\", \"logger\":\"null\", \"message\":\"null\", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n",
+            result)
     }
 
     @Test
@@ -140,11 +154,12 @@ class LoggerUtilsTest {
         whenever(mockEvent.threadName).thenReturn("betty")
         whenever(mockEvent.loggerName).thenReturn("mavis")
         whenever(mockEvent.formattedMessage).thenReturn("your-message")
+        whenever(mockEvent.hasCallerData()).thenReturn(false)
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-                "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"your-message\" }\n",
-                result)
+            "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"thread\":\"betty\", \"log_level\":\"WARN\", \"logger\":\"mavis\", \"message\":\"your-message\", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n",
+            result)
     }
 
     @Test
@@ -156,11 +171,12 @@ class LoggerUtilsTest {
         whenever(mockEvent.loggerName).thenReturn("mavis")
         val embeddedTokens = semiFormattedTuples("my-message", "key1", "value1", "key2", "value2")
         whenever(mockEvent.formattedMessage).thenReturn(embeddedTokens)
+        whenever(mockEvent.hasCallerData()).thenReturn(false)
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-                "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"my-message\", \"key1\":\"value1\", \"key2\":\"value2\" }\n",
-                result)
+            "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"thread\":\"betty\", \"log_level\":\"WARN\", \"logger\":\"mavis\", \"message\":\"my-message\", \"key1\":\"value1\", \"key2\":\"value2\", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n",
+            result)
     }
 
     @Test
@@ -171,11 +187,117 @@ class LoggerUtilsTest {
         whenever(mockEvent.threadName).thenReturn("betty")
         whenever(mockEvent.loggerName).thenReturn("mavis")
         whenever(mockEvent.formattedMessage).thenReturn("message-/:'!@")
+        whenever(mockEvent.hasCallerData()).thenReturn(false)
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-                "The standard logger should not escape json characters that Spring or AWS-utils might send it, sorry",
-                "{ timestamp:\"08:29:03.210\", thread:\"betty\", log_level:\"WARN\", logger:\"mavis\", application:\"HTME\", message:\"message-/:'!@\" }\n",
-                result)
+            "The standard logger should not escape json characters that Spring or AWS-utils might send it, sorry",
+            "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"thread\":\"betty\", \"log_level\":\"WARN\", \"logger\":\"mavis\", \"message\":\"message-/:'!@\", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n",
+            result)
+    }
+
+    @Test
+    fun testInlineStackTrace_WillRemoveTabsAndNewlines_WhenCalled(){
+        val stubThrowable = ThrowableProxy(catchMe1())
+        ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
+
+        val trace = "java.lang.RuntimeException: boom1\n" +
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270)\n" +
+            "\t... 58 common frames omitted\n"
+
+        val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
+        assertEquals(trace,
+            throwableStr)
+
+        val result = inlineStackTrace(throwableStr)
+        assertEquals("java.lang.RuntimeException: boom1 |  at app.utils.logging.LoggerUtilsTest\\\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270) |  ... 58 common frames omitted | ", result)
+    }
+
+    @Test
+    fun testThrowableProxyEventToString_EmbedsAsJsonKey_WhenCalled(){
+
+        val mockEvent = mock<ILoggingEvent>()
+        whenever(mockEvent.timeStamp).thenReturn(9876543210)
+        whenever(mockEvent.level).thenReturn(Level.WARN)
+        whenever(mockEvent.threadName).thenReturn("betty")
+        whenever(mockEvent.loggerName).thenReturn("mavis")
+        whenever(mockEvent.formattedMessage).thenReturn("message")
+
+        val stubThrowable = ThrowableProxy(catchMe1())
+        ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
+        whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
+
+        val result = throwableProxyEventToString(mockEvent)
+
+        assertEquals("\"exception\"=\"java.lang.RuntimeException: boom1 |  at app.utils.logging.LoggerUtilsTest\\\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270) |  ... 58 common frames omitted | \", ", result)
+    }
+
+
+    @Test
+    fun testLoggerLayoutAppender_ShouldAddExceptions_WhenProvided() {
+        val mockEvent = mock<ILoggingEvent>()
+        whenever(mockEvent.timeStamp).thenReturn(9876543210)
+        whenever(mockEvent.level).thenReturn(Level.WARN)
+        whenever(mockEvent.threadName).thenReturn("betty")
+        whenever(mockEvent.loggerName).thenReturn("mavis")
+        whenever(mockEvent.formattedMessage).thenReturn("message")
+
+        val stubThrowable = ThrowableProxy(catchMe1())
+        ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
+        whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
+
+        val expected = "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"thread\":\"betty\", \"log_level\":\"WARN\", \"logger\":\"mavis\", \"message\":\"message\", \"exception\"=\"java.lang.RuntimeException: boom1 |  at app.utils.logging.LoggerUtilsTest\\\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270) |  ... 58 common frames omitted | \", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n"
+
+        val result = LoggerLayoutAppender().doLayout(mockEvent)
+        assertEquals(
+            "The standard logger should add exception messages",
+            expected,
+            result)
+    }
+
+    fun catchMe1(): Throwable {
+        try{
+            MakeStacktrace1().callMe1()
+        } catch (ex: Exception) {
+            return ex
+        }
+        return RuntimeException("boom")
+    }
+
+    fun catchMe2(): Throwable {
+        try{
+            MakeStacktrace2().callMe2()
+        } catch (ex: Exception) {
+            return ex
+        }
+        return RuntimeException("boom")
+    }
+
+    fun catchMe3(): Throwable {
+        try{
+            MakeStacktrace3().callMe3()
+        } catch (ex: Exception) {
+            return ex
+        }
+        return RuntimeException("boom")
+    }
+
+    class MakeStacktrace1 {
+        fun callMe1() {
+            throw RuntimeException("boom1")
+        }
+    }
+
+    class MakeStacktrace2 {
+        fun callMe2() {
+            throw RuntimeException("boom2")
+        }
+    }
+
+    class MakeStacktrace3 {
+        fun callMe3() {
+            throw RuntimeException("boom3")
+        }
     }
 }
