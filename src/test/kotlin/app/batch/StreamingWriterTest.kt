@@ -8,7 +8,9 @@ import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.times
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.junit.Assert
 import org.junit.Test

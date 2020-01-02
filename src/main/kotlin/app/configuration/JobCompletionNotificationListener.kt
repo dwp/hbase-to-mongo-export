@@ -1,9 +1,9 @@
 package app.configuration
 
+import app.batch.StreamingWriter
 import app.batch.legacy.DirectoryWriter
 import app.batch.legacy.FileSystemWriter
 import app.batch.legacy.S3DirectoryWriter
-import app.batch.StreamingWriter
 import app.domain.Record
 import app.utils.logging.logInfo
 import org.slf4j.LoggerFactory

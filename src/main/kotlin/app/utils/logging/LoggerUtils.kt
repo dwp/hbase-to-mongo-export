@@ -85,6 +85,7 @@ class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
         }
         val dateTime = formattedTimestamp(event.timeStamp)
         val result = "{ timestamp:\"$dateTime\", thread:\"${event.threadName}\", log_level:\"${event.level}\", logger:\"${event.loggerName}\", application:\"HTME\", message:\"${event.formattedMessage}\" }"
+
         return result + CoreConstants.LINE_SEPARATOR
     }
 

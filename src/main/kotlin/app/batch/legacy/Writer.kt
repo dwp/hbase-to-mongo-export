@@ -4,8 +4,8 @@ import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
-import app.utils.logging.logInfo
 import app.utils.logging.logError
+import app.utils.logging.logInfo
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -80,7 +80,7 @@ abstract class Writer(private val keyService: KeyService,
                 this.batchSizeBytes = 0
                 this.currentBatchManifest = mutableListOf()
             } catch (e: Exception) {
-                logError(logger, "Exception while writing snapshot file '$fileName' to s3", e)
+                logError(logger, "Exception while writing snapshot file to s3", e, "file_name", fileName)
                 e.printStackTrace()
             }
         }

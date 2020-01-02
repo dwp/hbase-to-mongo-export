@@ -7,7 +7,8 @@ Please see notes in the file under test (LoggerUtils) and it's class LoggerLayou
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import com.nhaarman.mockitokotlin2.*
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest

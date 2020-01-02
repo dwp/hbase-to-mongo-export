@@ -3,8 +3,8 @@ package app.batch.legacy
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
-import app.utils.logging.logInfo
 import app.utils.logging.logError
+import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -82,7 +82,7 @@ class S3DirectoryWriter(keyService: KeyService,
             s3Client.putObject(request)
         } catch (e: Exception) {
             val joinedIds = manifestRecords.map{it.id}.joinToString(":")
-            logError(logger, "Exception while writing ids to manifest files in S3", e, "ids", "${joinedIds}", "database", manifestRecords[0].db, "collection", manifestRecords[0].collection)
+            logError(logger, "Exception while writing ids to manifest files in S3", e, "ids", joinedIds, "database", manifestRecords[0].db, "collection", manifestRecords[0].collection)
         }
     }
 
