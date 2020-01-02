@@ -19,10 +19,16 @@ import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.LayoutBase
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.Logger
+import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val defaultFormat = SimpleDateFormat("HH:mm:ss.SSS")
+private val defaultFormat = SimpleDateFormat("DD-MM-YYYYTHH:mm:ss.SSS")
+private val hostname = InetAddress.getLocalHost().hostName
+private val environment = System.getProperty("environment", "NOT_SET")
+private val application = System.getProperty("application", "NOT_SET")
+private val app_version = System.getProperty("app_version", "NOT_SET")
+private val component = System.getProperty("component", "NOT_SET")
 
 fun logDebug(logger: Logger, message: String, vararg tuples: String) {
     val semiFormatted = semiFormattedTuples(message, *tuples)
@@ -79,12 +85,25 @@ fun formattedTimestamp(epochTime: Long): String {
 
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
 
+    private val staticData = "\"hostname\"=\"$hostname\", " +
+        "\"environment\"=\"$environment\", " +
+        "\"application\"=\"$application\", " +
+        "\"app_version\"=\"$app_version\", " +
+        "\"component\"=\"$component\", "
+
     override fun doLayout(event: ILoggingEvent?): String {
         if (event == null) {
             return ""
         }
         val dateTime = formattedTimestamp(event.timeStamp)
-        val result = "{ timestamp:\"$dateTime\", thread:\"${event.threadName}\", log_level:\"${event.level}\", logger:\"${event.loggerName}\", application:\"HTME\", message:\"${event.formattedMessage}\" }"
+        val result = "{ " +
+            "\"timestamp\":\"$dateTime\", " +
+            staticData +
+            "\"thread\":\"${event.threadName}\", " +
+            "\"log_level\":\"${event.level}\", " +
+            "\"logger\":\"${event.loggerName}\", " +
+            "\"message\":\"${event.formattedMessage}\" " +
+            "}"
 
         return result + CoreConstants.LINE_SEPARATOR
     }

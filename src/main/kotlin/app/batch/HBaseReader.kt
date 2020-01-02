@@ -21,13 +21,13 @@ import java.nio.charset.Charset
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
-    var count = 0
+    var recordCount = 0
     override fun read() =
         scanner().next()?.let { result ->
-            count++
+            recordCount++
 
-            if(count % 10000 == 0) {
-                logInfo(logger, "Processed $count records for topic $topicName")
+            if(recordCount % 10000 == 0) {
+                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
             }
 
             val idBytes = result.row
