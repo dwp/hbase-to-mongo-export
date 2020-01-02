@@ -1,6 +1,5 @@
-package app.batch
+package app.batch.legacy
 
-import app.batch.legacy.S3DirectoryWriter
 import app.domain.ManifestRecord
 import app.domain.Record
 import ch.qos.logback.classic.spi.ILoggingEvent

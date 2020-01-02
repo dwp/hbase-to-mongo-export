@@ -14,7 +14,7 @@ import java.io.Reader
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [S3DummyConfiguration::class])
-class HbaseToMongoExportSpec {
+class S3WriterIntegrationTest {
 
     @Autowired
     private lateinit var s3Client: AmazonS3

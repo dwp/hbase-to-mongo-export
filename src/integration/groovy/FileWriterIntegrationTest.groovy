@@ -6,7 +6,7 @@ import org.apache.log4j.Logger
 import org.apache.log4j.PatternLayout
 import spock.lang.Specification
 
-class IntegrationTest extends Specification {
+class FileWriterIntegrationTest extends Specification {
 
     Logger log
     String expected_content = "{\"_id\":{\"someId\":\"RANDOM_GUID\",\"declarationId\":1234},\"@type\":\"V4\",\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\",\"_removedDateTime\":\"should be replaced by _removedDateTime\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000+0000\"},\"timestamp\":10}"
@@ -17,12 +17,12 @@ class IntegrationTest extends Specification {
     def setup() {
         def appender = new ConsoleAppender()
         appender.with {
-            layout = new PatternLayout("%d [%p|%c|%C{1}] %m%n")
+            layout = new PatternLayout("{ timestamp=\"%d\", log_level=\"%p\", test_name=\"%c\", logger=\"%C{1}\", application:\"HTME\", message=\"%m\"}%n")
             threshold = Level.INFO
             activateOptions()
         }
         Logger.getRootLogger().addAppender appender
-        log = Logger.getLogger(IntegrationTest.class)
+        log = Logger.getLogger(FileWriterIntegrationTest.class)
     }
 
     def "Writes the correct records"() {

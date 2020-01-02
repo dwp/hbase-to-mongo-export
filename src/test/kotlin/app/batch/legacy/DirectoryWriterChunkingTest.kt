@@ -1,6 +1,5 @@
-package app.batch
+package app.batch.legacy
 
-import app.batch.legacy.DirectoryWriter
 import app.domain.ManifestRecord
 import app.domain.Record
 import org.junit.Assert.assertEquals

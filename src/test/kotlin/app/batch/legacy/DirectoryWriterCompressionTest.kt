@@ -1,6 +1,5 @@
-package app.batch
+package app.batch.legacy
 
-import app.batch.legacy.DirectoryWriter
 import app.domain.ManifestRecord
 import app.domain.Record
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream

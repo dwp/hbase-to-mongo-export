@@ -26,12 +26,12 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 @Profile("outputToS3")
-class StreamingWriter(private val cipherService: CipherService,
-                      private val keyService: KeyService,
-                      private val secureRandom: SecureRandom,
-                      private val s3: AmazonS3,
-                      private val streamingManifestWriter: StreamingManifestWriter,
-                      private val compressionInstanceProvider: CompressionInstanceProvider): ItemWriter<Record> {
+class S3StreamingWriter(private val cipherService: CipherService,
+                        private val keyService: KeyService,
+                        private val secureRandom: SecureRandom,
+                        private val s3: AmazonS3,
+                        private val streamingManifestWriter: StreamingManifestWriter,
+                        private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -70,7 +70,7 @@ class StreamingWriter(private val cipherService: CipherService,
 
             logInfo(logger, """Putting '$objectKey' size '${data.size}' into '$exportBucket', 
                         |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
-                    .replace("\n", ""))
+                .replace("\n", ""))
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
@@ -97,12 +97,12 @@ class StreamingWriter(private val cipherService: CipherService,
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
         return EncryptingOutputStream(
-                BufferedOutputStream(compressingStream),
-                byteArrayOutputStream,
-                keyResponse,
-                Base64.getEncoder().encodeToString(initialisationVector),
-                manifestFile,
-                manifestWriter)
+            BufferedOutputStream(compressingStream),
+            byteArrayOutputStream,
+            keyResponse,
+            Base64.getEncoder().encodeToString(initialisationVector),
+            manifestFile,
+            manifestWriter)
     }
 
     private var currentOutputStream: EncryptingOutputStream? = null
@@ -132,6 +132,6 @@ class StreamingWriter(private val cipherService: CipherService,
     private lateinit var manifestOutputDirectory: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(StreamingWriter::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(S3StreamingWriter::class.toString())
     }
 }

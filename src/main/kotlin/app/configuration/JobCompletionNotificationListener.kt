@@ -1,6 +1,6 @@
 package app.configuration
 
-import app.batch.StreamingWriter
+import app.batch.S3StreamingWriter
 import app.batch.legacy.DirectoryWriter
 import app.batch.legacy.FileSystemWriter
 import app.batch.legacy.S3DirectoryWriter
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component
 class JobCompletionNotificationListener(private val writer: ItemWriter<Record>) : JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-        if (writer is StreamingWriter) {
+        if (writer is S3StreamingWriter) {
             writer.writeOutput()
             logInfo(logger, "Finished through StreamingWriter, status : '${jobExecution.status}'.")
         } else if (writer is DirectoryWriter) {
