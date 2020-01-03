@@ -13,8 +13,7 @@ import java.io.File
 import java.io.FileInputStream
 
 @Component
-open class StreamingManifestWriter {
-
+class StreamingManifestWriter {
 
     fun sendManifest(s3: AmazonS3, manifestFile: File, manifestBucket: String, manifestPrefix: String) {
         try {
@@ -22,7 +21,7 @@ open class StreamingManifestWriter {
             val manifestFileName = manifestFile.name
             val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
             val prefix = "$manifestPrefix/$manifestFileName"
-            logInfo(logger, "Writing manifest '$manifestFile' to 's3://$manifestBucket/$manifestPrefix/$manifestFileName', size: $manifestSize")
+            logInfo(logger, "Writing manifest manifestFile to s3", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName", "manifest_size", "$manifestSize")
             BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
                 val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
                 s3.putObject(request)
@@ -38,10 +37,6 @@ open class StreamingManifestWriter {
                 addUserMetadata("x-amz-meta-title", fileName)
                 contentLength = size
             }
-
-
-    fun topicName(db: String, collection: String) = "db.$db.$collection"
-
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())

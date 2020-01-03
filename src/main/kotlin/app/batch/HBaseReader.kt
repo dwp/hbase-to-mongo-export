@@ -26,7 +26,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         scanner().next()?.let { result ->
             recordCount++
 
-            if(recordCount % 10000 == 0) {
+            if (recordCount % 10000 == 0) {
                 logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
             }
 
@@ -72,14 +72,12 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         return if (lastModifiedElement != null) {
             if (lastModifiedElement.isJsonPrimitive) {
                 lastModifiedElement.asJsonPrimitive.asString
-            }
-            else {
+            } else {
                 val asObject = lastModifiedElement.asJsonObject
                 val dateSubField = "\$date"
                 asObject.getAsJsonPrimitive(dateSubField)?.asString ?: epoch
             }
-        }
-        else {
+        } else {
             epoch
         }
     }
@@ -91,8 +89,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            logInfo(logger, "Getting '$dataTableName' table from '$connection'.")
-            logInfo(logger, "columnFamily: '$columnFamily', topicName: '$topicName'.")
+            logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "data_table_name", dataTableName, "column_family", columnFamily, "topic_name", topicName)
             val table = connection.getTable(TableName.valueOf(dataTableName))
             val scan = Scan().apply {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
@@ -101,12 +98,11 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             if (scanCacheSize.toInt() > 0) {
                 scan.caching = scanCacheSize.toInt()
             }
+            logInfo(logger, "Setting hbase scan caching", "scan_caching", "${scan.caching}")
 
             scan.maxResultSize = Long.MAX_VALUE
             scan.cacheBlocks = false
-            logInfo(logger, "Scan cache size: '${scan.caching}'.")
-
-            logInfo(logger, "cache blocks: '${scan.cacheBlocks}'.")
+            logInfo(logger, "Setting hbase cache blocks", "cache_blocks", "${scan.cacheBlocks}")
             scanner = table.getScanner(scan)
         }
         return scanner!!

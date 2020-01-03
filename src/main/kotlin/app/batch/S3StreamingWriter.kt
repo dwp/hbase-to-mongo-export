@@ -68,9 +68,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 contentLength = data.size.toLong()
             }
 
-            logInfo(logger, """Putting '$objectKey' size '${data.size}' into '$exportBucket', 
-                        |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
-                .replace("\n", ""))
+            logInfo(logger, "Putting batch", "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "batch_size_bytes", "$batchSizeBytes", "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes")
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)

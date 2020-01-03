@@ -18,18 +18,19 @@ class JobCompletionNotificationListener(private val writer: ItemWriter<Record>) 
     override fun afterJob(jobExecution: JobExecution) {
         if (writer is S3StreamingWriter) {
             writer.writeOutput()
-            logInfo(logger, "Finished through StreamingWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished job through StreamingWriter", "status", "${jobExecution.status}")
         } else if (writer is DirectoryWriter) {
             writer.writeOutput()
-            logInfo(logger, "Finished through DirectoryWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished job through DirectoryWriter", "status", "${jobExecution.status}")
         } else if (writer is S3DirectoryWriter) {
             writer.writeOutput()
-            logInfo(logger, "Finished through S3DirectoryWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished job through S3DirectoryWriter", "status", "${jobExecution.status}")
         } else  if (writer is FileSystemWriter) {
             writer.writeOutput()
-            logInfo(logger, "Finished through FileSystemWriter, status : '${jobExecution.status}'.")
+            logInfo(logger, "Finished job through FileSystemWriter", "status", "${jobExecution.status}")
+        } else {
+            logInfo(logger, "Finished job", "status", "${jobExecution.status}")
         }
-        logInfo(logger, "Finished, status: '${jobExecution.status}'.")
     }
 
     companion object {

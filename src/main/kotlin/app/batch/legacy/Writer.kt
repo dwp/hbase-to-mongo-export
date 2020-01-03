@@ -33,7 +33,8 @@ abstract class Writer(private val keyService: KeyService,
             val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
-                logInfo(logger, "current batch manifest ${currentBatchManifest.map { it.id }.joinToString { "," }}")
+                val ids = currentBatchManifest.map { it.id }.joinToString { "," }
+                logInfo(logger, "Current batch manifest", "manifest_ids", ids)
             }
             currentBatch.append(item)
             currentBatchManifest.add(it.manifestRecord)
@@ -45,12 +46,12 @@ abstract class Writer(private val keyService: KeyService,
         if (batchSizeBytes > 0) {
 
             val fileName = outputName(++currentOutputFileNumber)
-            logInfo(logger, "Processing file $fileName with batchSizeBytes='$batchSizeBytes'.")
+            logInfo(logger, "Processing file", "file_name", fileName, "batch_size_bytes", "$batchSizeBytes")
 
             try {
                 if (encryptOutput) {
                     val dataKeyResult = keyService.batchDataKey()
-                    logInfo(logger, "dataKeyResult: '$dataKeyResult'.")
+                    logInfo(logger, "Getting batch data key", "data_key_result", "$dataKeyResult")
                     val byteArrayOutputStream = ByteArrayOutputStream()
 
                     bufferedOutputStream(byteArrayOutputStream).use {

@@ -90,8 +90,9 @@ class ContextConfiguration {
         if (dataReadyFlagLocation.isNotBlank()) {
             var attempts = 0
             val path = Paths.get(dataReadyFlagLocation)
-            while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < 100) {
-                logInfo(logger, "Waiting for data: '$path', attempt no. $attempts.")
+            val maxAttempts = 100
+            while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < maxAttempts) {
+                logInfo(logger, "Waiting for data ready flag to exist", "file_path", "$path", "attempt_no", "$attempts", "max_attempts", "$maxAttempts")
                 Thread.sleep(1000)
             }
         }
@@ -108,7 +109,7 @@ class ContextConfiguration {
     private fun addShutdownHook(connection: Connection) {
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
-                logInfo(logger, "Closing hbase connection: '$connection'.")
+                logInfo(logger, "Closing hbase connection", "connection", "$connection")
                 connection.close()
             }
         })

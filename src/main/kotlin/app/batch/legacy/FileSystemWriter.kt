@@ -20,7 +20,7 @@ class FileSystemWriter(keyService: KeyService,
     }
 
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
-        logInfo(logger, "writing to $filePath")
+        logInfo(logger, "Writing to file", "file_name", filePath)
         Files.write(Paths.get(filePath), fileBytes)
     }
 
