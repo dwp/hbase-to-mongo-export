@@ -151,7 +151,6 @@ services:
       --identity.store.alias=cid
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
-      --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}

@@ -91,6 +91,21 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3; \
 	}
 
+.PHONY: s3
+s3: ## Bring up hbase, population, and sample exporter services
+	@{ \
+		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
+		export AWS_DEFAULT_REGION=$(aws_default_region); \
+		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
+		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
+		export S3_BUCKET=$(s3_bucket); \
+		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
+		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
+		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
+		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
+		docker-compose up hbase-to-mongo-export-s3; \
+	}
+
 .PHONY: restart
 restart: ## Restart hbase and other services
 	@{ \
