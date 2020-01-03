@@ -49,15 +49,15 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
 
             if (encryptedDbObject.isNullOrEmpty()) {
-                logError(logger, "'$idBytes' missing dbObject field, skipping this record.")
+                logError(logger, "Missing dbObject field, skipping this record", "id_bytes", "$idBytes")
                 throw MissingFieldException(idBytes, "dbObject")
             }
             if (db.isNullOrEmpty()) {
-                logError(logger, "'$idBytes' missing db field, skipping this record.")
+                logError(logger, "Missing db field, skipping this record", "id_bytes", "$idBytes")
                 throw MissingFieldException(idBytes, "db")
             }
             if (collection.isNullOrEmpty()) {
-                logError(logger, "'$idBytes' missing collection field, skipping this record.")
+                logError(logger, "Missing collection field, skipping this record", "id_bytes", "$idBytes")
                 throw MissingFieldException(idBytes, "collection")
             }
 

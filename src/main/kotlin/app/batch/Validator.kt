@@ -38,9 +38,8 @@ class Validator {
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
-            val ex = BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
-            logError(logger, ex.message!!)
-            throw ex
+            logError(logger, "Error decrypting record", e, "hbase_row_id", hbaseRowId, "db_name", db, "collection_name", collection)
+            throw BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
         }
         return null
     }
@@ -63,8 +62,7 @@ class Validator {
             try {
                 val df = SimpleDateFormat(it)
                 return df.parse(lastUpdatedTimestamp).time
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 logDebug(logger, "lastUpdatedTimestamp did not match valid formats", "valid_formats", "$validTimestamps")
             }
         }

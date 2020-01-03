@@ -28,7 +28,7 @@ open class StreamingManifestWriter {
                 s3.putObject(request)
             }
         } catch (e: Exception) {
-            logError(logger, "Failed to write manifest: '${manifestFile}': '${e.message}'")
+            logError(logger, "Failed to write manifest", e, "manifest_file", "$manifestFile")
         }
     }
 
