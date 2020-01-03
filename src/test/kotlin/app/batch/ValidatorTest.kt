@@ -77,7 +77,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00002' in db 'db' in collection 'collection' with the reason 'id not found in the decrypted db object'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00002' in db 'db' in collection 'collection' with the reason '_id field not found in the decrypted db object'"
     }
 
     @Test
