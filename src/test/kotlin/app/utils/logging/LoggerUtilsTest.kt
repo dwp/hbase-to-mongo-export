@@ -96,7 +96,7 @@ class LoggerUtilsTest {
 
     @Test
     fun testFormattedTimestamp_WillUseDefaultFormat_WhenCalled() {
-        assertEquals("1970-01-01T01:00:00.000", formattedTimestamp(0))
+        assertEquals("1970-01-01T00:00:00.000", formattedTimestamp(0))
         assertEquals("1973-03-01T23:29:03.210", formattedTimestamp(99876543210))
         assertEquals("A long time ago in a galaxy far, far away....", "292278994-08-17T07:12:55.807", formattedTimestamp(Long.MAX_VALUE))
     }
@@ -237,7 +237,7 @@ class LoggerUtilsTest {
     fun testLoggerLayoutAppender_WillReturnSkinnyJson_WhenCalledWithEmptyEvent() {
         val result = LoggerLayoutAppender().doLayout(mock<ILoggingEvent>())
         assertEquals(
-            "{ \"timestamp\":\"1970-01-01T01:00:00.000\", \"log_level\":\"null\", \"message\":\"null\", \"thread\":\"null\", \"logger\":\"null\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
+            "{ \"timestamp\":\"1970-01-01T00:00:00.000\", \"log_level\":\"null\", \"message\":\"null\", \"thread\":\"null\", \"logger\":\"null\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
             result)
     }
 
@@ -253,7 +253,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
             result)
     }
 
@@ -270,7 +270,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"key1\":\"value1\", \"key2\":\"value2\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"key1\":\"value1\", \"key2\":\"value2\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
             result)
     }
 
@@ -287,7 +287,7 @@ class LoggerUtilsTest {
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
             "The standard logger should not escape json characters that Spring or AWS-utils might send it, sorry",
-            "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"log_level\":\"WARN\", \"message\":\"message-/:'!@\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"message-/:'!@\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
             result)
     }
 
@@ -304,7 +304,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:87) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:63) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n"
+        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:87) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:63) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n"
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(

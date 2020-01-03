@@ -25,7 +25,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-private val defaultFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS") // 2001-07-04T12:08:56.235
+private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
+
 private var topic_name = System.getProperty("topic_name", "NOT_SET")
 private var hostname = InetAddress.getLocalHost().hostName
 private var environment = System.getProperty("environment", "NOT_SET")
@@ -33,6 +34,12 @@ private var application = System.getProperty("application", "NOT_SET")
 private var app_version = System.getProperty("app_version", "NOT_SET")
 private var component = System.getProperty("component", "NOT_SET")
 private var staticData = makeLoggerStaticDataTuples()
+
+fun makeUtcDateFormat(): SimpleDateFormat {
+    val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+    df.setTimeZone(TimeZone.getTimeZone("UTC"))
+    return df
+}
 
 fun makeLoggerStaticDataTuples(): String {
     return "\"topic_name\":\"$topic_name\", " +
