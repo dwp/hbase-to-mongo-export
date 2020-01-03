@@ -45,6 +45,7 @@ class StreamingWriter(private val cipherService: CipherService,
             }
             currentOutputStream!!.write(item.toByteArray())
             batchSizeBytes += item.length
+            recordsInBatch++
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
@@ -68,7 +69,7 @@ class StreamingWriter(private val cipherService: CipherService,
             }
 
             logger.info("""Putting '$objectKey' size '${data.size}' into '$exportBucket', 
-                        |batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
+                        |recordsInBatch: $recordsInBatch, batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
                     .replace("\n", ""))
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
@@ -79,6 +80,7 @@ class StreamingWriter(private val cipherService: CipherService,
         }
         currentOutputStream = encryptingOutputStream()
         batchSizeBytes = 0
+        recordsInBatch = 0
         currentBatch++
     }
 
@@ -107,6 +109,7 @@ class StreamingWriter(private val cipherService: CipherService,
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 1
     private var batchSizeBytes = 0
+    private var recordsInBatch = 0
     private var currentBatchManifest = mutableListOf<ManifestRecord>()
 
     @Value("\${output.batch.size.max.bytes}")
