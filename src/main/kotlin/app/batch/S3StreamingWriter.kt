@@ -46,6 +46,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             }
             currentOutputStream!!.write(item.toByteArray())
             batchSizeBytes += item.length
+            recordsInBatch++
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
@@ -68,7 +69,10 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 contentLength = data.size.toLong()
             }
 
-            logInfo(logger, "Putting batch", "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "batch_size_bytes", "$batchSizeBytes", "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes")
+            logInfo(logger, "Putting batch object into bucket",
+                "s3_location", objectKey, "records_in_batch", "$recordsInBatch", "batch_size_bytes", "$batchSizeBytes",
+                "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes")
+
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
@@ -78,6 +82,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
         currentOutputStream = encryptingOutputStream()
         batchSizeBytes = 0
+        recordsInBatch = 0
         currentBatch++
     }
 
@@ -106,6 +111,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 1
     private var batchSizeBytes = 0
+    private var recordsInBatch = 0
     private var currentBatchManifest = mutableListOf<ManifestRecord>()
 
     @Value("\${output.batch.size.max.bytes}")
