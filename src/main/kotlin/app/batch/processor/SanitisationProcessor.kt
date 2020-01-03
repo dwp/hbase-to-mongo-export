@@ -24,7 +24,7 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
             .replace("_archived", "_removed")
 
         val manifestRecord = item.manifestRecord
-        logDebug(logger, "Sanitized record : ${manifestRecord.id} ${manifestRecord.timestamp}")
+        logDebug(logger, "Sanitized record", "manifest_record_id", manifestRecord.id, "manifest_record_timestamp", "${manifestRecord.timestamp}")
         return Record(replacedOutput, manifestRecord)
     }
 
@@ -35,7 +35,7 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
         if ((db == "penalties-and-deductions" && collection == "sanction")
             || (db == "core" && collection == "healthAndDisabilityDeclaration")
             || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
-            logDebug(logger, "Sanitising output for db: {} and collection: {}", db, collection)
+            logDebug(logger, "Sanitising output", "db_name", db, "collection_name", collection)
             return dbObject.toString().replace(replacementRegex, "")
         }
         return dbObject.toString()

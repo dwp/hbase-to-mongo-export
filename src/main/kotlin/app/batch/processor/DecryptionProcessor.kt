@@ -22,7 +22,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
         try {
-            logDebug(logger, "Processing item '$item'.")
+            logDebug(logger, "Processing next item", "item", "$item")
             val decryptedKey = keyService.decryptKey(
                 item.encryption.keyEncryptionKeyId,
                 item.encryption.encryptedEncryptionKey)
@@ -35,7 +35,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
         } catch (e: DataKeyServiceUnavailableException) {
             throw e
         } catch (e: Exception) {
-            logError(logger, "Rejecting '$item': '${e.message}': '${e.javaClass}': '${e.message}'.")
+            logError(logger, "Rejecting invalid item", e, "item", "$item")
             throw DecryptionFailureException(
                 "database-unknown",
                 "collection-unknown",

@@ -6,6 +6,7 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.logging.logDebug
+import app.utils.logging.logError
 import app.utils.logging.logWarn
 import com.google.gson.Gson
 import org.apache.http.client.methods.HttpGet
@@ -56,16 +57,14 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                             }
                         EntityUtils.consume(entity)
                         result
-                    }
-                    else {
+                    } else {
                         logWarn(logger, "dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
                         throw DataKeyServiceUnavailableException("data key service returned status code '$statusCode'.")
                     }
                 }
             }
-        }
-        catch (ex: Exception) {
-            when(ex) {
+        } catch (ex: Exception) {
+            when (ex) {
                 is DataKeyServiceUnavailableException -> {
                     throw ex
                 }
@@ -84,16 +83,15 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
                 decryptedKeyCache[cacheKey]!!
-            }
-            else {
+            } else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
-                    logDebug(logger, "Calling dataKeyServiceUrl: '$dksUrl'.")
+                    logDebug(logger, "Starting call to data key service", "dks_url", dksUrl)
                     val httpPost = HttpPost(dksUrl)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logDebug(logger, "dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
+                        logDebug(logger, "Finished call to data key service", "dks_url", dksUrl, "status_code", "$statusCode")
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity
@@ -103,19 +101,23 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                                 decryptedKeyCache[cacheKey] = dataKeyResult.plaintextDataKey
                                 dataKeyResult.plaintextDataKey
                             }
-                            400 ->
+                            400 -> {
+                                logError(logger, "DataKeyDecryptionException from data key service", "encrypted_key", encryptedKey, "key_encryption_key_id", encryptionKeyId, "dks_url", dksUrl, " status_code ", "$statusCode")
                                 throw DataKeyDecryptionException(
                                     "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
-                            else ->
-                                throw DataKeyServiceUnavailableException(
+                            }
+                            else -> {
+                                logError(logger, "DataKeyServiceUnavailableException from data key service", "encrypted_key", encryptedKey, "key_encryption_key_id", encryptionKeyId, "dks_url", dksUrl, " status_code ", "$statusCode")
+                                val ex = DataKeyServiceUnavailableException(
                                     "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
+                                throw ex
+                            }
                         }
                     }
                 }
             }
-        }
-        catch (ex: Exception) {
-            when(ex) {
+        } catch (ex: Exception) {
+            when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
                     throw ex
                 }

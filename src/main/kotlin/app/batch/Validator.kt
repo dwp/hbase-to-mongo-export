@@ -17,6 +17,9 @@ import java.util.*
 @Component
 class Validator {
     val defaultType = "TYPE_NOT_SET"
+    val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    val idNotFound = "_id field not found in the decrypted db object"
+    val parsingException = "Exception occurred while parsing decrypted db object"
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
@@ -25,7 +28,7 @@ class Validator {
         val collection = item.collection
         try {
             val jsonObject = parseDecrypted(decrypted)
-            logDebug(logger, "Successfully parsed decrypted object.")
+            logDebug(logger, "Successfully parsed decrypted object")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
                 val timeAsLong = timestampAsLong(item.lastModified)
@@ -44,50 +47,39 @@ class Validator {
 
     fun parseDecrypted(decrypted: String): JsonObject? {
         try {
-            val jsonObject = Gson().fromJson(decrypted, JsonObject::class.java)
-            return jsonObject
+            return Gson().fromJson(decrypted, JsonObject::class.java)
         } catch (e: Exception) {
-            val parsingException = "Exception occurred while parsing decrypted db object"
             throw Exception(parsingException)
         }
     }
 
     fun retrieveId(jsonObject: JsonObject): JsonObject? {
-        val id = jsonObject.getAsJsonObject("_id")
-        if (null == id) {
-            val idNotFound = "id not found in the decrypted db object"
-            throw Exception(idNotFound)
-        }
-        return id
+        return jsonObject.getAsJsonObject("_id") ?: throw Exception(idNotFound)
     }
 
 
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
-
-        val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-
         validTimestamps.forEach {
             try {
                 val df = SimpleDateFormat(it)
                 return df.parse(lastUpdatedTimestamp).time
             }
             catch (e: Exception) {
-                logDebug(logger, "'$lastUpdatedTimestamp' did not match date format '$it'")
+                logDebug(logger, "lastUpdatedTimestamp did not match valid formats", "valid_formats", "$validTimestamps")
             }
         }
-        throw Exception("Unparseable date: \"$lastUpdatedTimestamp\"")
+        throw Exception("Unparseable date found: \"$lastUpdatedTimestamp\"")
     }
 
     fun retrieveType(jsonObject: JsonObject): String {
         val typeElement = jsonObject.get("@type")
-        logDebug(logger, "Getting '@type' field is '$typeElement'.")
+        logDebug(logger, "Getting @type field", "type_field", "$typeElement")
 
         if (typeElement != null) {
-            return typeElement.getAsString()
+            return typeElement.asString
         }
         return defaultType
     }
-
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())
