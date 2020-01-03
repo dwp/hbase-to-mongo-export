@@ -34,7 +34,7 @@ class S3DirectoryWriter(keyService: KeyService,
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
         // See also https://github.com/aws/aws-sdk-java
         val bytesSize = fileBytes.size.toLong()
-        logInfo(logger, "Writing snapshot to s3", "s3://$s3BucketName/$filePath", "bytes_size", "$bytesSize")
+        logInfo(logger, "Writing snapshot to s3", "s3_location", "s3://$s3BucketName/$filePath", "bytes_size", "$bytesSize")
 
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
