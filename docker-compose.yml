@@ -159,6 +159,11 @@ services:
       --s3.secret.key=DummySecret
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.manifest.bucket=manifestbucket
+    environment:
+     - TOPIC_NAME=db.penalties-and-deductions.sanction
+     - ENVIRONMENT=local-docker
+     - APPLICATION=hbase_to_mongo_export
+     - COMPONENT=jar_file
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
