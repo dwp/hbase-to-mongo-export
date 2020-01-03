@@ -99,15 +99,15 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
 
-            if (scanCacheSize.toInt() > 0) {
-                scan.caching = scanCacheSize.toInt()
-            }
-
-            scan.maxResultSize = Long.MAX_VALUE
-            scan.cacheBlocks = false
-            logger.info("Scan cache size: '${scan.caching}'.")
-
-            logger.info("cache blocks: '${scan.cacheBlocks}'.")
+//            if (scanCacheSize.toInt() > 0) {
+//                scan.caching = scanCacheSize.toInt()
+//            }
+//
+//            scan.maxResultSize = Long.MAX_VALUE
+//            scan.cacheBlocks = false
+//            logger.info("Scan cache size: '${scan.caching}'.")
+//
+//            logger.info("cache blocks: '${scan.cacheBlocks}'.")
             scanner = table.getScanner(scan)
         }
         return scanner!!
