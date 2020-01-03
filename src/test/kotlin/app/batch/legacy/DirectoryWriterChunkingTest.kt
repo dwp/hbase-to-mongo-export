@@ -1,14 +1,11 @@
-package app.batch
+package app.batch.legacy
 
-import app.batch.legacy.DirectoryWriter
 import app.domain.ManifestRecord
 import app.domain.Record
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -116,26 +113,16 @@ class DirectoryWriterChunkingTest {
 
         outputs.forEach { outputFile ->
             val fileName = outputFile.name
-            logger.info("Checking $fileName.")
-
             val expectedSize = expectedSizes[fileName]
-
             outputFile.length().toInt().also { actualSize ->
-                logger.info("Checking that $fileName actual size $actualSize is the expected size $expectedSize")
                 assertEquals("File $fileName actual size $actualSize should be $expectedSize", expectedSize, actualSize)
             }
-
         }
-
     }
 
     @Autowired
     private lateinit var directoryWriter: DirectoryWriter
 
     private val outputDirectoryPath = "ephemera"
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(DirectoryWriterChunkingTest::class.toString())
-    }
 
 }

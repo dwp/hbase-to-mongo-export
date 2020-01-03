@@ -34,7 +34,7 @@ class AESCipherServiceTest {
     @Test
     fun testEncryptionDecryption() {
         val key = "czMQLgW/OrzBZwFV9u4EBA=="
-        val original = "Original unencrypted text that should come out of decrypt."
+        val original = "Original unencrypted text that should come out of decrypt"
         val (initialisationVector, encrypted) = cipherService.encrypt(key, original.toByteArray())
         val decrypted = cipherService.decrypt(key, initialisationVector, encrypted)
         assertEquals(original, decrypted)

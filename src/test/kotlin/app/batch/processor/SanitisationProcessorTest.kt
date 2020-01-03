@@ -75,9 +75,6 @@ class SanitisationProcessorTest {
         val input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "db", "collection", "EXPORT", "@V4"))
         val expected = getOutputDBObject()
         val actual = sanitisationProcessor.process(input)
-
-        println("Expected : $expected")
-        println("Actual : $actual")
         assertNotEquals(expected, actual)
     }
 

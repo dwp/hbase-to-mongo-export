@@ -4,6 +4,8 @@ import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logError
+import app.utils.logging.logInfo
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,7 +33,8 @@ abstract class Writer(private val keyService: KeyService,
             val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
-                logger.info("current batch manifest ${currentBatchManifest.map { it.id }.joinToString { "," }}")
+                val ids = currentBatchManifest.map { it.id }.joinToString { "," }
+                logInfo(logger, "Current batch manifest", "manifest_ids", ids)
             }
             currentBatch.append(item)
             currentBatchManifest.add(it.manifestRecord)
@@ -43,12 +46,12 @@ abstract class Writer(private val keyService: KeyService,
         if (batchSizeBytes > 0) {
 
             val fileName = outputName(++currentOutputFileNumber)
-            logger.info("Processing file $fileName with batchSizeBytes='$batchSizeBytes'.")
+            logInfo(logger, "Processing file", "file_name", fileName, "batch_size_bytes", "$batchSizeBytes")
 
             try {
                 if (encryptOutput) {
                     val dataKeyResult = keyService.batchDataKey()
-                    logger.info("dataKeyResult: '$dataKeyResult'.")
+                    logInfo(logger, "Getting batch data key", "data_key_result", "$dataKeyResult")
                     val byteArrayOutputStream = ByteArrayOutputStream()
 
                     bufferedOutputStream(byteArrayOutputStream).use {
@@ -78,7 +81,7 @@ abstract class Writer(private val keyService: KeyService,
                 this.batchSizeBytes = 0
                 this.currentBatchManifest = mutableListOf()
             } catch (e: Exception) {
-                logger.error("Exception while writing snapshot file '$fileName' to s3", e)
+                logError(logger, "Exception while writing snapshot file to s3", e, "file_name", fileName)
                 e.printStackTrace()
             }
         }

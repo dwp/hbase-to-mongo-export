@@ -3,6 +3,7 @@ package app.batch.processor
 import app.domain.DecryptedRecord
 import app.domain.Record
 import app.exceptions.DataKeyServiceUnavailableException
+import app.utils.logging.logDebug
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
@@ -23,7 +24,7 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
             .replace("_archived", "_removed")
 
         val manifestRecord = item.manifestRecord
-        logger.debug("Sanitized record : ${manifestRecord.id} ${manifestRecord.timestamp}")
+        logDebug(logger, "Sanitized record", "manifest_record_id", manifestRecord.id, "manifest_record_timestamp", "${manifestRecord.timestamp}")
         return Record(replacedOutput, manifestRecord)
     }
 
@@ -34,7 +35,7 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
         if ((db == "penalties-and-deductions" && collection == "sanction")
             || (db == "core" && collection == "healthAndDisabilityDeclaration")
             || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
-            logger.debug("Sanitising output for db: {} and collection: {}", db, collection)
+            logDebug(logger, "Sanitising output", "db_name", db, "collection_name", collection)
             return dbObject.toString().replace(replacementRegex, "")
         }
         return dbObject.toString()

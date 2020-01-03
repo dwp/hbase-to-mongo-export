@@ -4,7 +4,6 @@ import app.domain.EncryptionResult
 import java.io.OutputStream
 import java.security.Key
 import javax.crypto.Cipher
-import javax.crypto.CipherOutputStream
 
 interface CipherService {
     fun decrypt(key: String, initializationVector: String, encrypted: String): String

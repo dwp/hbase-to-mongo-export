@@ -6,6 +6,7 @@ import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -25,12 +26,12 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 @Profile("outputToS3")
-class StreamingWriter(private val cipherService: CipherService,
-                      private val keyService: KeyService,
-                      private val secureRandom: SecureRandom,
-                      private val s3: AmazonS3,
-                      private val streamingManifestWriter: StreamingManifestWriter,
-                      private val compressionInstanceProvider: CompressionInstanceProvider): ItemWriter<Record> {
+class S3StreamingWriter(private val cipherService: CipherService,
+                        private val keyService: KeyService,
+                        private val secureRandom: SecureRandom,
+                        private val s3: AmazonS3,
+                        private val streamingManifestWriter: StreamingManifestWriter,
+                        private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -68,9 +69,10 @@ class StreamingWriter(private val cipherService: CipherService,
                 contentLength = data.size.toLong()
             }
 
-            logger.info("""Putting '$objectKey' size '${data.size}' into '$exportBucket', 
-                        |recordsInBatch: $recordsInBatch, batch size: $batchSizeBytes, max: $maxBatchOutputSizeBytes.""".trimMargin()
-                    .replace("\n", ""))
+            logInfo(logger, "Putting batch object into bucket",
+                "s3_location", objectKey, "records_in_batch", "$recordsInBatch", "batch_size_bytes", "$batchSizeBytes",
+                "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes")
+
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
@@ -98,12 +100,12 @@ class StreamingWriter(private val cipherService: CipherService,
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
         return EncryptingOutputStream(
-                BufferedOutputStream(compressingStream),
-                byteArrayOutputStream,
-                keyResponse,
-                Base64.getEncoder().encodeToString(initialisationVector),
-                manifestFile,
-                manifestWriter)
+            BufferedOutputStream(compressingStream),
+            byteArrayOutputStream,
+            keyResponse,
+            Base64.getEncoder().encodeToString(initialisationVector),
+            manifestFile,
+            manifestWriter)
     }
 
     private var currentOutputStream: EncryptingOutputStream? = null
@@ -134,6 +136,6 @@ class StreamingWriter(private val cipherService: CipherService,
     private lateinit var manifestOutputDirectory: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(StreamingWriter::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(S3StreamingWriter::class.toString())
     }
 }

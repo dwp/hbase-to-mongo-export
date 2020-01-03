@@ -13,8 +13,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -50,7 +48,6 @@ class HBaseReaderTest {
 
     @Before
     fun reset() {
-        logger.info("Resetting '$connection'.")
         Mockito.reset(connection)
     }
 
@@ -105,7 +102,7 @@ class HBaseReaderTest {
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
             expected.toString(), actual.toString())
     }
 
@@ -162,7 +159,7 @@ class HBaseReaderTest {
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
     }
     @Test
@@ -213,7 +210,7 @@ class HBaseReaderTest {
         val actual = hbaseReader.read()
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hasacode vary when they should be the same",
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
     }
 
@@ -267,10 +264,6 @@ class HBaseReaderTest {
 
     @Autowired
     private lateinit var connection: Connection
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseReaderTest::class.toString())
-    }
 
 }
 

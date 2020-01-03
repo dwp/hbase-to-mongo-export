@@ -1,6 +1,5 @@
-package app.batch
+package app.batch.legacy
 
-import app.batch.legacy.DirectoryWriter
 import app.domain.ManifestRecord
 import app.domain.Record
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
@@ -8,8 +7,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -86,7 +83,6 @@ class DirectoryWriterCompressionTest {
         val filenameRegex = Regex("""(\d+)\.\w+\.txt.bz2$""")
 
         outputs.forEach {
-            logger.info("Checking $it.")
             if (it.endsWith(".txt.bz2")) {
                 val match = filenameRegex.find(it)
 
@@ -113,9 +109,5 @@ class DirectoryWriterCompressionTest {
     private lateinit var directoryWriter: DirectoryWriter
 
     private val outputDirectoryPath = "ephemera"
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(DirectoryWriterCompressionTest::class.toString())
-    }
 
 }

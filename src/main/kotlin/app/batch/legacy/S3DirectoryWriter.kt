@@ -3,6 +3,8 @@ package app.batch.legacy
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logError
+import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -32,7 +34,7 @@ class S3DirectoryWriter(keyService: KeyService,
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
         // See also https://github.com/aws/aws-sdk-java
         val bytesSize = fileBytes.size.toLong()
-        logger.info("Writing snapshot to 's3://$s3BucketName/$filePath' of '$bytesSize' bytes.")
+        logInfo(logger, "Writing snapshot to s3", "s3_location", "s3://$s3BucketName/$filePath", "bytes_size", "$bytesSize")
 
         val inputStream = ByteArrayInputStream(fileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
@@ -68,7 +70,7 @@ class S3DirectoryWriter(keyService: KeyService,
 
             val manifestFileBytes = byteArrayOutputStream.toByteArray()
             val bytesSize = manifestFileBytes.size.toLong()
-            logger.info("Writing manifest to 's3://$s3ManifestBucketName/$manifestFileName' of '$bytesSize' bytes.")
+            logInfo(logger, "Writing manifest to s3", "s3_location", "s3://$s3ManifestBucketName/$manifestFileName", "bytes_size", "$bytesSize")
 
             val inputStream = ByteArrayInputStream(manifestFileBytes)
             val bufferedInputStream = BufferedInputStream(inputStream)
@@ -80,7 +82,7 @@ class S3DirectoryWriter(keyService: KeyService,
             s3Client.putObject(request)
         } catch (e: Exception) {
             val joinedIds = manifestRecords.map{it.id}.joinToString(":")
-            logger.error("Exception while writing ids: '${joinedIds}' of db: '${manifestRecords[0].db}, collection: ${manifestRecords[0].collection}' to manifest files in S3", e)
+            logError(logger, "Exception while writing ids to manifest files in S3", e, "ids", joinedIds, "database", manifestRecords[0].db, "collection", manifestRecords[0].collection)
         }
     }
 

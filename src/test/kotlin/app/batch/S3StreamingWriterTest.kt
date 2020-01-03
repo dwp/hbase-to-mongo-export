@@ -8,7 +8,9 @@ import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.times
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.junit.Assert
 import org.junit.Test
@@ -26,7 +28,7 @@ import java.security.Key
 import java.security.SecureRandom
 
 @RunWith(SpringRunner::class)
-@SpringBootTest(classes = [StreamingWriter::class])
+@SpringBootTest(classes = [S3StreamingWriter::class])
 @ActiveProfiles("streamingWriter")
 @TestPropertySource(properties = [
     "output.batch.size.max.bytes=100000",
@@ -37,7 +39,7 @@ import java.security.SecureRandom
     "topic.name=topic"
 ])
 
-class StreamingWriterTest {
+class S3StreamingWriterTest {
 
     @MockBean
     private lateinit var compressionInstanceProvider: CompressionInstanceProvider
@@ -49,6 +51,7 @@ class StreamingWriterTest {
     private lateinit var keyService: KeyService
 
     @MockBean
+    @SuppressWarnings("Unused")
     private lateinit var secureRandom: SecureRandom
 
     @MockBean
@@ -73,8 +76,8 @@ class StreamingWriterTest {
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
         val record = Record(dbObject, manifestRecord)
-        streamingWriter.write(mutableListOf(record))
-        streamingWriter.writeOutput()
+        s3StreamingWriter.write(mutableListOf(record))
+        s3StreamingWriter.writeOutput()
         val written = byteArrayOutputStream.toByteArray()
         val decompress = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, ByteArrayInputStream(written))
         val sink = ByteArray(9)
@@ -113,15 +116,13 @@ class StreamingWriterTest {
             listOfLists.add(list)
         }
 
-        println()
         listOfLists.forEach {
-            println("Writing: ${it}")
-            streamingWriter.write(it)
+            s3StreamingWriter.write(it)
         }
 
-        streamingWriter.writeOutput()
+        s3StreamingWriter.writeOutput()
         val putObjectRequest = argumentCaptor<PutObjectRequest>()
-        Mockito.verify(streamingWriter, times(5)).writeOutput()
+        Mockito.verify(s3StreamingWriter, times(5)).writeOutput()
         Mockito.verify(s3, times(4)).putObject(putObjectRequest.capture())
         Mockito.verify(streamingManifestWriter, times(4)).sendManifest(any(), any(), any(), any())
    }
@@ -141,8 +142,8 @@ class StreamingWriterTest {
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
         val record = Record(dbObject, manifestRecord)
-        streamingWriter.write(mutableListOf(record))
-        streamingWriter.writeOutput()
+        s3StreamingWriter.write(mutableListOf(record))
+        s3StreamingWriter.writeOutput()
         val s3Captor = argumentCaptor<AmazonS3>()
         val bucketCaptor = argumentCaptor<String>()
         val prefixCaptor = argumentCaptor<String>()
@@ -166,5 +167,5 @@ class StreamingWriterTest {
             "externalSource")
 
     @SpyBean
-    private lateinit var streamingWriter: StreamingWriter
+    private lateinit var s3StreamingWriter: S3StreamingWriter
 }
