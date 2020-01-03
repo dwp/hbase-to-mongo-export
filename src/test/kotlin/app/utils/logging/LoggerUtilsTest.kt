@@ -50,11 +50,56 @@ class LoggerUtilsTest {
         useLoggerDefaultValues()
     }
 
+    fun catchMe1(): Throwable {
+        try {
+            MakeStacktrace1().callMe1()
+        } catch (ex: Exception) {
+            return ex
+        }
+        return RuntimeException("boom")
+    }
+
+    fun catchMe2(): Throwable {
+        try {
+            MakeStacktrace2().callMe2()
+        } catch (ex: Exception) {
+            return ex
+        }
+        return RuntimeException("boom")
+    }
+
+    fun catchMe3(): Throwable {
+        try {
+            MakeStacktrace3().callMe3()
+        } catch (ex: Exception) {
+            return ex
+        }
+        return RuntimeException("boom")
+    }
+
+    class MakeStacktrace1 {
+        fun callMe1() {
+            throw RuntimeException("boom1 - /:'!@£\$%^&*()")
+        }
+    }
+
+    class MakeStacktrace2 {
+        fun callMe2() {
+            throw RuntimeException("boom2")
+        }
+    }
+
+    class MakeStacktrace3 {
+        fun callMe3() {
+            throw RuntimeException("boom3")
+        }
+    }
+
     @Test
-    fun testFormattedTimestamp_WillUseDefaultFormat() {
+    fun testFormattedTimestamp_WillUseDefaultFormat_WhenCalled() {
         assertEquals("1970-01-01T01:00:00.000", formattedTimestamp(0))
         assertEquals("1973-03-01T23:29:03.210", formattedTimestamp(99876543210))
-        assertEquals("292278994-08-17T07:12:55.807", formattedTimestamp(Long.MAX_VALUE))
+        assertEquals("A long time ago in a galaxy far, far away....","292278994-08-17T07:12:55.807", formattedTimestamp(Long.MAX_VALUE))
     }
 
     @Test
@@ -163,7 +208,7 @@ class LoggerUtilsTest {
     }
 
     @Test
-    fun testLoggerLayoutAppender_WillFormatAsJson_WhenCalledWithEmbeddedTokenMessage() {
+    fun testLoggerLayoutAppender_WillFormatAsJson_WhenCalledWithEmbeddedTuplesInMessage() {
         val mockEvent = mock<ILoggingEvent>()
         whenever(mockEvent.timeStamp).thenReturn(9876543210)
         whenever(mockEvent.level).thenReturn(Level.WARN)
@@ -197,13 +242,13 @@ class LoggerUtilsTest {
     }
 
     @Test
-    fun testInlineStackTrace_WillRemoveTabsAndNewlines_WhenCalled(){
+    fun testInlineStackTrace_WillRemoveTabsAndNewlinesAndEscapeJsonChars_WhenCalled() {
         val stubThrowable = ThrowableProxy(catchMe1())
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
 
-        val trace = "java.lang.RuntimeException: boom1\n" +
-            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294)\n" +
-            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270)\n" +
+        val trace = "java.lang.RuntimeException: boom1 - /:'!@£\$%^&*()\n" +
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:88)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:64)\n" +
             "\t... 58 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
@@ -211,11 +256,11 @@ class LoggerUtilsTest {
             throwableStr)
 
         val result = inlineStackTrace(throwableStr)
-        assertEquals("java.lang.RuntimeException: boom1 |  at app.utils.logging.LoggerUtilsTest\\\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270) |  ... 58 common frames omitted | ", result)
+        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:88) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:64) |  ... 58 common frames omitted | ", result)
     }
 
     @Test
-    fun testThrowableProxyEventToString_EmbedsAsJsonKey_WhenCalled(){
+    fun testThrowableProxyEventToString_EmbedsAsJsonKey_WhenCalled() {
 
         val mockEvent = mock<ILoggingEvent>()
         whenever(mockEvent.timeStamp).thenReturn(9876543210)
@@ -230,7 +275,7 @@ class LoggerUtilsTest {
 
         val result = throwableProxyEventToString(mockEvent)
 
-        assertEquals("\"exception\"=\"java.lang.RuntimeException: boom1 |  at app.utils.logging.LoggerUtilsTest\\\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270) |  ... 58 common frames omitted | \", ", result)
+        assertEquals("\"exception\"=\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:88) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:64) |  ... 58 common frames omitted | \", ", result)
     }
 
 
@@ -247,7 +292,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"thread\":\"betty\", \"log_level\":\"WARN\", \"logger\":\"mavis\", \"message\":\"message\", \"exception\"=\"java.lang.RuntimeException: boom1 |  at app.utils.logging.LoggerUtilsTest\\\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:294) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:270) |  ... 58 common frames omitted | \", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n"
+        val expected = "{ \"timestamp\":\"1970-04-25T08:29:03.210\", \"thread\":\"betty\", \"log_level\":\"WARN\", \"logger\":\"mavis\", \"message\":\"message\", \"exception\"=\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:88) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:64) |  ... 58 common frames omitted | \", \"hostname\"=\"test-host\", \"environment\"=\"test-env\", \"application\"=\"my-app\", \"app_version\"=\"v1\", \"component\"=\"tests\" }\n"
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
@@ -256,48 +301,4 @@ class LoggerUtilsTest {
             result)
     }
 
-    fun catchMe1(): Throwable {
-        try{
-            MakeStacktrace1().callMe1()
-        } catch (ex: Exception) {
-            return ex
-        }
-        return RuntimeException("boom")
-    }
-
-    fun catchMe2(): Throwable {
-        try{
-            MakeStacktrace2().callMe2()
-        } catch (ex: Exception) {
-            return ex
-        }
-        return RuntimeException("boom")
-    }
-
-    fun catchMe3(): Throwable {
-        try{
-            MakeStacktrace3().callMe3()
-        } catch (ex: Exception) {
-            return ex
-        }
-        return RuntimeException("boom")
-    }
-
-    class MakeStacktrace1 {
-        fun callMe1() {
-            throw RuntimeException("boom1")
-        }
-    }
-
-    class MakeStacktrace2 {
-        fun callMe2() {
-            throw RuntimeException("boom2")
-        }
-    }
-
-    class MakeStacktrace3 {
-        fun callMe3() {
-            throw RuntimeException("boom3")
-        }
-    }
 }

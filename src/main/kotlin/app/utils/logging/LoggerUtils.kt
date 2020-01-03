@@ -103,13 +103,13 @@ fun formattedTimestamp(epochTime: Long): String {
 
 fun inlineStackTrace(fullTrace: String): String {
     return try {
-        fullTrace.replace("\n", " | ").replace("\t", " ").replace("$", "\\$")
+        StringEscapeUtils.escapeJson(fullTrace.replace("\n", " | ").replace("\t", " "))
     } catch (ex: java.lang.Exception) {
         fullTrace
     }
 }
 
-fun throwableProxyEventToString(event: ILoggingEvent): String{
+fun throwableProxyEventToString(event: ILoggingEvent): String {
     val throwableProxy = event.throwableProxy
     if (throwableProxy != null) {
         val throwableStr = ThrowableProxyUtil.asString(throwableProxy)
