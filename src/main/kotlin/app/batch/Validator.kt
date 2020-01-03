@@ -56,22 +56,21 @@ class Validator {
         return jsonObject.getAsJsonObject("_id") ?: throw Exception(idNotFound)
     }
 
-
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
         validTimestamps.forEach {
             try {
                 val df = SimpleDateFormat(it)
                 return df.parse(lastUpdatedTimestamp).time
             } catch (e: Exception) {
-                logDebug(logger, "lastUpdatedTimestamp did not match valid formats", "valid_formats", "$validTimestamps")
+                logDebug(logger, "lastUpdatedTimestamp did not match valid formats", "last_updated_timestamp", lastUpdatedTimestamp, "failed_format", it)
             }
         }
-        throw Exception("Unparseable date found: \"$lastUpdatedTimestamp\"")
+        throw Exception("Unparseable date found: \"$lastUpdatedTimestamp\", did not match any of $validTimestamps")
     }
 
     fun retrieveType(jsonObject: JsonObject): String {
         val typeElement = jsonObject.get("@type")
-        logDebug(logger, "Getting @type field", "type_field", "$typeElement")
+        logDebug(logger, "Getting @type field value", "field_value", "$typeElement")
 
         if (typeElement != null) {
             return typeElement.asString

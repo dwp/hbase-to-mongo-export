@@ -64,28 +64,38 @@ fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String,
 }
 
 fun logDebug(logger: Logger, message: String, vararg tuples: String) {
-    val semiFormatted = semiFormattedTuples(message, *tuples)
-    logger.debug(semiFormatted)
+    if (logger.isDebugEnabled) {
+        val semiFormatted = semiFormattedTuples(message, *tuples)
+        logger.debug(semiFormatted)
+    }
 }
 
 fun logInfo(logger: Logger, message: String, vararg tuples: String) {
-    val semiFormatted = semiFormattedTuples(message, *tuples)
-    logger.info(semiFormatted)
+    if (logger.isInfoEnabled) {
+        val semiFormatted = semiFormattedTuples(message, *tuples)
+        logger.info(semiFormatted)
+    }
 }
 
 fun logWarn(logger: Logger, message: String, vararg tuples: String) {
-    val semiFormatted = semiFormattedTuples(message, *tuples)
-    logger.warn(semiFormatted)
+    if (logger.isWarnEnabled) {
+        val semiFormatted = semiFormattedTuples(message, *tuples)
+        logger.warn(semiFormatted)
+    }
 }
 
 fun logError(logger: Logger, message: String, vararg tuples: String) {
-    val semiFormatted = semiFormattedTuples(message, *tuples)
-    logger.error(semiFormatted)
+    if (logger.isErrorEnabled) {
+        val semiFormatted = semiFormattedTuples(message, *tuples)
+        logger.error(semiFormatted)
+    }
 }
 
 fun logError(logger: Logger, message: String, error: Throwable, vararg tuples: String) {
-    val semiFormatted = semiFormattedTuples(message, *tuples)
-    logger.error(semiFormatted, error)
+    if (logger.isErrorEnabled) {
+        val semiFormatted = semiFormattedTuples(message, *tuples)
+        logger.error(semiFormatted, error)
+    }
 }
 
 fun semiFormattedTuples(message: String, vararg tuples: String): String {
