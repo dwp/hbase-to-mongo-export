@@ -58,8 +58,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         EntityUtils.consume(entity)
                         result
                     } else {
-                        logWarn(logger, "dataKeyServiceUrl: '$dksUrl' returned status code '$statusCode'.")
-                        throw DataKeyServiceUnavailableException("data key service returned status code '$statusCode'.")
+                        logWarn(logger, "Getting batch data key - data key service returned bad status code", "dks_url", dksUrl, "status_code", "$statusCode")
+                        throw DataKeyServiceUnavailableException("Getting batch data key - data key service returned bad status code '$statusCode'.")
                     }
                 }
             }
