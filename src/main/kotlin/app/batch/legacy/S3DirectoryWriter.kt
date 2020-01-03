@@ -70,7 +70,7 @@ class S3DirectoryWriter(keyService: KeyService,
 
             val manifestFileBytes = byteArrayOutputStream.toByteArray()
             val bytesSize = manifestFileBytes.size.toLong()
-            logInfo(logger, "Writing manifest to 's3://$s3ManifestBucketName/$manifestFileName' of '$bytesSize' bytes.")
+            logInfo(logger, "Writing manifest to s3", "s3_location", "s3://$s3ManifestBucketName/$manifestFileName", "bytes", "$bytesSize")
 
             val inputStream = ByteArrayInputStream(manifestFileBytes)
             val bufferedInputStream = BufferedInputStream(inputStream)
