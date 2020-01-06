@@ -195,11 +195,20 @@ class LoggerUtilsTest {
             "\t... 58 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
-        assertEquals(trace,
-            throwableStr)
+        assertEquals(trace, throwableStr)
 
         val result = inlineStackTrace(throwableStr)
         assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:87) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:63) |  ... 58 common frames omitted | ", result)
+    }
+
+    @Test
+    fun testFlattenMultipleLines_WillRemoveTabsAndNewlinesAndNotEscape_WhenCalled() {
+
+        val trace = "java.lang.RuntimeException: boom1 - /:'!@£\$%^&*()\n" +
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:87)\n"
+
+        val result = flattenMultipleLines(trace)
+        assertEquals("java.lang.RuntimeException: boom1 - /:'!@£\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:87) | ", result)
     }
 
     @Test
@@ -210,7 +219,6 @@ class LoggerUtilsTest {
 
     @Test
     fun testThrowableProxyEventToString_EmbedsAsJsonKey_WhenCalled() {
-
         val mockEvent = mock<ILoggingEvent>()
         whenever(mockEvent.timeStamp).thenReturn(9876543210)
         whenever(mockEvent.level).thenReturn(Level.WARN)
@@ -254,6 +262,22 @@ class LoggerUtilsTest {
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
             "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
+            result)
+    }
+
+    @Test
+    fun testLoggerLayoutAppender_WillFlattenMultilineMessages_WhenCalledWithAnyMessage() {
+        val mockEvent = mock<ILoggingEvent>()
+        whenever(mockEvent.timeStamp).thenReturn(9876543210)
+        whenever(mockEvent.level).thenReturn(Level.WARN)
+        whenever(mockEvent.threadName).thenReturn("my.thread.is.betty")
+        whenever(mockEvent.loggerName).thenReturn("logger.name.is.mavis")
+        whenever(mockEvent.formattedMessage).thenReturn("some\nmessage\nabout\nstuff with\ttabs")
+        whenever(mockEvent.hasCallerData()).thenReturn(false)
+
+        val result = LoggerLayoutAppender().doLayout(mockEvent)
+        assertEquals(
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some | message | about | stuff with tabs\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"topic_name\":\"topic.name\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\" }\n",
             result)
     }
 
