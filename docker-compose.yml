@@ -72,6 +72,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
@@ -108,6 +109,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
@@ -145,6 +147,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
