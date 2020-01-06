@@ -36,6 +36,7 @@ private var component = System.getProperty("component", "NOT_SET")
 private var staticData = makeLoggerStaticDataTuples()
 
 fun makeUtcDateFormat(): SimpleDateFormat {
+    // 2001-07-04T12:08:56.235
     val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
     df.setTimeZone(TimeZone.getTimeZone("UTC"))
     return df
@@ -106,9 +107,9 @@ fun logError(logger: Logger, message: String, error: Throwable, vararg tuples: S
 }
 
 fun semiFormattedTuples(message: String, vararg tuples: String): String {
-    var semiFormatted = StringEscapeUtils.escapeJson(message)
+    val semiFormatted = StringBuilder(StringEscapeUtils.escapeJson(message))
     if (tuples.isEmpty()) {
-        return semiFormatted
+        return semiFormatted.toString()
     }
     if (tuples.size % 2 != 0) {
         throw IllegalArgumentException("Must have matched key-value pairs but had ${tuples.size} argument(s)")
@@ -117,9 +118,12 @@ fun semiFormattedTuples(message: String, vararg tuples: String): String {
         val key = tuples[i]
         val value = tuples[i + 1]
         val escapedValue = StringEscapeUtils.escapeJson(value)
-        semiFormatted += "\", \"$key\":\"$escapedValue"
+        semiFormatted.append("\", \"")
+        semiFormatted.append(key)
+        semiFormatted.append("\":\"")
+        semiFormatted.append(escapedValue)
     }
-    return semiFormatted
+    return semiFormatted.toString()
 }
 
 fun formattedTimestamp(epochTime: Long): String {
@@ -133,11 +137,22 @@ fun formattedTimestamp(epochTime: Long): String {
     }
 }
 
-fun inlineStackTrace(fullTrace: String): String {
+fun flattenMultipleLines(text: String?): String {
+    if (text == null) {
+        return "null"
+    }
     return try {
-        StringEscapeUtils.escapeJson(fullTrace.replace("\n", " | ").replace("\t", " "))
+        text.replace("\n", " | ").replace("\t", " ")
     } catch (ex: java.lang.Exception) {
-        fullTrace
+        text
+    }
+}
+
+fun inlineStackTrace(text: String): String {
+    return try {
+        StringEscapeUtils.escapeJson(flattenMultipleLines(text))
+    } catch (ex: java.lang.Exception) {
+        text
     }
 }
 
@@ -159,16 +174,24 @@ class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
             return ""
         }
         val dateTime = formattedTimestamp(event.timeStamp)
-        val resultPrefix = "{ " +
-            "\"timestamp\":\"$dateTime\", " +
-            "\"log_level\":\"${event.level}\", "
-        val messageResult = "\"message\":\"${event.formattedMessage}\", "
-        val exceptionResult = throwableProxyEventToString(event)
-        val resultSuffix = "\"thread\":\"${event.threadName}\", " +
-            "\"logger\":\"${event.loggerName}\", " +
-            staticData +
-            " }" + CoreConstants.LINE_SEPARATOR
-
-        return resultPrefix + messageResult + exceptionResult + resultSuffix
+        val builder = StringBuilder()
+        builder.append("{ ")
+        builder.append("\"timestamp\":\"")
+        builder.append(dateTime)
+        builder.append("\", \"log_level\":\"")
+        builder.append(event.level)
+        builder.append("\", \"message\":\"")
+        builder.append(flattenMultipleLines(event.formattedMessage))
+        builder.append("\", ")
+        builder.append(throwableProxyEventToString(event))
+        builder.append("\"thread\":\"")
+        builder.append(event.threadName)
+        builder.append("\", \"logger\":\"")
+        builder.append(event.loggerName)
+        builder.append("\", ")
+        builder.append(staticData)
+        builder.append(" }")
+        builder.append(CoreConstants.LINE_SEPARATOR)
+        return builder.toString()
     }
 }
