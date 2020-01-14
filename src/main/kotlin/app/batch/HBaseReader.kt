@@ -17,6 +17,7 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
+import java.util.*
 
 @Component
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
@@ -33,11 +34,9 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val idBytes = result.row
             result.advance() //move pointer to the first cell
             val timestamp = result.current().timestamp
-
             val value = result.getValue(columnFamily.toByteArray(), topicName.toByteArray())
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
-
             val messageInfo = dataBlock.getAsJsonObject("message")
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val db = messageInfo.getAsJsonPrimitive("db")?.asString
@@ -93,18 +92,28 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             val table = connection.getTable(TableName.valueOf(dataTableName))
             val scan = Scan().apply {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
+                if (!useLatest.toBoolean()) {
+                    setTimeRange(0, Date().time)
+                }
             }
 
-            /*
             if (scanCacheSize.toInt() > 0) {
                 scan.caching = scanCacheSize.toInt()
             }
-            logInfo(logger, "Setting hbase scan caching", "scan_caching", "${scan.caching}")
 
-            scan.maxResultSize = Long.MAX_VALUE
-            scan.cacheBlocks = false
-            logInfo(logger, "Setting hbase cache blocks", "cache_blocks", "${scan.cacheBlocks}")
-            */
+            if (scanMaxResultSize.toInt() > 0) {
+                scan.maxResultSize = scanMaxResultSize.toLong()
+            }
+
+            scan.cacheBlocks = scanCacheBlocks.toBoolean()
+            scan.isAsyncPrefetch = asyncPrefetch.toBoolean()
+
+            logInfo(logger, "Scan caching config",
+                    "scan_caching", "${scan.caching}",
+                    "scan.maxResultSize", "${scan.maxResultSize}",
+                    "cache_blocks", "${scan.cacheBlocks}",
+                    "async_prefetch", scan.isAsyncPrefetch.toString(),
+                    "useLatest", useLatest)
 
             scanner = table.getScanner(scan)
         }
@@ -119,11 +128,24 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${topic.name}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
-    @Value("\${scan.cache.size:10000}")
+    @Value("\${scan.cache.size:-1}")
     private lateinit var scanCacheSize: String
+
+    @Value("\${scan.max.result.size:-1}")
+    private lateinit var scanMaxResultSize: String
+
+    @Value("\${scan.cache.blocks:true}")
+    private lateinit var scanCacheBlocks: String
+
+    @Value("\${scan.async.prefetch:true}")
+    private lateinit var asyncPrefetch: String
+
+    @Value("\${latest.available:true}")
+    private lateinit var useLatest: String
 
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String
+
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
