@@ -31,8 +31,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             recordCount++
 
             if (recordCount % 10000 == 0) {
-                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", 
-                "topic_name", topicName)
+                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
             }
 
             val idBytes = result.row
