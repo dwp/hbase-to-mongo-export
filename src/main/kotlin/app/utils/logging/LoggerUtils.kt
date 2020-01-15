@@ -175,12 +175,18 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
 }
 
 fun getDurationInMilliseconds(epochTime: Long): String {
-    if (start_time_milliseconds == UNSET_TEXT) {
-        start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
-    }
+    try {
+        synchronized(start_time_milliseconds) {
+            if (start_time_milliseconds == UNSET_TEXT) {
+                start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
+            }
 
-    var elapsed_milliseconds = epochTime - start_time_milliseconds.toLong()
-    return elapsed_milliseconds.toString()
+            var elapsed_milliseconds = epochTime - start_time_milliseconds.toLong()
+            return elapsed_milliseconds.toString()
+        }
+    } catch (e: Exception) {
+        throw e
+    }
 }
 
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
