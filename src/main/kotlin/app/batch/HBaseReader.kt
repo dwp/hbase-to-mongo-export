@@ -23,8 +23,8 @@ import java.util.*
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
     var recordCount = 0
-    var start = System.currentTimeMillis()
-    System.setProperty("start_time_milliseconds", "$start")
+    val start = System.currentTimeMillis()
+    var start_time_milliseconds = System.setProperty("start_time_milliseconds", "$start")
 
     override fun read() =
         scanner().next()?.let { result ->

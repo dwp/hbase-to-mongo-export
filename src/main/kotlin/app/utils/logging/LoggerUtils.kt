@@ -66,7 +66,7 @@ fun resetLoggerStaticFieldsForTests() {
     staticData = makeLoggerStaticDataTuples()
 }
 
-fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String) {
+fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String) {
     topic_name = topic
     hostname = host
     environment = env
@@ -74,6 +74,7 @@ fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String,
     app_version = version
     component = comp
     start_time_milliseconds = start_milliseconds
+    correlation_id = id
     staticData = makeLoggerStaticDataTuples()
 }
 
