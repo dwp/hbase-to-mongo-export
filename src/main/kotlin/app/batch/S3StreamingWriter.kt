@@ -50,6 +50,12 @@ class S3StreamingWriter(private val cipherService: CipherService,
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
+
+        logInfo(logger, "S3 writing completed",
+            "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes",
+            "total_snapshot_files_written", "$totalBatches", "total_bytes_written", "$totalBytes", 
+            "total_records_written", "$totalRecords", "total_manifest_records_written", "$totalManifestRecords",
+            "total_manifest_files_written", "$totalManifestFiles")
     }
 
     fun writeOutput() {
@@ -71,16 +77,26 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
             logInfo(logger, "Putting batch object into bucket",
                 "s3_location", objectKey, "records_in_batch", "$recordsInBatch", "batch_size_bytes", "$batchSizeBytes",
-                "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes")
+                "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes",
+                "total_snapshot_already_files_written", "$totalBatches", "total_bytes_already_written", "$totalBytes", 
+                "total_records_already_written", "$totalRecords")
 
             bufferedInputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
             }
 
-            streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
+            totalBatches++
+            totalBytes += batchSizeBytes
+            totalRecords += recordsInBatch
+
+            if (streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)) {
+                totalManifestFiles++
+                totalManifestRecords += currentOutputStream!!.manifestFile.length()
+            }
         }
         currentOutputStream = encryptingOutputStream()
+
         batchSizeBytes = 0
         recordsInBatch = 0
         currentBatch++
@@ -112,6 +128,11 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private var currentBatch = 1
     private var batchSizeBytes = 0
     private var recordsInBatch = 0
+    private var totalBatches = 0
+    private var totalBytes = 0
+    private var totalRecords = 0
+    private var totalManifestFiles = 0
+    private var totalManifestRecords : Long = 0
     private var currentBatchManifest = mutableListOf<ManifestRecord>()
 
     @Value("\${output.batch.size.max.bytes}")
