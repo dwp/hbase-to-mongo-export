@@ -23,7 +23,6 @@ import java.util.*
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
     var recordCount = 0
-    val start = System.currentTimeMillis()
 
     override fun read() =
         scanner().next()?.let { result ->
