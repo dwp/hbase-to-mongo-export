@@ -36,7 +36,11 @@ private var component = System.getProperty("component", UNSET_TEXT)
 private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
-static var start_time_milliseconds = System.currentTimeMillis()
+class LogConfiguration {
+    companion object {
+        var start_time_milliseconds = System.currentTimeMillis()
+    }
+}
 
 fun makeUtcDateFormat(): SimpleDateFormat {
     // 2001-07-04T12:08:56.235
@@ -73,7 +77,7 @@ fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String,
     application = app
     app_version = version
     component = comp
-    start_time_milliseconds = start_milliseconds.toLong()
+    LogConfiguration.start_time_milliseconds = start_milliseconds.toLong()
     correlation_id = id
     staticData = makeLoggerStaticDataTuples()
 }
@@ -175,7 +179,7 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
 }
 
 fun getDurationInMilliseconds(epochTime: Long): String {
-    var elapsed_milliseconds = epochTime - start_time_milliseconds
+    var elapsed_milliseconds = epochTime - LogConfiguration.start_time_milliseconds
     return elapsed_milliseconds.toString()
 }
 
