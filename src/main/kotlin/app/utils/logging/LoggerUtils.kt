@@ -34,8 +34,9 @@ private var application = System.getProperty("application", UNSET_TEXT)
 private var app_version = System.getProperty("app_version", UNSET_TEXT)
 private var component = System.getProperty("component", UNSET_TEXT)
 private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
-private var start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
+
+static var start_time_milliseconds = System.currentTimeMillis()
 
 fun makeUtcDateFormat(): SimpleDateFormat {
     // 2001-07-04T12:08:56.235
@@ -62,7 +63,6 @@ fun resetLoggerStaticFieldsForTests() {
     app_version = System.getProperty("app_version", UNSET_TEXT)
     component = System.getProperty("component", UNSET_TEXT)
     correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
-    start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
     staticData = makeLoggerStaticDataTuples()
 }
 
@@ -73,7 +73,7 @@ fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String,
     application = app
     app_version = version
     component = comp
-    start_time_milliseconds = start_milliseconds
+    start_time_milliseconds = start_milliseconds.toLong()
     correlation_id = id
     staticData = makeLoggerStaticDataTuples()
 }
@@ -175,18 +175,8 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
 }
 
 fun getDurationInMilliseconds(epochTime: Long): String {
-    try {
-        synchronized(start_time_milliseconds) {
-            if (start_time_milliseconds == UNSET_TEXT) {
-                start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
-            }
-
-            var elapsed_milliseconds = epochTime - start_time_milliseconds.toLong()
-            return elapsed_milliseconds.toString()
-        }
-    } catch (e: Exception) {
-        throw e
-    }
+    var elapsed_milliseconds = epochTime - start_time_milliseconds
+    return elapsed_milliseconds.toString()
 }
 
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {

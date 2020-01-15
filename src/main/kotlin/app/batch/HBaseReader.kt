@@ -24,7 +24,6 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
 
     var recordCount = 0
     val start = System.currentTimeMillis()
-    var start_time_milliseconds = System.setProperty("start_time_milliseconds", "$start")
 
     override fun read() =
         scanner().next()?.let { result ->
