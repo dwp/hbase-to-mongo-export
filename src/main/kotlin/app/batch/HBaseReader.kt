@@ -23,12 +23,16 @@ import java.util.*
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
     var recordCount = 0
+    var start = System.currentTimeMillis()
+    System.setProperty("start_time_milliseconds", "$start")
+
     override fun read() =
         scanner().next()?.let { result ->
             recordCount++
 
             if (recordCount % 10000 == 0) {
-                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
+                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", 
+                "topic_name", topicName)
             }
 
             val idBytes = result.row

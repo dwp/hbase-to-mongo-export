@@ -24,15 +24,17 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 
-
+private val UNSET_TEXT = "NOT_SET"
 private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
 
-private var topic_name = System.getProperty("topic_name", "NOT_SET")
+private var topic_name = System.getProperty("topic_name", UNSET_TEXT)
 private var hostname = InetAddress.getLocalHost().hostName
-private var environment = System.getProperty("environment", "NOT_SET")
-private var application = System.getProperty("application", "NOT_SET")
-private var app_version = System.getProperty("app_version", "NOT_SET")
-private var component = System.getProperty("component", "NOT_SET")
+private var environment = System.getProperty("environment", UNSET_TEXT)
+private var application = System.getProperty("application", UNSET_TEXT)
+private var app_version = System.getProperty("app_version", UNSET_TEXT)
+private var component = System.getProperty("component", UNSET_TEXT)
+private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+private var start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
 fun makeUtcDateFormat(): SimpleDateFormat {
@@ -48,26 +50,30 @@ fun makeLoggerStaticDataTuples(): String {
         "\"environment\":\"$environment\", " +
         "\"application\":\"$application\", " +
         "\"app_version\":\"$app_version\", " +
-        "\"component\":\"$component\""
+        "\"component\":\"$component\", " + 
+        "\"correlation_id\":\"$correlation_id\""
 }
 
 fun resetLoggerStaticFieldsForTests() {
-    topic_name = System.getProperty("topic_name", "NOT_SET")
+    topic_name = System.getProperty("topic_name", UNSET_TEXT)
     hostname = InetAddress.getLocalHost().hostName
-    environment = System.getProperty("environment", "NOT_SET")
-    application = System.getProperty("application", "NOT_SET")
-    app_version = System.getProperty("app_version", "NOT_SET")
-    component = System.getProperty("component", "NOT_SET")
+    environment = System.getProperty("environment", UNSET_TEXT)
+    application = System.getProperty("application", UNSET_TEXT)
+    app_version = System.getProperty("app_version", UNSET_TEXT)
+    component = System.getProperty("component", UNSET_TEXT)
+    correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+    start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
     staticData = makeLoggerStaticDataTuples()
 }
 
-fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String) {
+fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String) {
     topic_name = topic
     hostname = host
     environment = env
     application = app
     app_version = version
     component = comp
+    start_time_milliseconds = start_milliseconds
     staticData = makeLoggerStaticDataTuples()
 }
 
@@ -167,6 +173,15 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
     }
 }
 
+fun getDurationInMilliseconds(epochTime: Long): String {
+    if (start_time_milliseconds == UNSET_TEXT) {
+        start_time_milliseconds = System.getProperty("start_time_milliseconds", UNSET_TEXT)
+    }
+
+    var elapsed_milliseconds = epochTime - start_time_milliseconds.toLong()
+    return elapsed_milliseconds.toString()
+}
+
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
 
     override fun doLayout(event: ILoggingEvent?): String {
@@ -188,6 +203,8 @@ class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
         builder.append(event.threadName)
         builder.append("\", \"logger\":\"")
         builder.append(event.loggerName)
+        builder.append("\", \"duration_in_milliseconds\":\"")
+        builder.append(getDurationInMilliseconds(event.timeStamp))
         builder.append("\", ")
         builder.append(staticData)
         builder.append(" }")
