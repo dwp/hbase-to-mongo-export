@@ -38,8 +38,8 @@ dependencies {
     //implementation("software.amazon.awssdk:aws-sdk-java:2.7.16")
 
     // sdk v1
-    implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
-    implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
+    implementation("com.amazonaws:aws-java-sdk-s3:1.11.706")
+    implementation("com.amazonaws:aws-java-sdk-core:1.11.706")
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-batch")
