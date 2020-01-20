@@ -73,7 +73,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             logInfo(logger, "Putting batch object into bucket",
                 "s3_location", objectKey, "records_in_batch", "$recordsInBatch", "batch_size_bytes", "$batchSizeBytes",
                 "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes",
-                "total_snapshot_files_already_written", "$totalBatches", "total_bytes_already_written", "$totalBytes", 
+                "total_snapshot_files_already_written", "$totalBatches", "total_bytes_already_written", "$totalBytes",
                 "total_records_already_written", "$totalRecords")
 
             bufferedInputStream.use {
@@ -127,7 +127,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private var totalBytes = 0
     private var totalRecords = 0
     private var totalManifestFiles = 0
-    private var totalManifestRecords : Long = 0
+    private var totalManifestRecords: Long = 0
     private var currentBatchManifest = mutableListOf<ManifestRecord>()
 
     @Value("\${output.batch.size.max.bytes}")
