@@ -51,11 +51,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
 
-        logInfo(logger, "S3 writing completed",
-            "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes",
-            "total_snapshot_files_written", "$totalBatches", "total_bytes_written", "$totalBytes", 
-            "total_records_written", "$totalRecords", "total_manifest_records_written", "$totalManifestRecords",
-            "total_manifest_files_written", "$totalManifestFiles")
     }
 
     fun writeOutput() {

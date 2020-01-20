@@ -7,6 +7,7 @@ import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.apache.hadoop.hbase.CellUtil
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ResultScanner
@@ -33,9 +34,10 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             }
 
             val idBytes = result.row
-            result.advance() //move pointer to the first cell
-            val timestamp = result.current().timestamp
-            val value = result.getValue(columnFamily.toByteArray(), topicName.toByteArray())
+            result.advance()
+            val cell = result.current()
+            val timestamp = cell.timestamp
+            val value = CellUtil.cloneValue(cell)
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
             val messageInfo = dataBlock.getAsJsonObject("message")
@@ -92,14 +94,16 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "data_table_name", dataTableName, "column_family", columnFamily, "topic_name", topicName)
             val table = connection.getTable(TableName.valueOf(dataTableName))
             val scan = Scan().apply {
-                addColumn(columnFamily.toByteArray(), topicName.toByteArray())
                 if (!useLatest.toBoolean()) {
                     setTimeRange(0, Date().time)
                 }
             }
 
-            if (scanCacheSize.toInt() > 0) {
-                scan.caching = scanCacheSize.toInt()
+            scan.caching = if (scanCacheSize.toInt() > 0) {
+                scanCacheSize.toInt()
+            }
+            else {
+                Int.MAX_VALUE
             }
 
             if (scanMaxResultSize.toInt() > 0) {
