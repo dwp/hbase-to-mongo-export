@@ -97,6 +97,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
                 if (!useLatest.toBoolean()) {
                     setTimeRange(0, Date().time)
                 }
+
+
             }
 
             scan.caching = if (scanCacheSize.toInt() > 0) {
@@ -112,6 +114,12 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
 
             scan.cacheBlocks = scanCacheBlocks.toBoolean()
             scan.isAsyncPrefetch = asyncPrefetch.toBoolean()
+
+            val startRow: Byte = 0
+            val endRow: Byte = 2
+
+            scan.withStartRow(byteArrayOf(startRow), true)
+            scan.withStopRow(byteArrayOf(endRow), true)
 
             logInfo(logger, "Scan caching config",
                     "scan_caching", "${scan.caching}",
@@ -142,10 +150,10 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${scan.cache.blocks:true}")
     private lateinit var scanCacheBlocks: String
 
-    @Value("\${scan.async.prefetch:true}")
+    @Value("\${scan.async.prefetch:false}")
     private lateinit var asyncPrefetch: String
 
-    @Value("\${latest.available:true}")
+    @Value("\${latest.available:false}")
     private lateinit var useLatest: String
 
     @Value("\${data.table.name}")
