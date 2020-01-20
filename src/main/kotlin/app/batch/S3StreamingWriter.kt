@@ -50,6 +50,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
+
     }
 
     fun writeOutput() {
