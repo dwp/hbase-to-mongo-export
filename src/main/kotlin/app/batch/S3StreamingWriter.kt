@@ -62,11 +62,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
-            var prefix = "start=$startRow-stop-$stopRow"
-            if (StringUtils.isNotBlank(topicName) && !topicName.equals(UNSET_TEXT)) {
-                prefix = topicName
-            }
-            val objectKey: String = "$exportPrefix/$prefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
+            val filePrefix = filePrefix()
+            val objectKey: String = "$exportPrefix/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)
@@ -112,7 +109,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
         val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
         val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
-        val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
+        val filePrefix = filePrefix()
+        val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
         return EncryptingOutputStream(
@@ -122,6 +120,14 @@ class S3StreamingWriter(private val cipherService: CipherService,
             Base64.getEncoder().encodeToString(initialisationVector),
             manifestFile,
             manifestWriter)
+    }
+
+    private fun filePrefix(): String {
+        return if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
+            topicName
+        } else {
+            "start=$startRow-stop-$stopRow"
+        }
     }
 
     private var currentOutputStream: EncryptingOutputStream? = null

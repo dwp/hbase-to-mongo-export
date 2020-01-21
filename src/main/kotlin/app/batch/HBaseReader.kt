@@ -107,7 +107,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         val stopByte = stopRow.toByte()
         val scan = Scan().apply {
 
-            if (StringUtils.isNotBlank(topicName) && !topicName.equals(UNSET_TEXT)) {
+            if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
 
