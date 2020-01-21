@@ -105,6 +105,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             if (!useLatest.toBoolean()) {
                 setTimeRange(0, Date().time)
             }
+
             withStartRow(byteArrayOf(startByte), true)
             withStopRow(byteArrayOf(stopByte), false)
             cacheBlocks = scanCacheBlocks.toBoolean()
@@ -159,10 +160,10 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String
 
-    @Value("\${scan.start.row}")
+    @Value("\${scan.start.row:0}")
     private lateinit var startRow: String
 
-    @Value("\${scan.stop.row}")
+    @Value("\${scan.stop.row:1}")
     private lateinit var stopRow: String
 
     companion object {
