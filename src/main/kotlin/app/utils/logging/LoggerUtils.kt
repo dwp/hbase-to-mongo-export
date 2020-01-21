@@ -29,7 +29,7 @@ private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
 
 private var topic_name = System.getProperty("topic_name", UNSET_TEXT)
 private var scan_start_row = System.getProperty("scan_start_row", UNSET_TEXT)
-private var scan_end_row = System.getProperty("scan_end_row", UNSET_TEXT)
+private var scan_stop_row = System.getProperty("scan_stop_row", UNSET_TEXT)
 private var hostname = InetAddress.getLocalHost().hostName
 private var environment = System.getProperty("environment", UNSET_TEXT)
 private var application = System.getProperty("application", UNSET_TEXT)
@@ -54,7 +54,7 @@ fun makeUtcDateFormat(): SimpleDateFormat {
 fun makeLoggerStaticDataTuples(): String {
     return "\"topic_name\":\"$topic_name\", " +
         "\"scan_start_row\":\"$scan_start_row\", " +
-        "\"scan_end_row\":\"$scan_end_row\", " +
+        "\"scan_stop_row\":\"$scan_stop_row\", " +
         "\"hostname\":\"$hostname\", " +
         "\"environment\":\"$environment\", " +
         "\"application\":\"$application\", " +
@@ -66,7 +66,7 @@ fun makeLoggerStaticDataTuples(): String {
 fun resetLoggerStaticFieldsForTests() {
     topic_name = System.getProperty("topic_name", UNSET_TEXT)
     scan_start_row = System.getProperty("scan_start_row", UNSET_TEXT)
-    scan_end_row = System.getProperty("scan_end_row", UNSET_TEXT)
+    scan_stop_row = System.getProperty("scan_stop_row", UNSET_TEXT)
     hostname = InetAddress.getLocalHost().hostName
     environment = System.getProperty("environment", UNSET_TEXT)
     application = System.getProperty("application", UNSET_TEXT)
@@ -79,7 +79,7 @@ fun resetLoggerStaticFieldsForTests() {
 fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String) {
     topic_name = topic
     scan_start_row = "1"
-    scan_end_row = "2"
+    scan_stop_row = "2"
     hostname = host
     environment = env
     application = app
