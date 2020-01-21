@@ -28,6 +28,8 @@ private val UNSET_TEXT = "NOT_SET"
 private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
 
 private var topic_name = System.getProperty("topic_name", UNSET_TEXT)
+private var scan_start_row = System.getProperty("scan_start_row", UNSET_TEXT)
+private var scan_end_row = System.getProperty("scan_end_row", UNSET_TEXT)
 private var hostname = InetAddress.getLocalHost().hostName
 private var environment = System.getProperty("environment", UNSET_TEXT)
 private var application = System.getProperty("application", UNSET_TEXT)
@@ -51,16 +53,20 @@ fun makeUtcDateFormat(): SimpleDateFormat {
 
 fun makeLoggerStaticDataTuples(): String {
     return "\"topic_name\":\"$topic_name\", " +
+        "\"scan_start_row\":\"$scan_start_row\", " +
+        "\"scan_end_row\":\"$scan_end_row\", " +
         "\"hostname\":\"$hostname\", " +
         "\"environment\":\"$environment\", " +
         "\"application\":\"$application\", " +
         "\"app_version\":\"$app_version\", " +
-        "\"component\":\"$component\", " + 
+        "\"component\":\"$component\", " +
         "\"correlation_id\":\"$correlation_id\""
 }
 
 fun resetLoggerStaticFieldsForTests() {
     topic_name = System.getProperty("topic_name", UNSET_TEXT)
+    scan_start_row = System.getProperty("scan_start_row", UNSET_TEXT)
+    scan_end_row = System.getProperty("scan_end_row", UNSET_TEXT)
     hostname = InetAddress.getLocalHost().hostName
     environment = System.getProperty("environment", UNSET_TEXT)
     application = System.getProperty("application", UNSET_TEXT)

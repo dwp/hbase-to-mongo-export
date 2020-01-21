@@ -25,6 +25,7 @@ import java.util.*
 class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
 
     var recordCount = 0
+    private val UNSET_TEXT = "NOT_SET"
 
     override fun read() =
         scanner().next()?.let { result ->
@@ -75,12 +76,14 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         return if (lastModifiedElement != null) {
             if (lastModifiedElement.isJsonPrimitive) {
                 lastModifiedElement.asJsonPrimitive.asString
-            } else {
+            }
+            else {
                 val asObject = lastModifiedElement.asJsonObject
                 val dateSubField = "\$date"
                 asObject.getAsJsonPrimitive(dateSubField)?.asString ?: epoch
             }
-        } else {
+        }
+        else {
             epoch
         }
     }
@@ -104,7 +107,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         val stopByte = stopRow.toByte()
         val scan = Scan().apply {
 
-            if (StringUtils.isNotBlank(topicName)) {
+            if (StringUtils.isNotBlank(topicName) && !topicName.equals(UNSET_TEXT)) {
                 addColumn(columnFamily.toByteArray(), topicName.toByteArray())
             }
 
@@ -132,13 +135,13 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         }
 
         logInfo(logger, "Scan caching config",
-                "scan_caching", "${scan.caching}",
-                "scan.maxResultSize", "${scan.maxResultSize}",
-                "cache_blocks", "${scan.cacheBlocks}",
-                "async_prefetch", scan.isAsyncPrefetch.toString(),
-                "useLatest", useLatest,
-                "startByte", startByte.toString(),
-                "stopByte", stopByte.toString())
+            "scan_caching", "${scan.caching}",
+            "scan.maxResultSize", "${scan.maxResultSize}",
+            "cache_blocks", "${scan.cacheBlocks}",
+            "async_prefetch", scan.isAsyncPrefetch.toString(),
+            "useLatest", useLatest,
+            "startByte", startByte.toString(),
+            "stopByte", stopByte.toString())
 
         return scan
     }
@@ -148,7 +151,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${column.family}")
     private lateinit var columnFamily: String // i.e. "topic"
 
-    @Value("\${topic.name:}")
+    @Value("\${topic.name:NOT_SET}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
     @Value("\${scan.cache.size:-1}")

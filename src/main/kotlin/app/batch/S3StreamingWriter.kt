@@ -33,6 +33,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val streamingManifestWriter: StreamingManifestWriter,
                         private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
 
+    private val UNSET_TEXT = "NOT_SET"
+
     init {
         Security.addProvider(BouncyCastleProvider())
     }
@@ -60,6 +62,10 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
+            var prefix = "start=$startRow-stop-$stopRow"
+            if (StringUtils.isNotBlank(topicName) && !topicName.equals(UNSET_TEXT)) {
+                prefix = topicName
+            }
             val objectKey: String = "$exportPrefix/$topicName-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
@@ -145,8 +151,14 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @Value("\${s3.manifest.prefix.folder}")
     private lateinit var manifestPrefix: String
 
-    @Value("\${topic.name}")
-    private lateinit var topicName: String
+    @Value("\${topic.name:NO_TOPIC}")
+    private lateinit var topicName: String // i.e. "db.user.data"
+
+    @Value("\${scan.start.row:-1}")
+    private lateinit var startRow: String
+
+    @Value("\${scan.stop.row:-1}")
+    private lateinit var stopRow: String
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
