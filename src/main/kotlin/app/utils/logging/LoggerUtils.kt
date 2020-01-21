@@ -78,6 +78,8 @@ fun resetLoggerStaticFieldsForTests() {
 
 fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String) {
     topic_name = topic
+    scan_start_row = "1"
+    scan_end_row = "2"
     hostname = host
     environment = env
     application = app

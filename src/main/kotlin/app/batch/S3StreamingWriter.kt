@@ -53,7 +53,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
-
     }
 
     fun writeOutput() {
@@ -103,7 +102,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
         recordsInBatch = 0
         currentBatch++
     }
-
 
     private fun encryptingOutputStream(): EncryptingOutputStream {
         val keyResponse = keyService.batchDataKey()
