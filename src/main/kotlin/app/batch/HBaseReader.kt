@@ -93,15 +93,24 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         if (scanner == null) {
             logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "data_table_name", dataTableName, "column_family", columnFamily, "topic_name", topicName)
             val table = connection.getTable(TableName.valueOf(dataTableName))
-            val scan = Scan().apply {
-                if (!useLatest.toBoolean()) {
-                    setTimeRange(0, Date().time)
-                }
+            scanner = table.getScanner(scan())
+        }
+        return scanner!!
+    }
 
-
+    private fun scan(): Scan {
+        val startByte = startRow.toByte()
+        val stopByte = stopRow.toByte()
+        val scan = Scan().apply {
+            if (!useLatest.toBoolean()) {
+                setTimeRange(0, Date().time)
             }
 
-            scan.caching = if (scanCacheSize.toInt() > 0) {
+            withStartRow(byteArrayOf(startByte), true)
+            withStopRow(byteArrayOf(stopByte), false)
+            cacheBlocks = scanCacheBlocks.toBoolean()
+            isAsyncPrefetch = asyncPrefetch.toBoolean()
+            caching = if (scanCacheSize.toInt() > 0) {
                 scanCacheSize.toInt()
             }
             else {
@@ -109,28 +118,20 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             }
 
             if (scanMaxResultSize.toInt() > 0) {
-                scan.maxResultSize = scanMaxResultSize.toLong()
+                maxResultSize = scanMaxResultSize.toLong()
             }
-
-            scan.cacheBlocks = scanCacheBlocks.toBoolean()
-            scan.isAsyncPrefetch = asyncPrefetch.toBoolean()
-
-            val startRow: Byte = 0
-            val endRow: Byte = 2
-
-            scan.withStartRow(byteArrayOf(startRow), true)
-            scan.withStopRow(byteArrayOf(endRow), true)
-
-            logInfo(logger, "Scan caching config",
-                    "scan_caching", "${scan.caching}",
-                    "scan.maxResultSize", "${scan.maxResultSize}",
-                    "cache_blocks", "${scan.cacheBlocks}",
-                    "async_prefetch", scan.isAsyncPrefetch.toString(),
-                    "useLatest", useLatest)
-
-            scanner = table.getScanner(scan)
         }
-        return scanner!!
+
+        logInfo(logger, "Scan caching config",
+                "scan_caching", "${scan.caching}",
+                "scan.maxResultSize", "${scan.maxResultSize}",
+                "cache_blocks", "${scan.cacheBlocks}",
+                "async_prefetch", scan.isAsyncPrefetch.toString(),
+                "useLatest", useLatest,
+                "startByte", startByte.toString(),
+                "stopByte", stopByte.toString())
+
+        return scan
     }
 
     private var scanner: ResultScanner? = null
@@ -159,6 +160,11 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String
 
+    @Value("\${scan.start.row:0}")
+    private lateinit var startRow: String
+
+    @Value("\${scan.stop.row:1}")
+    private lateinit var stopRow: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
