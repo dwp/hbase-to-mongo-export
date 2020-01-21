@@ -10,6 +10,7 @@ import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import org.apache.commons.lang3.StringUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -33,6 +34,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val streamingManifestWriter: StreamingManifestWriter,
                         private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
 
+    private val UNSET_TEXT = "NOT_SET"
+
     init {
         Security.addProvider(BouncyCastleProvider())
     }
@@ -50,7 +53,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
-
     }
 
     fun writeOutput() {
@@ -60,7 +62,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
-            val objectKey: String = "$exportPrefix/$topicName-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
+            val filePrefix = filePrefix()
+            val objectKey: String = "$exportPrefix/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)
@@ -97,7 +100,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
         currentBatch++
     }
 
-
     private fun encryptingOutputStream(): EncryptingOutputStream {
         val keyResponse = keyService.batchDataKey()
         val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
@@ -107,7 +109,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
         val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
         val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
-        val manifestFile = File("$manifestOutputDirectory/$topicName-%06d.csv".format(currentBatch))
+        val filePrefix = filePrefix()
+        val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
         return EncryptingOutputStream(
@@ -117,6 +120,14 @@ class S3StreamingWriter(private val cipherService: CipherService,
             Base64.getEncoder().encodeToString(initialisationVector),
             manifestFile,
             manifestWriter)
+    }
+
+    private fun filePrefix(): String {
+        return if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
+            topicName
+        } else {
+            "start=$startRow-stop-$stopRow"
+        }
     }
 
     private var currentOutputStream: EncryptingOutputStream? = null
@@ -145,8 +156,14 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @Value("\${s3.manifest.prefix.folder}")
     private lateinit var manifestPrefix: String
 
-    @Value("\${topic.name}")
-    private lateinit var topicName: String
+    @Value("\${topic.name:NO_TOPIC}")
+    private lateinit var topicName: String // i.e. "db.user.data"
+
+    @Value("\${scan.start.row:-1}")
+    private lateinit var startRow: String
+
+    @Value("\${scan.stop.row:-1}")
+    private lateinit var stopRow: String
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
