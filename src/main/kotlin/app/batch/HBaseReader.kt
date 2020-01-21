@@ -7,6 +7,7 @@ import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.CellUtil
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
@@ -102,12 +103,20 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         val startByte = startRow.toByte()
         val stopByte = stopRow.toByte()
         val scan = Scan().apply {
+
+            if (StringUtils.isNotBlank(topicName)) {
+                addColumn(columnFamily.toByteArray(), topicName.toByteArray())
+            }
+
             if (!useLatest.toBoolean()) {
                 setTimeRange(0, Date().time)
             }
 
-            withStartRow(byteArrayOf(startByte), true)
-            withStopRow(byteArrayOf(stopByte), false)
+            if (startByte > -1 && stopByte > -1) {
+                withStartRow(byteArrayOf(startByte), true)
+                withStopRow(byteArrayOf(stopByte), false)
+            }
+
             cacheBlocks = scanCacheBlocks.toBoolean()
             isAsyncPrefetch = asyncPrefetch.toBoolean()
             caching = if (scanCacheSize.toInt() > 0) {
@@ -139,7 +148,7 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${column.family}")
     private lateinit var columnFamily: String // i.e. "topic"
 
-    @Value("\${topic.name}")
+    @Value("\${topic.name:}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
     @Value("\${scan.cache.size:-1}")
@@ -160,10 +169,10 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String
 
-    @Value("\${scan.start.row:0}")
+    @Value("\${scan.start.row:-1}")
     private lateinit var startRow: String
 
-    @Value("\${scan.stop.row:1}")
+    @Value("\${scan.stop.row:-1}")
     private lateinit var stopRow: String
 
     companion object {
