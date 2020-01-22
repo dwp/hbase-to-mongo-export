@@ -20,9 +20,9 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
 
-//@RunWith(SpringRunner::class)
-//@ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
-//@SpringBootTest
+@RunWith(SpringRunner::class)
+@ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
+@SpringBootTest
 @TestPropertySource(properties = [
     "data.table.name=ucfs-data",
     "column.family=topic",
@@ -51,7 +51,7 @@ class HBaseReaderTest {
         Mockito.reset(connection)
     }
 
-//    @Test
+    @Test
     fun testRead() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
@@ -90,7 +90,7 @@ class HBaseReaderTest {
         given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
         given(result.current()).willReturn(current)
-        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
@@ -106,7 +106,7 @@ class HBaseReaderTest {
             expected.toString(), actual.toString())
     }
 
-//    @Test
+    @Test
     fun testReadModifiedIsObject() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
