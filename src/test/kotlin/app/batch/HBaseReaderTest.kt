@@ -147,7 +147,7 @@ class HBaseReaderTest {
         given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
         given(result.current()).willReturn(current)
-        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
@@ -163,7 +163,7 @@ class HBaseReaderTest {
                 expected.toString(), actual.toString())
     }
 
-//    @Test
+    @Test
     fun testReadModifiedIsAbsent() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
@@ -199,7 +199,7 @@ class HBaseReaderTest {
         given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
         given(result.current()).willReturn(current)
-        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
@@ -215,7 +215,7 @@ class HBaseReaderTest {
                 expected.toString(), actual.toString())
     }
 
-//    @Test(expected = MissingFieldException::class)
+    @Test(expected = MissingFieldException::class)
     fun testReject() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
@@ -252,7 +252,7 @@ class HBaseReaderTest {
         given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
         given(result.current()).willReturn(current)
-        given(result.getValue("topic".toByteArray(), "db.a.b".toByteArray())).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(TableName.valueOf("ucfs-data"))).willReturn(table)
