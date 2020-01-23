@@ -39,7 +39,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             result.advance()
             val cell = result.current()
             val timestamp = cell.timestamp
-            val value = CellUtil.cloneValue(cell)
+            cell.qualifierArray
+            val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
             val messageInfo = dataBlock.getAsJsonObject("message")
