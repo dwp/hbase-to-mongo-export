@@ -111,7 +111,7 @@ abstract class Writer(private val keyService: KeyService,
     @Value("\${encrypt.output:true}")
     protected var encryptOutput: Boolean = true
 
-    @Value("\${topic.name}")
+    @Value("\${topic.name:NOT_SET}")
     protected lateinit var topicName: String // i.e. "db.user.data"
 
     private var currentBatch = StringBuilder()
