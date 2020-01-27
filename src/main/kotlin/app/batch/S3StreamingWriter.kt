@@ -126,7 +126,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
         return if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
             topicName
         } else {
-            "start=$startRow-stop-$stopRow"
+            "start-$startRow-stop-$stopRow"
         }
     }
 
@@ -156,7 +156,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @Value("\${s3.manifest.prefix.folder}")
     private lateinit var manifestPrefix: String
 
-    @Value("\${topic.name:NO_TOPIC}")
+    @Value("\${topic.name:NOT_SET}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
     @Value("\${scan.start.row:-1}")
