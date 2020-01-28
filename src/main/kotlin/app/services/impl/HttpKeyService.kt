@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.URLEncoder
+import app.utils.logging.correlation_id
 
 @Service
 @Profile("httpDataKeyService")
@@ -46,8 +47,9 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
     override fun batchDataKey(): DataKeyResult {
         try {
             val dksUrl = "$dataKeyServiceUrl/datakey"
+            val dksUrlWithCorrelationId = "$dksUrl?correlationId=$correlation_id"
             httpClientProvider.client().use { client ->
-                client.execute(HttpGet(dksUrl)).use { response ->
+                client.execute(HttpGet(dksUrlWithCorrelationId)).use { response ->
                     val statusCode = response.statusLine.statusCode
                     return if (statusCode == 201) {
                         val entity = response.entity
@@ -85,9 +87,10 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                 decryptedKeyCache[cacheKey]!!
             } else {
                 httpClientProvider.client().use { client ->
-                    val dksUrl = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
+                    val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
+                    val dksUrlWithCorrelationId = "$dksUrl&correlationId=$correlation_id"
                     logDebug(logger, "Starting call to data key service", "dks_url", dksUrl)
-                    val httpPost = HttpPost(dksUrl)
+                    val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
