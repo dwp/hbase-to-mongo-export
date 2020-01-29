@@ -4,16 +4,17 @@ import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
+import app.utils.UUIDGenerator
 import app.utils.logging.overrideLoggerStaticFieldsForTests
 import app.utils.logging.resetLoggerStaticFieldsForTests
 import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.firstValue
+import com.nhaarman.mockitokotlin2.whenever
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpPut
 import org.apache.http.impl.client.CloseableHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -57,10 +58,14 @@ class HttpKeyServiceTest {
     @Autowired
     private lateinit var httpClientProvider: HttpClientProvider
 
+    @Autowired
+    private lateinit var uuidGenerator: UUIDGenerator
+
     @Before
     fun init() {
         this.keyService.clearCache()
         reset(this.httpClientProvider)
+        reset(this.uuidGenerator)
         overrideLoggerStaticFieldsForTests(
             "topic.name", "test-host", "test-env", "my-app",
             "v1", "tests", "9876543000", "correlation-1")
@@ -92,6 +97,8 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         val dataKeyResult = keyService.batchDataKey()
 
@@ -100,7 +107,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey?correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+        assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -113,15 +120,17 @@ class HttpKeyServiceTest {
         given(httpResponse.statusLine).willReturn(statusLine)
         given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
         } catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("Getting batch data key - data key service returned bad status code '503'", ex.message)
+            assertEquals("Getting batch data key - data key service returned bad status code '503' for dks_correlation_id: 'dks-id-1'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey?correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+            assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -136,15 +145,17 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpGet::class.java))).willThrow(RuntimeException("Boom!"))
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
         } catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
+            assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!' for dks_correlation_id: 'dks-id-1'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey?correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+            assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -170,6 +181,8 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpGet::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         val dataKeyResult = keyService.batchDataKey()
 
@@ -178,7 +191,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
         verify(httpClient, times(3)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey?correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+        assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -201,13 +214,15 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -230,6 +245,8 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
@@ -237,7 +254,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(3)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -260,6 +277,8 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
@@ -268,7 +287,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -280,15 +299,17 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyDecryptionException")
         } catch (ex: DataKeyDecryptionException) {
-            assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400'", ex.message)
+            assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(1)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -301,15 +322,17 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willReturn(httpResponse)
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
 
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
         } catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '503'", ex.message)
+            assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '503' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -322,14 +345,23 @@ class HttpKeyServiceTest {
         val httpClient = mock(CloseableHttpClient::class.java)
         given(httpClient.execute(any(HttpPost::class.java))).willThrow(RuntimeException("Boom!"))
         given(httpClientProvider.client()).willReturn(httpClient)
+        val dksCallId = nextDksCorrelationId()
+        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
+
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
         } catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
+            assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=correlation-1", argumentCaptor.firstValue.uri.toString())
+            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
+    }
+
+    var dksCorrelationId = 0
+
+    private fun nextDksCorrelationId(): String {
+        return "dks-id-${++dksCorrelationId}"
     }
 }

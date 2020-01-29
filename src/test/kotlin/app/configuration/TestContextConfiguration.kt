@@ -1,6 +1,7 @@
 package app.configuration
 
 import app.services.KeyService
+import app.utils.UUIDGenerator
 import com.amazonaws.services.s3.AmazonS3
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.http.client.HttpClient
@@ -12,6 +13,10 @@ import java.security.SecureRandom
 
 @Configuration
 class TestContextConfiguration {
+
+    @Bean
+    @Profile("unitTest")
+    fun uuidGenerator() = Mockito.mock(UUIDGenerator::class.java)!!
 
     @Bean
     @Profile("unitTest")
