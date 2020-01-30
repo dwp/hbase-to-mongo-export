@@ -108,10 +108,6 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         val stopByte = stopRow.toByte()
         val scan = Scan().apply {
 
-            if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
-                addColumn(columnFamily.toByteArray(), topicName.toByteArray())
-            }
-
             if (!useLatest.toBoolean()) {
                 setTimeRange(0, Date().time)
             }
