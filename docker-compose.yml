@@ -50,7 +50,6 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
       --data-key-service http://dks-standalone-http:8080/datakey
       --zookeeper-quorum hbase
       --dump-table-contents
@@ -213,7 +212,6 @@ services:
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
     command: >-
-      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
@@ -229,7 +227,6 @@ services:
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
     command: >-
-      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
