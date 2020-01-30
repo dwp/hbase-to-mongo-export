@@ -72,6 +72,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -95,6 +96,7 @@ services:
       - ENVIRONMENT=local-docker
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
+      - CORRELATION_ID=aaa-file
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -109,6 +111,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -132,6 +135,7 @@ services:
     - ENVIRONMENT=local-docker
     - APPLICATION=hbase_to_mongo_export
     - COMPONENT=jar_file
+    - CORRELATION_ID=aaa-dir
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -147,6 +151,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
+      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -177,6 +182,7 @@ services:
      - ENVIRONMENT=local-docker
      - APPLICATION=hbase_to_mongo_export
      - COMPONENT=jar_file
+     - CORRELATION_ID=aaa-s3
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
@@ -205,6 +211,8 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-http
+    command: >-
+      --spring.main.banner-mode=off
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     environment:
@@ -218,6 +226,8 @@ services:
       context: resources
       dockerfile: Dockerfile_dks
     container_name: dks-standalone-https
+    command: >-
+      --spring.main.banner-mode=off
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     environment:

@@ -217,3 +217,11 @@ local-all-collections-test: build-jar ## Build a local jar, then run it repeat t
 			$(local_dks_url) ;\
 		popd ;\
 	}
+
+.PHONY: dks-logs-https
+dks-logs-https: ## Cat the logs of dks-standalone-https
+	docker exec dks-standalone-https cat /opt/data-key-service/logs/dks.out
+
+.PHONY: dks-logs-http
+dks-logs-http: ## Cat the logs of dks-standalone-http
+	docker exec dks-standalone-http cat /opt/data-key-service/logs/dks.out
