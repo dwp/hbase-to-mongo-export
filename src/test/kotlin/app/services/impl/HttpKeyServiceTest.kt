@@ -135,7 +135,7 @@ class HttpKeyServiceTest {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
         } catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("Getting batch data key - data key service returned bad status code '503' for dks_correlation_id: 'dks-id-1'", ex.message)
+            assertEquals("Getting batch data key - data key service returned bad status code '503' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
@@ -160,7 +160,7 @@ class HttpKeyServiceTest {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
         } catch (ex: DataKeyServiceUnavailableException) {
-            assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!' for dks_correlation_id: 'dks-id-1'", ex.message)
+            assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
