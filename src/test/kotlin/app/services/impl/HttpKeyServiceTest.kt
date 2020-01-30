@@ -61,6 +61,14 @@ class HttpKeyServiceTest {
     @Autowired
     private lateinit var uuidGenerator: UUIDGenerator
 
+    companion object {
+        var dksCorrelationId = 0
+
+        private fun nextDksCorrelationId(): String {
+            return "dks-id-${++dksCorrelationId}"
+        }
+    }
+
     @Before
     fun init() {
         this.keyService.clearCache()
@@ -359,9 +367,4 @@ class HttpKeyServiceTest {
         }
     }
 
-    var dksCorrelationId = 0
-
-    private fun nextDksCorrelationId(): String {
-        return "dks-id-${++dksCorrelationId}"
-    }
 }
