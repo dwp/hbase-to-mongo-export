@@ -131,7 +131,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     private var currentOutputStream: EncryptingOutputStream? = null
-    private var currentBatch = 1
+    private var currentBatch = 0
     private var batchSizeBytes = 0
     private var recordsInBatch = 0
     private var totalBatches = 0
