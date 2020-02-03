@@ -7,11 +7,10 @@ import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
 import org.springframework.batch.core.Step
-import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
+import org.springframework.batch.core.StepExecutionListener
+import org.springframework.batch.core.configuration.annotation.*
 import org.springframework.batch.core.launch.support.RunIdIncrementer
+import org.springframework.batch.core.partition.support.Partitioner
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
@@ -21,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.core.task.SimpleAsyncTaskExecutor
+
 
 @Configuration
 @Profile("batchRun")
@@ -28,13 +29,37 @@ import org.springframework.context.annotation.Profile
 class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
-    fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
-        jobBuilderFactory.get("nightlyExportBatchJob")
-            .incrementer(RunIdIncrementer())
-            .listener(listener)
-            .flow(step)
-            .end()
-            .build()
+    fun importUserJob() =
+            jobBuilderFactory.get("nightlyExportBatchJob")
+                    .incrementer(RunIdIncrementer())
+                    .flow(step1())
+                    .end()
+                    .build()
+
+    // Master
+    @Bean
+    fun step1() = stepBuilderFactory["step1"]
+                .partitioner(slaveStep().getName(), partitioner)
+                .step(slaveStep())
+                .gridSize(9)
+                .taskExecutor(SimpleAsyncTaskExecutor())
+                .build()
+
+    // slave step
+    @Bean
+    fun slaveStep() =
+        stepBuilderFactory["slaveStep"]
+                .chunk<SourceRecord, Record>(chunkSize.toInt())
+                .reader(itemReader)
+                .faultTolerant()
+                .skip(MissingFieldException::class.java)
+                .skip(DecryptionFailureException::class.java)
+                .skip(BadDecryptedDataException::class.java)
+                .skipLimit(Integer.MAX_VALUE)
+                .processor(itemProcessor())
+                .writer(itemWriter).listener(stepExecutionListener)
+                .build()
+
 
     @Bean
     fun step() =
@@ -50,10 +75,15 @@ class JobConfiguration : DefaultBatchConfigurer() {
             .writer(itemWriter)
             .build()
 
+    @Bean
+    @StepScope
     fun itemProcessor(): ItemProcessor<SourceRecord, Record> =
         CompositeItemProcessor<SourceRecord, Record>().apply {
             setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
         }
+
+    @Autowired
+    lateinit var partitioner: Partitioner
 
     @Autowired
     lateinit var itemReader: ItemReader<SourceRecord>
@@ -72,6 +102,9 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
+
+    @Autowired
+    lateinit var stepExecutionListener: StepExecutionListener
 
     @Value("\${chunk.size:10000}")
     lateinit var chunkSize: String

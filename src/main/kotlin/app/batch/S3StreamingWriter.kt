@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
@@ -27,6 +28,7 @@ import javax.crypto.spec.SecretKeySpec
 
 @Component
 @Profile("outputToS3")
+@StepScope
 class S3StreamingWriter(private val cipherService: CipherService,
                         private val keyService: KeyService,
                         private val secureRandom: SecureRandom,
@@ -52,6 +54,10 @@ class S3StreamingWriter(private val cipherService: CipherService,
             recordsInBatch++
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
+
+            if (recordsInBatch % 100 == 0) {
+                logger.info("$this: recordsInBatch: $recordsInBatch")
+            }
         }
     }
 

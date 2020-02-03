@@ -15,6 +15,7 @@ import org.apache.hadoop.hbase.client.ResultScanner
 import org.apache.hadoop.hbase.client.Scan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -22,7 +23,10 @@ import java.nio.charset.Charset
 import java.util.*
 
 @Component
-class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
+@StepScope
+class HBaseReader constructor(private val connection: Connection,
+                              @Value("#{stepExecutionContext['prefix']}") val idPrefix: String):
+        ItemReader<SourceRecord> {
 
     var recordCount = 0
     private val UNSET_TEXT = "NOT_SET"
@@ -31,8 +35,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
         scanner().next()?.let { result ->
             recordCount++
 
-            if (recordCount % 10000 == 0) {
-                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
+            if (recordCount % 100 == 0) {
+                logInfo(logger, "$this: Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
             }
 
             val idBytes = result.row
@@ -106,17 +110,18 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     private fun scan(): Scan {
         val startByte = startRow.toByte()
         val stopByte = stopRow.toByte()
-        val scan = Scan().apply {
 
+        val scan = Scan().apply {
             if (!useLatest.toBoolean()) {
                 setTimeRange(0, Date().time)
             }
 
-            if (startByte > -1 && stopByte > -1) {
-                withStartRow(byteArrayOf(startByte), true)
-                withStopRow(byteArrayOf(stopByte), false)
-            }
+//            if (startByte > -1 && stopByte > -1) {
+//                withStartRow(byteArrayOf(startByte), true)
+//                withStopRow(byteArrayOf(stopByte), false)
+//            }
 
+            setRowPrefixFilter(idPrefix.toByteArray())
             cacheBlocks = scanCacheBlocks.toBoolean()
             isAsyncPrefetch = asyncPrefetch.toBoolean()
             caching = if (scanCacheSize.toInt() > 0) {
