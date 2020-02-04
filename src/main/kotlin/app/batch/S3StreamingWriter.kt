@@ -67,10 +67,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
         Security.addProvider(BouncyCastleProvider())
     }
 
-    @Value("#{jobParameters}")
-    private lateinit var jobParameters: Map<String, JobParameter>
-
-
     override fun write(items: MutableList<out Record>) {
         items.forEach { it ->
             currentBatchManifest.add(it.manifestRecord)
