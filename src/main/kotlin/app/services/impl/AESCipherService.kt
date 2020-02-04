@@ -61,8 +61,6 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
                 init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
             }
 
-    //private val decryptingCipher =
-
     @Value("\${source.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var sourceCipherAlgorithm: String
 
