@@ -48,8 +48,6 @@ class Validator {
         try {
             return Gson().fromJson(decrypted, JsonObject::class.java)
         } catch (e: Exception) {
-//            println(decrypted)
-            e.printStackTrace()
             throw Exception(parsingException)
         }
     }
