@@ -14,6 +14,11 @@ import org.apache.commons.lang3.StringUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.ExitStatus
+import org.springframework.batch.core.JobParameter
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.annotation.AfterStep
+import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
@@ -26,6 +31,7 @@ import java.security.Security
 import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
+
 @Component
 @Profile("outputToS3")
 @StepScope
@@ -36,11 +42,34 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val streamingManifestWriter: StreamingManifestWriter,
                         private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
 
+    fun toUnsigned(b: Byte): Int {
+        return if (b < 0) b + 256 else b.toInt()
+    }
+
+    private var unsignedStart: Int = 0
+    private var unsignedStop: Int = 0
+
+    @BeforeStep
+    fun beforeStep(stepExecution: StepExecution) {
+        unsignedStart = toUnsigned(stepExecution.executionContext["start"].toString().toByte())
+        unsignedStop = toUnsigned(stepExecution.executionContext["stop"].toString().toByte())
+    }
+
+    @AfterStep
+    fun afterStep(stepExecution: StepExecution): ExitStatus? {
+        writeOutput()
+        return stepExecution.exitStatus
+    }
+
     private val UNSET_TEXT = "NOT_SET"
 
     init {
         Security.addProvider(BouncyCastleProvider())
     }
+
+    @Value("#{jobParameters}")
+    private lateinit var jobParameters: Map<String, JobParameter>
+
 
     override fun write(items: MutableList<out Record>) {
         items.forEach { it ->
@@ -54,10 +83,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
             recordsInBatch++
             it.manifestRecord
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
-
-            if (recordsInBatch % 100 == 0) {
-                logger.info("$this: recordsInBatch: $recordsInBatch")
-            }
         }
     }
 
@@ -132,7 +157,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
         return if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
             topicName
         } else {
-            "start-$startRow-stop-$stopRow"
+            "${dataTableName.replace(':', '_')}-$unsignedStart-$unsignedStop"
         }
     }
 
@@ -173,6 +198,9 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
+
+    @Value("\${data.table.name}")
+    private lateinit var dataTableName: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3StreamingWriter::class.toString())

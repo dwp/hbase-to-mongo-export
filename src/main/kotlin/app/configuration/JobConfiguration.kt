@@ -39,11 +39,22 @@ class JobConfiguration : DefaultBatchConfigurer() {
     // Master
     @Bean
     fun step1() = stepBuilderFactory["step1"]
-                .partitioner(slaveStep().getName(), partitioner)
+                .partitioner(slaveStep().name, partitioner)
                 .step(slaveStep())
-                .gridSize(9)
-                .taskExecutor(SimpleAsyncTaskExecutor())
+                .gridSize(256)
+                .taskExecutor(taskExecutor())
                 .build()
+
+//    @Bean
+//    fun step() =
+//            stepBuilderFactory.get("step")
+//                    .chunk<InputStreamPair, DecompressedStream>(chunkSize.toInt())
+//                    .reader(itemReader)
+//                    .processor(itemProcessor())
+//                    .writer(itemWriter)
+//                    .taskExecutor(taskExecutor())
+//                    .throttleLimit(throttleLimit.toInt())
+//                    .build()
 
     // slave step
     @Bean
@@ -57,7 +68,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .skip(BadDecryptedDataException::class.java)
                 .skipLimit(Integer.MAX_VALUE)
                 .processor(itemProcessor())
-                .writer(itemWriter).listener(stepExecutionListener)
+                .writer(itemWriter)
                 .build()
 
 
@@ -74,6 +85,12 @@ class JobConfiguration : DefaultBatchConfigurer() {
             .processor(itemProcessor())
             .writer(itemWriter)
             .build()
+
+
+    @Bean
+    fun taskExecutor() = SimpleAsyncTaskExecutor("htme").apply {
+        concurrencyLimit = Integer.parseInt(threadCount)
+    }
 
     @Bean
     @StepScope
@@ -103,9 +120,12 @@ class JobConfiguration : DefaultBatchConfigurer() {
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
 
-    @Autowired
-    lateinit var stepExecutionListener: StepExecutionListener
+//    @Autowired
+//    lateinit var stepExecutionListener: StepExecutionListener
 
     @Value("\${chunk.size:10000}")
     lateinit var chunkSize: String
+
+    @Value("\${thread.count:256}")
+    lateinit var threadCount: String
 }

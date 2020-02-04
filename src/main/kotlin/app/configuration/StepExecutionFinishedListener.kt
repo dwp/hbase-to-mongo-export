@@ -16,15 +16,13 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component
 
-@Component
-@StepScope
+//@Component
+//@StepScope
 class StepExecutionFinishedListener(private val writer: ItemWriter<Record>): StepExecutionListener {
     override fun beforeStep(stepExecution: StepExecution) {
-        println("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
     }
 
     override fun afterStep(stepExecution: StepExecution): ExitStatus? {
-        println("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA $writer")
         if (writer is S3StreamingWriter) {
             writer.writeOutput()
         }
@@ -34,5 +32,5 @@ class StepExecutionFinishedListener(private val writer: ItemWriter<Record>): Ste
     companion object {
         private val logger = LoggerFactory.getLogger(StepExecutionFinishedListener::class.java)
     }
-//
+
 }

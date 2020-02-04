@@ -9,11 +9,22 @@ import java.util.*
 class HBasePartitioner: Partitioner {
     override fun partition(gridSize: Int): MutableMap<String, ExecutionContext> {
         val map: MutableMap<String, ExecutionContext> = HashMap(gridSize)
-        for (i in 0..gridSize) {
-            val ec = ExecutionContext()
-            ec.putString("prefix", "000$i")
-            map.put("p$i", ec)
+
+        for (i in -128..-1) {
+            map.put("p${i + 256}", ExecutionContext().apply {
+                putInt("start", i)
+                putInt("stop", i + 1)
+            })
         }
+
+        for (i in 0..127) {
+            map.put("p$i", ExecutionContext().apply {
+                putInt("start", i)
+                putInt("stop", i + 1)
+            })
+        }
+
+
         return map
     }
 }
