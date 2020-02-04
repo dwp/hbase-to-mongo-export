@@ -15,6 +15,7 @@ import org.apache.hadoop.hbase.client.ResultScanner
 import org.apache.hadoop.hbase.client.Scan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -22,17 +23,20 @@ import java.nio.charset.Charset
 import java.util.*
 
 @Component
-class HBaseReader constructor(private val connection: Connection) : ItemReader<SourceRecord> {
+@StepScope
+class HBaseReader constructor(private val connection: Connection,
+                              @Value("#{stepExecutionContext['start']}") val start: Int,
+                              @Value("#{stepExecutionContext['stop']}") val stop: Int):
+        ItemReader<SourceRecord> {
 
     var recordCount = 0
-    private val UNSET_TEXT = "NOT_SET"
 
     override fun read() =
         scanner().next()?.let { result ->
             recordCount++
 
             if (recordCount % 10000 == 0) {
-                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
+                logInfo(logger, "$this: Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
             }
 
             val idBytes = result.row
@@ -104,19 +108,12 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
     }
 
     private fun scan(): Scan {
-        val startByte = startRow.toByte()
-        val stopByte = stopRow.toByte()
+        val startByte = start.toByte()
+        val stopByte = stop.toByte()
         val scan = Scan().apply {
-
-            if (!useLatest.toBoolean()) {
-                setTimeRange(0, Date().time)
-            }
-
-            if (startByte > -1 && stopByte > -1) {
-                withStartRow(byteArrayOf(startByte), true)
-                withStopRow(byteArrayOf(stopByte), false)
-            }
-
+            setTimeRange(0, Date().time)
+            withStartRow(byteArrayOf(startByte), true)
+            withStopRow(byteArrayOf(stopByte), true)
             cacheBlocks = scanCacheBlocks.toBoolean()
             isAsyncPrefetch = asyncPrefetch.toBoolean()
             caching = if (scanCacheSize.toInt() > 0) {
@@ -137,8 +134,8 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
             "cache_blocks", "${scan.cacheBlocks}",
             "async_prefetch", scan.isAsyncPrefetch.toString(),
             "useLatest", useLatest,
-            "startByte", startByte.toString(),
-            "stopByte", stopByte.toString())
+            "start", "$start",
+            "stop", "$stop")
 
         return scan
     }
@@ -168,13 +165,6 @@ class HBaseReader constructor(private val connection: Connection) : ItemReader<S
 
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String
-
-    @Value("\${scan.start.row:-1}")
-    private lateinit var startRow: String
-
-    @Value("\${scan.stop.row:-1}")
-    private lateinit var stopRow: String
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
     }

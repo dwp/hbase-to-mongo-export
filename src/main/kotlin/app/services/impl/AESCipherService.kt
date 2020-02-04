@@ -57,11 +57,9 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
             }
 
     override fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
-            decryptingCipher.apply {
+            Cipher.getInstance("AES/CTR/NoPadding", "BC").apply {
                 init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
             }
-
-    private val decryptingCipher = Cipher.getInstance("AES/CTR/NoPadding", "BC")
 
     @Value("\${source.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var sourceCipherAlgorithm: String
