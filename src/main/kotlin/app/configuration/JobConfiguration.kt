@@ -45,17 +45,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .taskExecutor(taskExecutor())
                 .build()
 
-//    @Bean
-//    fun step() =
-//            stepBuilderFactory.get("step")
-//                    .chunk<InputStreamPair, DecompressedStream>(chunkSize.toInt())
-//                    .reader(itemReader)
-//                    .processor(itemProcessor())
-//                    .writer(itemWriter)
-//                    .taskExecutor(taskExecutor())
-//                    .throttleLimit(throttleLimit.toInt())
-//                    .build()
-
     // slave step
     @Bean
     fun slaveStep() =
@@ -119,9 +108,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
-
-//    @Autowired
-//    lateinit var stepExecutionListener: StepExecutionListener
 
     @Value("\${chunk.size:10000}")
     lateinit var chunkSize: String
