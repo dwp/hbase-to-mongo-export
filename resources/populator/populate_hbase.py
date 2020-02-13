@@ -16,11 +16,7 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
-DATA_COLUMN_FAMILY = "topic"
-TOPIC_LIST_COLUMN_FAMILY = "c"
-TOPIC_LIST_COLUMN_QUALIFIER = "msg"
-TOPIC_LIST_COLUMN_FAMILY_QUALIFIER = TOPIC_LIST_COLUMN_FAMILY + ":" + TOPIC_LIST_COLUMN_QUALIFIER
-
+DATA_COLUMN_FAMILY = 'cf'
 
 def main():
     args = command_line_args()
@@ -31,27 +27,10 @@ def main():
         try:
             connection = happybase.Connection(args.zookeeper_quorum)
             connection.open()
-
-            if not args.skip_table_creation:
-                try:
-                    connection.create_table(args.topics_table_name,
-                                        {TOPIC_LIST_COLUMN_FAMILY: {}})
-                    print("Created table '{}'".format(args.topics_table_name))
-                except Exception as e:
-                    print("Table '{}' already exists. {}".format(args.topics_table_name, e))
-                    pass
-
-                try:
-                    connection.create_table(args.data_table_name,
-                                        {DATA_COLUMN_FAMILY: dict(max_versions=10)})
-                    print("Created table '{}'".format(args.data_table_name))
-                except Exception as e:
-                    print("Table '{}' already exists. {}".format(args.data_table_name, e))
-                    pass
-
-            topics_table = connection.table(args.topics_table_name)
-            data_table = connection.table(args.data_table_name)
             connected = True
+            tables = [x.decode('ascii') for x in connection.tables()]
+
+            print(f"tables: '{tables}'")
 
             print("data_key_service='{}'".format(args.data_key_service))
             if args.data_key_service:
@@ -76,9 +55,18 @@ def main():
                     db_name = value['message']['db']
                     collection_name = value['message']['collection']
                     topic_name = "db." + db_name + "." + collection_name
+                    table_name = f"{db_name}:{collection_name}".replace("-", "_")
+
+
+                    if not table_name in tables:
+                        print(f"Created table '{table_name}'.")
+                        connection.create_table(table_name,
+                                                {'cf': dict(max_versions=1000000)})
+                        tables.append(table_name)
+                        print(f"Created table '{table_name}'.")
 
                     print("Creating record %s timestamp %s topic %s in table %s"
-                          .format(record_id, timestamp, topic_name, args.data_table_name))
+                          .format(record_id, timestamp, topic_name, table_name))
 
                     if 'dbObject' in value['message']:
                         db_object = value['message']['dbObject']
@@ -107,17 +95,13 @@ def main():
 
 
 
-                        column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
+                        column_family_qualifier = DATA_COLUMN_FAMILY + ":record"
                         obj = {column_family_qualifier: json.dumps(value)}
+                        data_table = connection.table(table_name)
                         data_table.put(record_id, obj, timestamp=int(timestamp))
                         print(json.dumps(value, indent=4))
                         print("Saved record '{}' timestamp '{}' topic '{}' in table '{}'."
-                               .format(record_id, timestamp, topic_name, args.data_table_name))
-
-                        topics_table.counter_inc(
-                            topic_name, TOPIC_LIST_COLUMN_FAMILY_QUALIFIER, 1)
-                        print("Updated count of topic '{}' in table '{}'."
-                              .format(topic_name, args.topics_table_name))
+                               .format(record_id, timestamp, topic_name, table_name))
 
                     else:
                         print("Skipped record '{}' as dbObject was missing.".format(record_id))
@@ -223,10 +207,6 @@ def command_line_args():
                         help='Remove the output file.')
     parser.add_argument('-s', '--skip-table-creation', action='store_true',
                         help='Do not create the target table.')
-    parser.add_argument('-dt', '--data-table-name', default='data',
-                        help='The data table to write the records to.')
-    parser.add_argument('-tt', '--topics-table-name', default='topics',
-                        help='The table to write the list of topics to.')
     parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
                         help='The zookeeper quorum host.')
     parser.add_argument('-f', '--test-configuration-file',

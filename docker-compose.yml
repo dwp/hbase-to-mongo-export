@@ -55,8 +55,6 @@ services:
       --dump-table-contents
       --completed-flag /opt/hbase-to-mongo-export/data/ready
       --remove-output-file /opt/hbase-to-mongo-export/data/ucdata-file-output.txt
-      --data-table-name ucfs-data
-      --topics-table-name ucfs-topics
       --test-configuration-file test-config.json
 
   hbase-to-mongo-export-file:
@@ -117,7 +115,7 @@ services:
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
-      --topic.name=db.core.addressDeclaration
+      --topic.name=db.penalties-and-deductions.sanction
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --directory.output=/opt/hbase-to-mongo-export/data
       --encrypt.output=true

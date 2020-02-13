@@ -15,19 +15,31 @@ import org.apache.hadoop.hbase.client.ResultScanner
 import org.apache.hadoop.hbase.client.Scan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.math.absoluteValue
 
 @Component
 @StepScope
-class HBaseReader constructor(private val connection: Connection,
+class HBaseReader constructor(private val connection: Connection /*,
                               @Value("#{stepExecutionContext['start']}") val start: Int,
-                              @Value("#{stepExecutionContext['stop']}") val stop: Int):
+                              @Value("#{stepExecutionContext['stop']}") val stop: Int*/):
         ItemReader<SourceRecord> {
+
+    private var start: Int = Int.MIN_VALUE
+    private var stop: Int = Int.MAX_VALUE
+
+    @BeforeStep
+    fun beforeStep(stepExecution: StepExecution) {
+        start = stepExecution.executionContext["start"] as Int
+        stop = stepExecution.executionContext["stop"] as Int
+    }
 
     var recordCount = 0
 
@@ -100,27 +112,39 @@ class HBaseReader constructor(private val connection: Connection,
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "data_table_name", dataTableName, "column_family", columnFamily, "topic_name", topicName)
-            val table = connection.getTable(TableName.valueOf(dataTableName))
-            scanner = table.getScanner(scan())
+            logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "topic_name", topicName)
+            val topicPattern = Regex("""^\w+\.([-\w]+)\.([-\w]+)$""")
+            val matcher = topicPattern.find(topicName)
+            if (matcher != null) {
+                val namespace = matcher.groupValues[1]
+                val tableName = matcher.groupValues[2]
+                val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
+                val table = connection.getTable(TableName.valueOf(qualifiedTableName))
+
+                scanner = table.getScanner(scan())
+            }
         }
         return scanner!!
     }
 
     private fun scan(): Scan {
-        val startByte = start.toByte()
-        val stopByte = stop.toByte()
         val scan = Scan().apply {
             setTimeRange(0, Date().time)
-            withStartRow(byteArrayOf(startByte), true)
-            withStopRow(byteArrayOf(stopByte), true)
-            cacheBlocks = scanCacheBlocks.toBoolean()
-            isAsyncPrefetch = asyncPrefetch.toBoolean()
-            caching = if (scanCacheSize.toInt() > 0) {
-                scanCacheSize.toInt()
+
+            if (start == -1 && stop == -1) {
+                setRowPrefixFilter(byteArrayOf(-1))
             }
             else {
-                Int.MAX_VALUE
+                withStartRow(byteArrayOf(start.toByte()), true)
+                if (stop != 0) {
+                    withStopRow(byteArrayOf(stop.toByte()), true)
+                }
+            }
+
+            cacheBlocks = scanCacheBlocks.toBoolean()
+            isAsyncPrefetch = asyncPrefetch.toBoolean()
+            if (scanCacheSize.toInt() > 0) {
+                caching = scanCacheSize.toInt()
             }
 
             if (scanMaxResultSize.toInt() > 0) {
@@ -142,10 +166,7 @@ class HBaseReader constructor(private val connection: Connection,
 
     private var scanner: ResultScanner? = null
 
-    @Value("\${column.family}")
-    private lateinit var columnFamily: String // i.e. "topic"
-
-    @Value("\${topic.name:NOT_SET}")
+    @Value("\${topic.name}")
     private lateinit var topicName: String // i.e. "db.user.data"
 
     @Value("\${scan.cache.size:-1}")
@@ -162,9 +183,6 @@ class HBaseReader constructor(private val connection: Connection,
 
     @Value("\${latest.available:false}")
     private lateinit var useLatest: String
-
-    @Value("\${data.table.name}")
-    private lateinit var dataTableName: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())

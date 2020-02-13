@@ -50,6 +50,7 @@ def main():
         value['message']['encryption']['encryptedEncryptionKey'] = encrypted_key
         value['message']['dbObject'] = encrypted_record.decode('ascii')
         table_name = db_name + ":" + collection_name
+
         if not table_name in tables:
             connection.create_table(table_name, {'cf': dict(max_versions=1000000)})
             tables.append(table_name)
