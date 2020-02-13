@@ -41,7 +41,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
     fun step1() = stepBuilderFactory["step1"]
                 .partitioner(slaveStep().name, partitioner)
                 .step(slaveStep())
-                .gridSize(256)
+                .gridSize(256 / scanWidth.toInt())
                 .taskExecutor(taskExecutor())
                 .build()
 
@@ -114,4 +114,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Value("\${thread.count:256}")
     lateinit var threadCount: String
+
+    @Value("\${scan.width:5}")
+    private lateinit var scanWidth: String
 }

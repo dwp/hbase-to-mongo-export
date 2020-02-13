@@ -7,7 +7,8 @@ import json
 import os
 import time
 import uuid
-
+import math
+import random
 import happybase
 import requests
 import thriftpy2
@@ -16,12 +17,6 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
-DATA_COLUMN_FAMILY = "topic"
-TOPIC_LIST_COLUMN_FAMILY = "c"
-TOPIC_LIST_COLUMN_QUALIFIER = "msg"
-TOPIC_LIST_COLUMN_FAMILY_QUALIFIER = TOPIC_LIST_COLUMN_FAMILY + ":" + TOPIC_LIST_COLUMN_QUALIFIER
-
-
 def main():
     args = command_line_args()
     connected = False
@@ -29,15 +24,19 @@ def main():
     connection = happybase.Connection(args.zookeeper_quorum)
     connection.open()
     topics_table = connection.table(args.topics_table_name)
-    data_table = connection.table(args.data_table_name)
     content = requests.get(args.data_key_service).json()
     encryption_key = content['plaintextDataKey']
     encrypted_key = content['ciphertextDataKey']
     master_key_id = content['dataKeyEncryptionKeyId']
-
+    tables = [x.decode('ascii') for x in connection.tables()]
+    table_cache = {}
+    print(f"tables: '{tables}'")
+    created = {}
     for i in range(int(args.records)):
         datum = kafka_message(i)
-        record_id = datum['kafka_message_id']
+        salt = math.floor(random.random() * 256).to_bytes(length=1, byteorder='big')
+        record_id = bytearray(datum['kafka_message_id'].encode('ascii'))
+        db_id = bytes(salt + record_id)
         timestamp = datum['kafka_message_timestamp']
         value = datum['kafka_message_value']
         db_name = value['message']['db']
@@ -50,10 +49,19 @@ def main():
         value['message']['encryption']['keyEncryptionKeyId'] = master_key_id
         value['message']['encryption']['encryptedEncryptionKey'] = encrypted_key
         value['message']['dbObject'] = encrypted_record.decode('ascii')
-        column_family_qualifier = DATA_COLUMN_FAMILY + ":" + topic_name
-        obj = {column_family_qualifier: json.dumps(value)}
-        data_table.put(record_id, obj, timestamp=int(timestamp))
-        print("Saved record '{}' timestamp '{}' topic '{}' in table '{}'.".format(record_id, timestamp, topic_name, args.data_table_name))
+        table_name = db_name + ":" + collection_name
+        if not table_name in tables:
+            connection.create_table(table_name, {'cf': dict(max_versions=1000000)})
+            tables.append(table_name)
+            print(f"Created table '{table}'.")
+
+        obj = {'cf:record': json.dumps(value)}
+        table = table_cache[table_name] if table_name in table_cache \
+            else connection.table(table_name)
+
+        table_cache[table_name] = table
+        table.put(db_id, obj) #, timestamp=int(timestamp))
+        print("Saved record '{}' in table '{}'.".format(db_id, table_name))
 
 
 def encrypt(key, plaintext):

@@ -165,6 +165,7 @@ class HBaseReader constructor(private val connection: Connection,
 
     @Value("\${data.table.name}")
     private lateinit var dataTableName: String
+
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
     }
