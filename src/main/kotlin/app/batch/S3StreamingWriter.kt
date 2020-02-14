@@ -62,7 +62,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     override fun write(items: MutableList<out Record>) {
-        items.forEach { it ->
+        items.forEach {
             currentBatchManifest.add(it.manifestRecord)
             val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {

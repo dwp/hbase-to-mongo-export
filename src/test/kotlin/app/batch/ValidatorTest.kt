@@ -106,7 +106,7 @@ class ValidatorTest {
         val bytes = input.toByteArray()
         val checksum = CRC32()
         checksum.update(bytes, 0, bytes.size)
-        val checksumBytes = ByteBuffer.allocate(4).putInt(checksum.getValue().toInt()).array();
+        val checksumBytes = ByteBuffer.allocate(4).putInt(checksum.getValue().toInt()).array()
         return checksumBytes.plus(bytes)
     }
 

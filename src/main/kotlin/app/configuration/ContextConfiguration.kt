@@ -44,7 +44,8 @@ class ContextConfiguration {
     @Profile("framedLZ4Compressor")
     fun framedLZ4Compressor() = object: CompressionInstanceProvider {
         override fun compressorOutputStream(outputStream: OutputStream) =
-                FramedLZ4CompressorOutputStream(outputStream);
+                FramedLZ4CompressorOutputStream(outputStream)
+
         override fun compressionExtension() = "lz4"
     }
 
@@ -52,7 +53,8 @@ class ContextConfiguration {
     @Profile("blockLZ4Compressor")
     fun blockLZ4Compressor() = object: CompressionInstanceProvider {
         override fun compressorOutputStream(outputStream: OutputStream) =
-                BlockLZ4CompressorOutputStream(outputStream);
+                BlockLZ4CompressorOutputStream(outputStream)
+
         override fun compressionExtension() = "lz4"
     }
 

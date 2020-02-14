@@ -64,7 +64,7 @@ data class EncryptingOutputStream(private val outputStream: BufferedOutputStream
                                   val manifestFile: File,
                                   private val manifestWriter: BufferedWriter) {
     fun write(data: ByteArray) = outputStream.write(data)
-    fun data() = target.toByteArray()
+    fun data(): ByteArray = target.toByteArray()
 
     fun close() {
         outputStream.close()

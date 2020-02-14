@@ -17,15 +17,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import java.io.*
-import java.security.Key
+import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.security.SecureRandom
 
 @RunWith(SpringRunner::class)
@@ -67,12 +67,12 @@ class S3StreamingWriterTest {
         val byteArrayOutputStream = ByteArrayOutputStream()
         val os = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, byteArrayOutputStream)
         given(compressionInstanceProvider.compressionExtension()).willReturn("bz2")
-        given(compressionInstanceProvider.compressorOutputStream(any<OutputStream>())).willReturn(os)
+        given(compressionInstanceProvider.compressorOutputStream(any())).willReturn(os)
 
         val dataKeyResult = dataKeyResult()
 
         given(keyService.batchDataKey()).willReturn(dataKeyResult)
-        given(cipherService.cipherOutputStream(any<Key>(), any<ByteArray>(), any<OutputStream>()))
+        given(cipherService.cipherOutputStream(any(), any(), any()))
                 .willReturn(byteArrayOutputStream)
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
@@ -93,7 +93,7 @@ class S3StreamingWriterTest {
         val dataKeyResult = dataKeyResult()
         val byteArrayOutputStream = ByteArrayOutputStream()
         given(compressionInstanceProvider.compressionExtension()).willReturn("bz2")
-        val ongoingStubbing = given(compressionInstanceProvider.compressorOutputStream(any<OutputStream>()))
+        val ongoingStubbing = given(compressionInstanceProvider.compressorOutputStream(any()))
                 .willReturn(CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, byteArrayOutputStream))
 
         for (i in 1..10) {
@@ -101,7 +101,7 @@ class S3StreamingWriterTest {
         }
 
         given(keyService.batchDataKey()).willReturn(dataKeyResult)
-        given(cipherService.cipherOutputStream(any<Key>(), any<ByteArray>(), any<OutputStream>()))
+        given(cipherService.cipherOutputStream(any(), any(), any()))
                 .willReturn(byteArrayOutputStream)
         val listOfLists: MutableList<MutableList<Record>> = mutableListOf()
         var total = 0
@@ -133,13 +133,13 @@ class S3StreamingWriterTest {
         val dataKeyResult = dataKeyResult()
         val byteArrayOutputStream = ByteArrayOutputStream()
         given(keyService.batchDataKey()).willReturn(dataKeyResult)
-        given(cipherService.cipherOutputStream(any<Key>(), any<ByteArray>(), any<OutputStream>()))
+        given(cipherService.cipherOutputStream(any(), any(), any()))
                 .willReturn(byteArrayOutputStream)
 
         val sink = ByteArrayOutputStream()
         val os = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2, sink)
         given(compressionInstanceProvider.compressionExtension()).willReturn("bz2")
-        given(compressionInstanceProvider.compressorOutputStream(any<OutputStream>())).willReturn(os)
+        given(compressionInstanceProvider.compressorOutputStream(any())).willReturn(os)
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
         val record = Record(dbObject, manifestRecord)
@@ -149,7 +149,7 @@ class S3StreamingWriterTest {
         val bucketCaptor = argumentCaptor<String>()
         val prefixCaptor = argumentCaptor<String>()
         Mockito.verify(streamingManifestWriter, Mockito.times(1))
-                .sendManifest(s3Captor.capture(), any<File>(), bucketCaptor.capture(), prefixCaptor.capture())
+                .sendManifest(s3Captor.capture(), any(), bucketCaptor.capture(), prefixCaptor.capture())
 
         Assert.assertEquals(s3, s3Captor.firstValue)
         Assert.assertEquals("manifestbucket", bucketCaptor.firstValue)

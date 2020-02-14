@@ -1,6 +1,5 @@
 import app.configuration.S3DummyConfiguration
 import com.amazonaws.services.s3.AmazonS3
-import org.apache.log4j.Logger
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
