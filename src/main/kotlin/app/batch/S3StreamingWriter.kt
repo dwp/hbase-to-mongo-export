@@ -51,8 +51,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     @AfterStep
-    fun afterStep(stepExecution: StepExecution): ExitStatus? {
-        writeOutput()
+    fun afterStep(stepExecution: StepExecution): ExitStatus {
+        writeOutput(openNext = false)
         return stepExecution.exitStatus
     }
 
@@ -77,7 +77,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
     }
 
-    fun writeOutput() {
+    fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
@@ -115,11 +115,13 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 totalManifestRecords += currentOutputStream!!.manifestFile.length()
             }
         }
-        currentOutputStream = encryptingOutputStream()
 
-        batchSizeBytes = 0
-        recordsInBatch = 0
-        currentBatch++
+        if (openNext) {
+            currentOutputStream = encryptingOutputStream()
+            batchSizeBytes = 0
+            recordsInBatch = 0
+            currentBatch++
+        }
     }
 
     private fun encryptingOutputStream(): EncryptingOutputStream {

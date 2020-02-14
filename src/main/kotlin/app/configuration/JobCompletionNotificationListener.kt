@@ -16,10 +16,7 @@ import org.springframework.stereotype.Component
 class JobCompletionNotificationListener(private val writer: ItemWriter<Record>) : JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-        if (writer is S3StreamingWriter) {
-            writer.writeOutput()
-            logInfo(logger, "Finished job through StreamingWriter", "status", "${jobExecution.status}")
-        } else if (writer is DirectoryWriter) {
+        if (writer is DirectoryWriter) {
             writer.writeOutput()
             logInfo(logger, "Finished job through DirectoryWriter", "status", "${jobExecution.status}")
         } else if (writer is S3DirectoryWriter) {
