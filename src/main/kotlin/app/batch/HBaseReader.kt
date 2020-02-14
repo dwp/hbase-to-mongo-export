@@ -3,6 +3,7 @@ package app.batch
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
+import app.utils.TextUtils
 import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.google.gson.Gson
@@ -24,10 +25,7 @@ import java.util.*
 
 @Component
 @StepScope
-class HBaseReader constructor(private val connection: Connection /*,
-                              @Value("#{stepExecutionContext['start']}") val start: Int,
-                              @Value("#{stepExecutionContext['stop']}") val stop: Int*/):
-        ItemReader<SourceRecord> {
+class HBaseReader constructor(private val connection: Connection): ItemReader<SourceRecord> {
 
     private var start: Int = Int.MIN_VALUE
     private var stop: Int = Int.MAX_VALUE
@@ -110,19 +108,18 @@ class HBaseReader constructor(private val connection: Connection /*,
     fun scanner(): ResultScanner {
         if (scanner == null) {
             logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "topic_name", topicName)
-            val topicPattern = Regex("""^\w+\.([-\w]+)\.([-\w]+)$""")
-            val matcher = topicPattern.find(topicName)
+            val matcher = textUtils.topicNameTableMatcher(topicName)
             if (matcher != null) {
                 val namespace = matcher.groupValues[1]
                 val tableName = matcher.groupValues[2]
                 val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
                 val table = connection.getTable(TableName.valueOf(qualifiedTableName))
-
                 scanner = table.getScanner(scan())
             }
         }
         return scanner!!
     }
+
 
     private fun scan(): Scan {
         val scan = Scan().apply {
@@ -180,6 +177,8 @@ class HBaseReader constructor(private val connection: Connection /*,
 
     @Value("\${latest.available:false}")
     private lateinit var useLatest: String
+
+    private val textUtils = TextUtils()
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())

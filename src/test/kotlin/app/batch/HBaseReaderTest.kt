@@ -254,6 +254,7 @@ class HBaseReaderTest {
         hbaseReader.read()
     }
 
+
     @Autowired
     private lateinit var hbaseReader: HBaseReader
 
