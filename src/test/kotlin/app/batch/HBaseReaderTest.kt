@@ -2,22 +2,16 @@ package app.batch
 
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
-import app.exceptions.MissingFieldException
 import org.apache.hadoop.hbase.Cell
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
 
 //@RunWith(SpringRunner::class)
@@ -259,6 +253,7 @@ class HBaseReaderTest {
 
         hbaseReader.read()
     }
+
 
     @Autowired
     private lateinit var hbaseReader: HBaseReader

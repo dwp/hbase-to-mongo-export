@@ -22,9 +22,9 @@ class StreamingManifestWriter {
             val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
             val prefix = "$manifestPrefix/$manifestFileName"
 
-            logInfo(logger, "Writing manifest manifestFile to s3", 
-                "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName", 
-                "manifest_size", "$manifestSize", 
+            logInfo(logger, "Writing manifest manifestFile to s3",
+                "s3_location", "s3://$manifestBucket/$prefix",
+                "manifest_size", "$manifestSize",
                 "total_manifest_files_already_written", "$totalManifestFiles",
                 "total_manifest_records_already_written", "$totalManifestRecords")
 

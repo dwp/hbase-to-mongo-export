@@ -101,7 +101,10 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https; \
 		echo "Waiting for hbase and s3"; \
-		sleep 5; \
+		sleep 15; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up -d s3-bucket-provision hbase-populate; \
 		echo "Waiting for s3 bucket create and hbase population"; \
 		sleep 5; \

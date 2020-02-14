@@ -55,8 +55,6 @@ services:
       --dump-table-contents
       --completed-flag /opt/hbase-to-mongo-export/data/ready
       --remove-output-file /opt/hbase-to-mongo-export/data/ucdata-file-output.txt
-      --data-table-name ucfs-data
-      --topics-table-name ucfs-topics
       --test-configuration-file test-config.json
 
   hbase-to-mongo-export-file:
@@ -72,7 +70,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
+      --logging.level.root=INFO
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -111,13 +109,13 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
+      --logging.level.root=INFO
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
       --data.table.name=ucfs-data
       --column.family=topic
-      --topic.name=db.core.addressDeclaration
+      --topic.name=db.penalties-and-deductions.sanction
       --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
       --directory.output=/opt/hbase-to-mongo-export/data
       --encrypt.output=true
@@ -151,7 +149,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
+      --logging.level.root=INFO
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -168,7 +166,7 @@ services:
       --identity.store.alias=cid
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
-      --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
+      --data.key.service.url=https://dks-standalone-https:8443
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}

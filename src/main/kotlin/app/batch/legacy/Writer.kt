@@ -9,6 +9,9 @@ import app.utils.logging.logInfo
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.batch.core.ExitStatus
+import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import java.io.BufferedOutputStream
@@ -27,6 +30,12 @@ abstract class Writer(private val keyService: KeyService,
     abstract fun outputLocation(): String
     abstract fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String)
     abstract fun writeManifest(manifestRecords: MutableList<ManifestRecord>)
+
+    @AfterStep
+    fun afterStep(stepExecution: StepExecution): ExitStatus {
+        writeOutput()
+        return stepExecution.exitStatus
+    }
 
     private fun chunkData(items: MutableList<out Record>) {
         items.forEach { it ->

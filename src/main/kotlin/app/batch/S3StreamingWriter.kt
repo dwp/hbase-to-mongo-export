@@ -10,12 +10,10 @@ import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
-import org.apache.commons.lang3.StringUtils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.ExitStatus
-import org.springframework.batch.core.JobParameter
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.core.annotation.BeforeStep
@@ -30,6 +28,7 @@ import java.security.SecureRandom
 import java.security.Security
 import java.util.*
 import javax.crypto.spec.SecretKeySpec
+import kotlin.math.absoluteValue
 
 
 @Component
@@ -42,33 +41,28 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val streamingManifestWriter: StreamingManifestWriter,
                         private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
 
-    fun toUnsigned(b: Byte): Int {
-        return if (b < 0) b + 256 else b.toInt()
-    }
-
-    private var unsignedStart: Int = 0
-    private var unsignedStop: Int = 0
+    private var absoluteStart: Int = Int.MIN_VALUE
+    private var absoluteStop: Int = Int.MAX_VALUE
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
-        unsignedStart = toUnsigned(stepExecution.executionContext["start"].toString().toByte())
-        unsignedStop = toUnsigned(stepExecution.executionContext["stop"].toString().toByte())
+        absoluteStart = (stepExecution.executionContext["start"] as Int).absoluteValue
+        absoluteStop = (stepExecution.executionContext["stop"] as Int).absoluteValue
     }
 
     @AfterStep
-    fun afterStep(stepExecution: StepExecution): ExitStatus? {
-        writeOutput()
+    fun afterStep(stepExecution: StepExecution): ExitStatus {
+        writeOutput(openNext = false)
         return stepExecution.exitStatus
     }
 
-    private val UNSET_TEXT = "NOT_SET"
 
     init {
         Security.addProvider(BouncyCastleProvider())
     }
 
     override fun write(items: MutableList<out Record>) {
-        items.forEach { it ->
+        items.forEach {
             currentBatchManifest.add(it.manifestRecord)
             val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {
@@ -78,11 +72,12 @@ class S3StreamingWriter(private val cipherService: CipherService,
             batchSizeBytes += item.length
             recordsInBatch++
             it.manifestRecord
+
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
     }
 
-    fun writeOutput() {
+    fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
             val data = currentOutputStream!!.data()
@@ -120,11 +115,13 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 totalManifestRecords += currentOutputStream!!.manifestFile.length()
             }
         }
-        currentOutputStream = encryptingOutputStream()
 
-        batchSizeBytes = 0
-        recordsInBatch = 0
-        currentBatch++
+        if (openNext) {
+            currentOutputStream = encryptingOutputStream()
+            batchSizeBytes = 0
+            recordsInBatch = 0
+            currentBatch++
+        }
     }
 
     private fun encryptingOutputStream(): EncryptingOutputStream {
@@ -149,13 +146,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             manifestWriter)
     }
 
-    private fun filePrefix(): String {
-        return if (StringUtils.isNotBlank(topicName) && topicName != UNSET_TEXT) {
-            topicName
-        } else {
-            "${dataTableName.replace(':', '_')}-$unsignedStart-$unsignedStop"
-        }
-    }
+    private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 0
@@ -183,20 +174,11 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @Value("\${s3.manifest.prefix.folder}")
     private lateinit var manifestPrefix: String
 
-    @Value("\${topic.name:NOT_SET}")
+    @Value("\${topic.name}")
     private lateinit var topicName: String // i.e. "db.user.data"
-
-    @Value("\${scan.start.row:-1}")
-    private lateinit var startRow: String
-
-    @Value("\${scan.stop.row:-1}")
-    private lateinit var stopRow: String
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
-
-    @Value("\${data.table.name}")
-    private lateinit var dataTableName: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3StreamingWriter::class.toString())

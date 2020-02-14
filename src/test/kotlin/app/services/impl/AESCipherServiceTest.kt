@@ -65,7 +65,6 @@ class AESCipherServiceTest {
     private lateinit var cipherService: CipherService
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(AESCipherServiceTest::class.toString())
     }
 
 }

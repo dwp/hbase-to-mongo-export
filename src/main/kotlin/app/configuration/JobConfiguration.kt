@@ -6,8 +6,6 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
-import org.springframework.batch.core.Step
-import org.springframework.batch.core.StepExecutionListener
 import org.springframework.batch.core.configuration.annotation.*
 import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.batch.core.partition.support.Partitioner
@@ -41,7 +39,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
     fun step1() = stepBuilderFactory["step1"]
                 .partitioner(slaveStep().name, partitioner)
                 .step(slaveStep())
-                .gridSize(256)
+                .gridSize(256 / scanWidth.toInt())
                 .taskExecutor(taskExecutor())
                 .build()
 
@@ -114,4 +112,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Value("\${thread.count:256}")
     lateinit var threadCount: String
+
+    @Value("\${scan.width:5}")
+    private lateinit var scanWidth: String
 }

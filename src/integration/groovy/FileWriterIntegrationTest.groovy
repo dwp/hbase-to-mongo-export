@@ -10,9 +10,9 @@ class FileWriterIntegrationTest extends Specification {
 
     Logger log
     String expected_content = "{\"_id\":{\"someId\":\"RANDOM_GUID\",\"declarationId\":1234},\"@type\":\"V4\",\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\",\"_removedDateTime\":\"should be replaced by _removedDateTime\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000+0000\"},\"timestamp\":10}"
-    String fileName = System.getenv("FILE_NAME")
-    Integer expectedTimestamp = Integer.valueOf(System.getenv("EXPECTED_TIMESTAMP"))
-    Integer expectedLineCount = Integer.valueOf(System.getenv("EXPECTED_LINE_COUNT"))
+    String fileName = System.getenv("FILE_NAME") ?: "tmp"
+    Integer expectedTimestamp = Integer.valueOf(System.getenv("EXPECTED_TIMESTAMP") ?: "10")
+    Integer expectedLineCount = Integer.valueOf(System.getenv("EXPECTED_LINE_COUNT") ?: "7")
 
     def setup() {
         def appender = new ConsoleAppender()
@@ -34,7 +34,9 @@ class FileWriterIntegrationTest extends Specification {
         def list = []
         def dir = new File(fileName)
         dir.eachFileRecurse(FileType.FILES) { file ->
-            list << file
+            if (file.name.endsWith("txt")) {
+                list << file
+            }
         }
 
         list.each {
@@ -72,8 +74,6 @@ class FileWriterIntegrationTest extends Specification {
             println(line)
             def jsonSlurper = new JsonSlurper()
             def object = jsonSlurper.parse(line.getBytes())
-            println(object)
-            println(object.getClass())
             def timestamp = object.get('timestamp')
             assert line == expected_content
             lineCount++

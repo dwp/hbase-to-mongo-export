@@ -51,18 +51,15 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
         return CipherOutputStream(target, encryptingCipher(key, initialisationVector))
     }
 
-    override fun encryptingCipher(key: Key, initialisationVector: ByteArray) =
+    override fun encryptingCipher(key: Key, initialisationVector: ByteArray): Cipher =
             Cipher.getInstance(targetCipherAlgorithm, "BC").apply {
                 init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(initialisationVector))
             }
 
-    override fun decryptingCipher(key: Key, initialisationVector: ByteArray) =
+    override fun decryptingCipher(key: Key, initialisationVector: ByteArray): Cipher =
             Cipher.getInstance("AES/CTR/NoPadding", "BC").apply {
                 init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
             }
-
-    @Value("\${source.cipher.algorithm:AES/CTR/NoPadding}")
-    private lateinit var sourceCipherAlgorithm: String
 
     @Value("\${target.cipher.algorithm:AES/CTR/NoPadding}")
     private lateinit var targetCipherAlgorithm: String
