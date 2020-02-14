@@ -70,7 +70,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
+      --logging.level.root=INFO
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -109,7 +109,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
+      --logging.level.root=INFO
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -149,7 +149,7 @@ services:
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
     command: >-
-      --logging.level.root=DEBUG
+      --logging.level.root=INFO
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
       --hbase.zookeeper.quorum=hbase
@@ -166,7 +166,7 @@ services:
       --identity.store.alias=cid
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
-      --data.key.service.url=${DATA_KEY_SERVICE_URL_SSL}
+      --data.key.service.url=https://dks-standalone-https:8443
       --aws.region=${AWS_DEFAULT_REGION}
       --s3.bucket=${S3_BUCKET}
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
