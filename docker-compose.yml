@@ -95,6 +95,7 @@ services:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
       - CORRELATION_ID=aaa-file
+      - SQS_MESSAGE_ID=bbb-file
 
   hbase-to-mongo-export-directory:
     image: hbase-to-mongo-export
@@ -134,6 +135,7 @@ services:
     - APPLICATION=hbase_to_mongo_export
     - COMPONENT=jar_file
     - CORRELATION_ID=aaa-dir
+    - SQS_MESSAGE_ID=bbb-dir
 
   hbase-to-mongo-export-s3:
     image: hbase-to-mongo-export
@@ -181,6 +183,7 @@ services:
      - APPLICATION=hbase_to_mongo_export
      - COMPONENT=jar_file
      - CORRELATION_ID=aaa-s3
+     - SQS_MESSAGE_ID=bbb-s3
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

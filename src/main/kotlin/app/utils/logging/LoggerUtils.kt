@@ -36,6 +36,7 @@ private var application = System.getProperty("application", UNSET_TEXT)
 private var app_version = System.getProperty("app_version", UNSET_TEXT)
 private var component = System.getProperty("component", UNSET_TEXT)
 private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+private var sqs_message_id = System.getProperty("sqs_message_id", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
 class LogConfiguration {
@@ -60,7 +61,8 @@ fun makeLoggerStaticDataTuples(): String {
         "\"application\":\"$application\", " +
         "\"app_version\":\"$app_version\", " +
         "\"component\":\"$component\", " +
-        "\"correlation_id\":\"$correlation_id\""
+        "\"correlation_id\":\"$correlation_id\", " +
+        "\"sqs_message_id\":\"$sqs_message_id\""
 }
 
 fun resetLoggerStaticFieldsForTests() {
@@ -73,10 +75,11 @@ fun resetLoggerStaticFieldsForTests() {
     app_version = System.getProperty("app_version", UNSET_TEXT)
     component = System.getProperty("component", UNSET_TEXT)
     correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+    sqs_message_id = System.getProperty("sqs_message_id", UNSET_TEXT)
     staticData = makeLoggerStaticDataTuples()
 }
 
-fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String) {
+fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String, message_id: String) {
     topic_name = topic
     scan_start_row = "1"
     scan_stop_row = "2"
@@ -87,6 +90,7 @@ fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String,
     component = comp
     LogConfiguration.start_time_milliseconds = start_milliseconds.toLong()
     correlation_id = id
+    sqs_message_id = message_id
     staticData = makeLoggerStaticDataTuples()
 }
 

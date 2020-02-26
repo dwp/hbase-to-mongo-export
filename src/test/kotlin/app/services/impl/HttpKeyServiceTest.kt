@@ -76,7 +76,7 @@ class HttpKeyServiceTest {
         reset(this.uuidGenerator)
         overrideLoggerStaticFieldsForTests(
             "topic.name", "test-host", "test-env", "my-app",
-            "v1", "tests", "9876543000", "correlation-1")
+            "v1", "tests", "9876543000", "correlation-1", "sqs-message-1")
     }
 
     @After
