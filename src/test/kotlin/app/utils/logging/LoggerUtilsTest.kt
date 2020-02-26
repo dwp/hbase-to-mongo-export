@@ -216,7 +216,7 @@ class LoggerUtilsTest {
     @Test
     fun testMakeLoggerStaticDataTuples_WillCreatePartialJson_WhenCalled() {
         overrideLoggerStaticFieldsForTests("the.topic","a-host", "b-env", "c-app", "d-version", "e-component", "9876543000", "test2", "test22")
-        assertEquals("\"topic_name\":\"the.topic\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"a-host\", \"environment\":\"b-env\", \"application\":\"c-app\", \"app_version\":\"d-version\", \"component\":\"e-component\", \"correlation_id\":\"test2\"", \"sqs_message_id\":\"test22\"", makeLoggerStaticDataTuples())
+        assertEquals("\"topic_name\":\"the.topic\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"a-host\", \"environment\":\"b-env\", \"application\":\"c-app\", \"app_version\":\"d-version\", \"component\":\"e-component\", \"correlation_id\":\"test2\", \"sqs_message_id\":\"test22\"", makeLoggerStaticDataTuples())
     }
 
     @Test
