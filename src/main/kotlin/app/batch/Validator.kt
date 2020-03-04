@@ -8,6 +8,7 @@ import app.utils.logging.logDebug
 import app.utils.logging.logError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -28,7 +29,6 @@ class Validator {
         val collection = item.collection
         try {
             val jsonObject = parseDecrypted(decrypted)
-            logDebug(logger, "Successfully parsed decrypted object")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
                 val timeAsLong = timestampAsLong(item.lastModified)
@@ -38,8 +38,8 @@ class Validator {
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
-            logError(logger, "Error decrypting record", e, "hbase_row_id", hbaseRowId, "db_name", db, "collection_name", collection)
-            throw BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
+            logError(logger, "Error decrypting record, is blank: ${StringUtils.isBlank(decrypted)}", e, "hbase_row_id", hbaseRowId, "db_name", db, "collection_name", collection)
+            throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
     }
