@@ -48,6 +48,23 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Log_Error_If_Decrypted_DbObject_Is_A_JsonPrimitive() {
+        val decryptedDbObject = "hello"
+
+        val lastModified = "2019-07-04T07:27:35.104+0000"
+        val encryptionBlock: EncryptionBlock =
+                EncryptionBlock("keyEncryptionKeyId",
+                        "initialisationVector",
+                        "encryptedEncryptionKey")
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), 10, encryptionBlock,
+                "dbObject", "db", "collection", lastModified)
+        val exception = shouldThrow<BadDecryptedDataException> {
+            validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
+        }
+        exception.message shouldBe "Exception in processing the decrypted record id '00003' in db 'db' in collection 'collection' with the reason 'Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive'"
+    }
+
+    @Test
     fun Should_Retrieve_ID_If_DbObject_Is_A_Valid_Json() {
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
