@@ -38,7 +38,7 @@ class Validator {
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
-            logError(logger, "Error decrypting record", e, "message", e.message ?: "No message", "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(hbaseRowKey), "db_name", db, "collection_name", collection)
+            logError(logger, "Error decrypting record", e, "message", e.message ?: "No message", "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(item.hbaseRowId), "db_name", db, "collection_name", collection)
             throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
