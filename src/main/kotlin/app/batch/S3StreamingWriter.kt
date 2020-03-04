@@ -85,7 +85,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
             val inputStream = ByteArrayInputStream(data)
             val bufferedInputStream = BufferedInputStream(inputStream)
             val filePrefix = filePrefix()
-            val objectKey: String = "$exportPrefix/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
+            val slashRemovedPrefix = exportPrefix.replace(Regex("""/+$"""), "")
+            val objectKey: String = "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)

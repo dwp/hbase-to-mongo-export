@@ -55,4 +55,12 @@ ignore:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
         expires: 2020-03-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-559094:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-03-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-559106:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-03-20T00:00:00.000Z
 patch: {}

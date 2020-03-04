@@ -8,6 +8,7 @@ import app.utils.logging.logDebug
 import app.utils.logging.logError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -28,7 +29,6 @@ class Validator {
         val collection = item.collection
         try {
             val jsonObject = parseDecrypted(decrypted)
-            logDebug(logger, "Successfully parsed decrypted object")
             if (null != jsonObject) {
                 val id = retrieveId(jsonObject)
                 val timeAsLong = timestampAsLong(item.lastModified)
@@ -38,18 +38,21 @@ class Validator {
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
-            logError(logger, "Error decrypting record", e, "hbase_row_id", hbaseRowId, "db_name", db, "collection_name", collection)
-            throw BadDecryptedDataException(hbaseRowId, db, collection, e.message!!)
+            logError(logger, "Error decrypting record", e, "message", e.message ?: "No message", "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(hbaseRowKey), "db_name", db, "collection_name", collection)
+            throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
     }
 
     fun parseDecrypted(decrypted: String): JsonObject? {
-        try {
-            return Gson().fromJson(decrypted, JsonObject::class.java)
-        } catch (e: Exception) {
-            throw Exception(parsingException)
-        }
+        return Gson().fromJson(decrypted, JsonObject::class.java)
+    }
+
+    fun printableKey(key: ByteArray): String {
+        val hash = key.slice(IntRange(0, 3))
+        val hex = hash.map { String.format("\\x%02x", it) }.joinToString("")
+        val renderable = key.slice(IntRange(4, key.size - 1)).map{ it.toChar() }.joinToString("")
+        return "${hex}${renderable}"
     }
 
     fun retrieveId(jsonObject: JsonObject): JsonObject? {
