@@ -1,8 +1,9 @@
 version: '3'
 
 services:
+
   hbase:
-    image: harisekhon/hbase:1.4
+    image: harisekhon/hbase
     ports:
       - 9090:9090
       - 9095:9095
