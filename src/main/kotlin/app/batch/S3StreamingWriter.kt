@@ -77,7 +77,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
     }
 
-
     fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
             currentOutputStream!!.close()
