@@ -38,7 +38,7 @@ class Validator {
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
-            logError(logger, "Error decrypting record, is blank: ${StringUtils.isBlank(decrypted)}", e, "hbase_row_id", hbaseRowId, "db_name", db, "collection_name", collection)
+            logError(logger, "Error decrypting record", e, "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(hbaseRowKey), "db_name", db, "collection_name", collection)
             throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
@@ -50,6 +50,13 @@ class Validator {
         } catch (e: Exception) {
             throw Exception(parsingException)
         }
+    }
+
+    fun printableKey(key: ByteArray): String {
+        val hash = key.slice(IntRange(0, 3))
+        val hex = hash.map { String.format("\\x%02x", it) }.joinToString("")
+        val renderable = key.slice(IntRange(4, key.size - 1)).map{ it.toChar() }.joinToString("")
+        return "${hex}${renderable}"
     }
 
     fun retrieveId(jsonObject: JsonObject): JsonObject? {
