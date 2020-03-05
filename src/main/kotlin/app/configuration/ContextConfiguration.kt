@@ -103,7 +103,7 @@ class ContextConfiguration {
             set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
             setInt("hbase.zookeeper.port", 2181)
             if (hbaseTimeout.toInt() > 0) {
-                setInt("hbase.client.scanner.timeout.period", if (hbaseTimeout.toInt() > 0) hbaseTimeout.toInt() else 900000)
+                setInt("hbase.client.scanner.timeout.period", if (hbaseTimeout.toInt() > 0) hbaseTimeout.toInt() else 24 * 60 * 60 * 1000)
             }
 
         }

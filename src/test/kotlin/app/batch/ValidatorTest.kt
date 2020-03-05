@@ -31,6 +31,18 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Process_If_Decrypted_DbObject_Is_A_Valid_Json_with_primitive_id() {
+        val decryptedDbObject = """{"_id": "I am a string", "type": "addressDeclaration", "contractId": 1234, "addressNumber": {"type": "AddressLine", "cryptoId": 1234}, "addressLine2": null, "townCity": {"type": "AddressLine", "cryptoId": 1234}, "postcode": "SM5 2LE", "processId": 1234, "effectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "paymentEffectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "createdDateTime": {"${"$"}date": "2015-03-20T12:23:25.183Z", "_archivedDateTime": "should be replaced by _archivedDateTime"}, "_version": 2, "_archived": "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"}"""
+        val lastModified = "2019-07-04T07:27:35.104+0000"
+        val encryptionBlock: EncryptionBlock =
+                EncryptionBlock("keyEncryptionKeyId","initialisationVector","encryptedEncryptionKey")
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
+                10, encryptionBlock, "dbObject", "db", "collection", lastModified)
+        val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
+        assertNotNull(decrypted)
+    }
+
+    @Test
     fun Should_Log_Error_If_Decrypted_DbObject_Is_A_InValid_Json() {
         val decryptedDbObject = "{\"testOne\":\"test1\", \"testTwo\":2"
 
