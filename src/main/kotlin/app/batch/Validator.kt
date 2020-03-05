@@ -7,7 +7,9 @@ import app.exceptions.BadDecryptedDataException
 import app.utils.logging.logDebug
 import app.utils.logging.logError
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,7 +40,8 @@ class Validator {
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
-            logError(logger, "Error decrypting record", e, "message", e.message ?: "No message", "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(item.hbaseRowId), "db_name", db, "collection_name", collection)
+            e.printStackTrace(System.err)
+            logError(logger, "Error decrypting record", e, "exceptionMessage", e.message ?: "No message", "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(item.hbaseRowId), "db_name", db, "collection_name", collection)
             throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
@@ -55,9 +58,8 @@ class Validator {
         return "${hex}${renderable}"
     }
 
-    fun retrieveId(jsonObject: JsonObject): JsonObject? {
-        return jsonObject.getAsJsonObject("_id") ?: throw Exception(idNotFound)
-    }
+    fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
+
 
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
         validTimestamps.forEach {
