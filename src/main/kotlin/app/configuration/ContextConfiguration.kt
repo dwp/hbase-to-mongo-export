@@ -102,10 +102,7 @@ class ContextConfiguration {
         val configuration = HBaseConfiguration.create().apply {
             set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
             setInt("hbase.zookeeper.port", 2181)
-            if (hbaseTimeout.toInt() > 0) {
-                setInt("hbase.client.scanner.timeout.period", if (hbaseTimeout.toInt() > 0) hbaseTimeout.toInt() else 24 * 60 * 60 * 1000)
-            }
-
+            setInt("hbase.client.scanner.timeout.period", if (hbaseTimeout.toInt() > 0) hbaseTimeout.toInt() else 24 * 60 * 60 * 1000)
         }
 
         val timeout = configuration.get("hbase.client.scanner.timeout.period")
