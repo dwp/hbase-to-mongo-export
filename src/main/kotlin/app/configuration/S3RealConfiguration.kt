@@ -21,14 +21,21 @@ class S3RealConfiguration {
         val updatedRegion = region.toUpperCase().replace("-", "_")
         val clientRegion = Regions.valueOf(updatedRegion)
 
+        val clientConfiguration = ClientConfiguration().apply {
+            maxConnections = maximumS3Connections.toInt()
+        }
+
         //This code expects that you have AWS credentials set up per:
         // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
         return AmazonS3ClientBuilder.standard()
             .withCredentials(DefaultAWSCredentialsProviderChain())
             .withRegion(clientRegion)
-            .withClientConfiguration(ClientConfiguration().withSocketTimeout(socketTimeOut.toInt()))
+            .withClientConfiguration(clientConfiguration.withSocketTimeout(socketTimeOut.toInt()))
             .build()
     }
+
+    @Value("\${aws.s3.max.connections:256}")
+    private lateinit var maximumS3Connections: String
 
     @Value("\${aws.region}")
     private lateinit var region: String
