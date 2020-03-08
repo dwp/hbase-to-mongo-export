@@ -63,7 +63,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 })
                 .retryLimit(retryLimit.toInt())
                 .processor(itemProcessor())
-                .faultTolerant()
                 .writer(itemWriter)
                 .build()
 
