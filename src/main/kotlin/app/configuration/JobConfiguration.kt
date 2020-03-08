@@ -6,6 +6,7 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
+import org.apache.hadoop.hbase.regionserver.NoSuchColumnFamilyException
 import org.springframework.batch.core.configuration.annotation.*
 import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.batch.core.partition.support.Partitioner
@@ -54,6 +55,8 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .skip(DecryptionFailureException::class.java)
                 .skip(BadDecryptedDataException::class.java)
                 .skipLimit(Integer.MAX_VALUE)
+                .retry(NoSuchColumnFamilyException::class.java)
+                .retryLimit(retryLimit.toInt())
                 .processor(itemProcessor())
                 .writer(itemWriter)
                 .build()
@@ -115,4 +118,8 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Value("\${scan.width:5}")
     private lateinit var scanWidth: String
+
+
+    @Value("\${retry.limit:50}")
+    private lateinit var retryLimit: String
 }
