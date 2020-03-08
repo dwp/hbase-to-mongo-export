@@ -47,12 +47,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     // slave step
     @Bean
-    fun slaveStep(): TaskletStep {
-
-
-        val backOffPolicy =
-
-        return stepBuilderFactory["slaveStep"]
+    fun slaveStep() = stepBuilderFactory["slaveStep"]
                 .chunk<SourceRecord, Record>(chunkSize.toInt())
                 .reader(itemReader)
                 .faultTolerant()
@@ -71,7 +66,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .faultTolerant()
                 .writer(itemWriter)
                 .build()
-    }
 
     @Bean
     fun step() =
