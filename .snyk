@@ -63,4 +63,12 @@ ignore:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
         expires: 2020-03-20T00:00:00.000Z
+  SNYK-JAVA-ORGAPACHEHADOOP-174573:
+    - '*':
+        reason: EMR v1.4 requires hbase client 1.4 libraries.
+        expires: 2020-03-20T00:00:00.000Z
+  SNYK-JAVA-ORGAPACHEHADOOP-32047:
+    - '*':
+        reason: EMR v1.4 requires hbase client 1.4 libraries.
+        expires: 2020-03-20T00:00:00.000Z
 patch: {}
