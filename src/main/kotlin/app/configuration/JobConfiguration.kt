@@ -23,10 +23,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.retry.backoff.ExponentialBackOffPolicy
 
-
-
-
-
 @Configuration
 @Profile("batchRun")
 @EnableBatchProcessing
