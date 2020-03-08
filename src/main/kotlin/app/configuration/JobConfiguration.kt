@@ -6,9 +6,11 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
+import org.apache.hadoop.hbase.regionserver.NoSuchColumnFamilyException
 import org.springframework.batch.core.configuration.annotation.*
 import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.batch.core.partition.support.Partitioner
+import org.springframework.batch.core.step.tasklet.TaskletStep
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
@@ -19,7 +21,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
-
+import org.springframework.retry.backoff.ExponentialBackOffPolicy
 
 @Configuration
 @Profile("batchRun")
@@ -45,8 +47,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     // slave step
     @Bean
-    fun slaveStep() =
-        stepBuilderFactory["slaveStep"]
+    fun slaveStep() = stepBuilderFactory["slaveStep"]
                 .chunk<SourceRecord, Record>(chunkSize.toInt())
                 .reader(itemReader)
                 .faultTolerant()
@@ -54,10 +55,16 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .skip(DecryptionFailureException::class.java)
                 .skip(BadDecryptedDataException::class.java)
                 .skipLimit(Integer.MAX_VALUE)
+                .retry(NoSuchColumnFamilyException::class.java)
+                .backOffPolicy(ExponentialBackOffPolicy().apply {
+                    initialInterval = initialIntervalMs.toLong()
+                    multiplier = backoffMultiplier.toDouble()
+                    maxInterval = maxIntervalMs.toLong()
+                })
+                .retryLimit(retryLimit.toInt())
                 .processor(itemProcessor())
                 .writer(itemWriter)
                 .build()
-
 
     @Bean
     fun step() =
@@ -115,4 +122,17 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Value("\${scan.width:5}")
     private lateinit var scanWidth: String
+
+    @Value("\${retry.limit:50}")
+    private lateinit var retryLimit: String
+
+    @Value("\${backoff.initial.interval.ms:1000}")
+    private lateinit var initialIntervalMs: String
+
+    @Value("\${backoff.multiplier:2.0}")
+    private lateinit var backoffMultiplier: String
+
+    @Value("\${backoff.max.interval.ms:600000}")
+    private lateinit var maxIntervalMs: String
+
 }
