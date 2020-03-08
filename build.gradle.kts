@@ -45,7 +45,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.apache.hbase:hbase-client:2.2.0")
+    implementation("org.apache.hbase:hbase-client:1.4.13")
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.commons:commons-compress:1.19")
     implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
