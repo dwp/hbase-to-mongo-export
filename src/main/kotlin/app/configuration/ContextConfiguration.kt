@@ -103,10 +103,15 @@ class ContextConfiguration {
             set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
             setInt("hbase.zookeeper.port", 2181)
             setInt("hbase.client.scanner.timeout.period", hbaseTimeout.toInt())
+            setInt("hbase.rpc.timeout", hbaseRpcTimeout.toInt())
+            setInt("hbase.client.operation.timeout", hbaseClientTimeout.toInt())
         }
 
-        val timeout = configuration.get("hbase.client.scanner.timeout.period")
-        logger.info("Configuration timeout: '${timeout}'.")
+        logger.info("Timeout configuration",
+                "scanner", configuration.get("hbase.client.scanner.timeout.period"),
+                "rpc", configuration.get("hbase.rpc.timeout"),
+                "client", configuration.get("hbase.client.operation.timeout"))
+
         val connection = ConnectionFactory.createConnection(configuration)
         addShutdownHook(connection)
         logger.info("Got connection to hbase.")
@@ -122,7 +127,13 @@ class ContextConfiguration {
         })
     }
 
-    @Value("\${hbase.scanner.timeout:86400000}")
+    @Value("\${hbase.client.timeout:3600000}")
+    private lateinit var hbaseClientTimeout: String
+
+    @Value("\${hbase.rpc.timeout:1800000}")
+    private lateinit var hbaseRpcTimeout: String
+
+    @Value("\${hbase.scanner.timeout:1200000}")
     private lateinit var hbaseTimeout: String
 
     @Value("\${hbase.zookeeper.quorum}")
