@@ -102,12 +102,12 @@ class ContextConfiguration {
         val configuration = HBaseConfiguration.create().apply {
             set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
             setInt("hbase.zookeeper.port", 2181)
-            setInt("hbase.client.scanner.timeout.period", hbaseTimeout.toInt())
-            setInt("hbase.rpc.timeout", hbaseRpcTimeout.toInt())
-            setInt("hbase.client.operation.timeout", hbaseClientTimeout.toInt())
+            setInt("hbase.client.scanner.timeout.period", hbaseTimeoutMs.toInt())
+            setInt("hbase.rpc.timeout", hbaseRpcTimeoutMs.toInt())
+            setInt("hbase.client.operation.timeout", hbaseClientTimeoutMs.toInt())
         }
 
-        logger.info("Timeout configuration",
+        logInfo(logger, "Timeout configuration",
                 "scanner", configuration.get("hbase.client.scanner.timeout.period"),
                 "rpc", configuration.get("hbase.rpc.timeout"),
                 "client", configuration.get("hbase.client.operation.timeout"))
@@ -127,14 +127,14 @@ class ContextConfiguration {
         })
     }
 
-    @Value("\${hbase.client.timeout:3600000}")
-    private lateinit var hbaseClientTimeout: String
+    @Value("\${hbase.client.timeout.ms:3600000}")
+    private lateinit var hbaseClientTimeoutMs: String
 
-    @Value("\${hbase.rpc.timeout:1800000}")
-    private lateinit var hbaseRpcTimeout: String
+    @Value("\${hbase.rpc.timeout.ms:1800000}")
+    private lateinit var hbaseRpcTimeoutMs: String
 
-    @Value("\${hbase.scanner.timeout:1200000}")
-    private lateinit var hbaseTimeout: String
+    @Value("\${hbase.scanner.timeout.ms:1200000}")
+    private lateinit var hbaseTimeoutMs: String
 
     @Value("\${hbase.zookeeper.quorum}")
     private lateinit var hbaseZookeeperQuorum: String
