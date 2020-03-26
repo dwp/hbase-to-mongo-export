@@ -35,8 +35,7 @@ class Validator {
                 val id = retrieveId(jsonObject)
                 val timeAsLong = timestampAsLong(item.lastModified)
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
-                val externalSource = retrieveType(jsonObject)
-                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong, db, collection, "EXPORT", externalSource)
+                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong, db, collection, "EXPORT", item.type)
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
@@ -71,16 +70,6 @@ class Validator {
             }
         }
         throw Exception("Unparseable date found: \"$lastUpdatedTimestamp\", did not match any of $validTimestamps")
-    }
-
-    fun retrieveType(jsonObject: JsonObject): String {
-        val typeElement = jsonObject.get("@type")
-        logDebug(logger, "Getting @type field value", "field_value", "$typeElement")
-
-        if (typeElement != null) {
-            return typeElement.asString
-        }
-        return defaultType
     }
 
     companion object {

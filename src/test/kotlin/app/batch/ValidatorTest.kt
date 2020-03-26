@@ -25,7 +25,7 @@ class ValidatorTest {
         val encryptionBlock: EncryptionBlock =
             EncryptionBlock("keyEncryptionKeyId","initialisationVector","encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
-                10, encryptionBlock, "dbObject", "db", "collection", lastModified)
+                10, encryptionBlock, "dbObject", "db", "collection", lastModified, "HDI")
         val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         assertNotNull(decrypted)
     }
@@ -37,7 +37,7 @@ class ValidatorTest {
         val encryptionBlock: EncryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId","initialisationVector","encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
-                10, encryptionBlock, "dbObject", "db", "collection", lastModified)
+                10, encryptionBlock, "dbObject", "db", "collection", lastModified, "HDI")
         val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         assertNotNull(decrypted)
     }
@@ -52,7 +52,7 @@ class ValidatorTest {
                 "initialisationVector",
                 "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), 10, encryptionBlock,
-                "dbObject", "db", "collection", lastModified)
+                "dbObject", "db", "collection", lastModified, "HDI")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
@@ -69,7 +69,7 @@ class ValidatorTest {
                         "initialisationVector",
                         "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), 10, encryptionBlock,
-                "dbObject", "db", "collection", lastModified)
+                "dbObject", "db", "collection", lastModified, "HDI")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
@@ -100,34 +100,14 @@ class ValidatorTest {
                 }"""
         val sourceRecord = SourceRecord(generateFourByteChecksum("00002"), 10, encryptionBlock,
                 "dbObject", "db", "collection",
-                lastModified)
+                lastModified, "HDI")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
         exception.message shouldBe "Exception in processing the decrypted record id '00002' in db 'db' in collection 'collection' with the reason '_id field not found in the decrypted db object'"
     }
 
-    @Test
-    fun Should_Retrieve_Type_When_Type_Field_Valid() {
-        val decryptedDbObject = """{
-                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "@type": "TEST_TYPE"
-                }"""
-        val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val typeString = validator.retrieveType(jsonObject!!)
-        typeString shouldBe "TEST_TYPE"
-    }
 
-    @Test
-    fun Should_Retrieve_Default_Type_When_Missing_Type_Field() {
-        val decryptedDbObject = """{
-                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "@type1": "TEST_TYPE"
-                }"""
-        val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val typeString = validator.retrieveType(jsonObject!!)
-        typeString shouldBe validator.defaultType
-    }
 
     private fun generateFourByteChecksum(input: String): ByteArray {
         val bytes = input.toByteArray()

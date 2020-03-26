@@ -25,7 +25,7 @@ import java.util.*
 
 @Component
 @StepScope
-class HBaseReader constructor(private val connection: Connection): ItemReader<SourceRecord> {
+class HBaseReader constructor(private val connection: Connection, private val textUtils: TextUtils): ItemReader<SourceRecord> {
 
     private var start: Int = Int.MIN_VALUE
     private var stop: Int = Int.MAX_VALUE
@@ -55,6 +55,7 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
             val messageInfo = dataBlock.getAsJsonObject("message")
+            val type = messageInfo.getAsJsonPrimitive("@type")?.asString ?: "TYPE_NOT_SET"
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val db = messageInfo.getAsJsonPrimitive("db")?.asString
             val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
@@ -78,7 +79,7 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified)
+            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified, type)
         }
 
 
@@ -159,21 +160,19 @@ class HBaseReader constructor(private val connection: Connection): ItemReader<So
     private var scanner: ResultScanner? = null
 
     @Value("\${topic.name}")
-    private lateinit var topicName: String // i.e. "db.user.data"
+    private var topicName: String = ""
 
     @Value("\${scan.cache.size:-1}")
-    private lateinit var scanCacheSize: String
+    private var scanCacheSize: String = "-1"
 
     @Value("\${scan.max.result.size:-1}")
-    private lateinit var scanMaxResultSize: String
+    private var scanMaxResultSize: String = "-1"
 
     @Value("\${scan.cache.blocks:true}")
-    private lateinit var scanCacheBlocks: String
+    private var scanCacheBlocks: String = "true"
 
     @Value("\${latest.available:false}")
-    private lateinit var useLatest: String
-
-    private val textUtils = TextUtils()
+    private var useLatest: String = "false"
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
