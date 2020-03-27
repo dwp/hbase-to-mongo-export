@@ -2,10 +2,6 @@
 version: v1.13.5
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
-  SNYK-JAVA-IONETTY-559515:
-    - '*':
-        reason: removed, Can't upgrade HBase library version until supported by AWS EMR
-        expires: 2020-04-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469676:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
@@ -74,5 +70,29 @@ ignore:
   SNYK-JAVA-ORGAPACHEHADOOP-32047:
     - '*':
         reason: EMR v1.4 requires hbase client 1.4 libraries.
+        expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-IONETTY-559515:
+    - '*':
+        reason: EMR v1.4 requires hbase client 1.4 libraries.
+        expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-IONETTY-559516:
+    - '*':
+        reason: EMR v1.4 requires hbase client 1.4 libraries.
+        expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560762:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560766:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561362:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561373:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
         expires: 2020-04-20T00:00:00.000Z
 patch: {}
