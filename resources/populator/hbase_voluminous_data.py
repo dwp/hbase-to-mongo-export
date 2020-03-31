@@ -108,9 +108,7 @@ def kafka_message(i):
 
 def decrypted_db_object():
     return {
-        "_id": {
-            "someId": "RANDOM_GUID"
-        },
+        "_id": "qwertyuiop",
         "type": "addressDeclaration",
         "contractId": "RANDOM_GUID",
         "addressNumber": {
@@ -159,7 +157,7 @@ def guid():
 
 def unique_decrypted_db_object():
     record = decrypted_db_object()
-    record['_id']['declarationId'] = 1234
+    #record['_id']['declarationId'] = 1234
     record['contractId'] = 1234
     record['addressNumber']['cryptoId'] = 1234
     record['townCity']['cryptoId'] = 1234

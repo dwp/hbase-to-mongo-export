@@ -7,9 +7,7 @@ import app.exceptions.BadDecryptedDataException
 import app.utils.logging.logDebug
 import app.utils.logging.logError
 import com.google.gson.Gson
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,10 +17,8 @@ import java.util.*
 
 @Component
 class Validator {
-    val defaultType = "TYPE_NOT_SET"
     val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     val idNotFound = "_id field not found in the decrypted db object"
-    val parsingException = "Exception occurred while parsing decrypted db object"
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
@@ -32,10 +28,18 @@ class Validator {
         try {
             val jsonObject = parseDecrypted(decrypted)
             if (null != jsonObject) {
-                val id = retrieveId(jsonObject)
+                val idElement = retrieveId(jsonObject)
+
+                val id = if (idElement is JsonObject) {
+                    idElement.toString()
+                }
+                else {
+                    idElement.asString
+                }
+
                 val timeAsLong = timestampAsLong(item.lastModified)
                 jsonObject.addProperty("timestamp", item.hbaseTimestamp)
-                val manifestRecord = ManifestRecord(id!!.toString(), timeAsLong, db, collection, "EXPORT", item.type)
+                val manifestRecord = ManifestRecord(id!!, timeAsLong, db, collection, "EXPORT", item.type)
                 return DecryptedRecord(jsonObject, manifestRecord)
             }
         } catch (e: Exception) {
