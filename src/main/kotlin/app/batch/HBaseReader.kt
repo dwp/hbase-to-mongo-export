@@ -54,8 +54,9 @@ class HBaseReader constructor(private val connection: Connection, private val te
             val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
+            val outerType = dataBlock.getAsJsonPrimitive("@type")?.asString
             val messageInfo = dataBlock.getAsJsonObject("message")
-            val type = messageInfo.getAsJsonPrimitive("@type")?.asString ?: "TYPE_NOT_SET"
+            val innerType = messageInfo.getAsJsonPrimitive("@type")?.asString
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val db = messageInfo.getAsJsonPrimitive("db")?.asString
             val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
@@ -79,7 +80,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified, type)
+            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified,
+                    outerType ?: innerType ?: "TYPE_NOT_SET")
         }
 
 
