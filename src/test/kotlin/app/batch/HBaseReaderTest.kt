@@ -112,7 +112,7 @@ class HBaseReaderTest {
     }
 
     @Test
-    fun testInnerType() {
+    fun testInnerTypeWhenNoOuterType() {
         val table: Table = Mockito.mock(Table::class.java)
         val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
@@ -132,6 +132,68 @@ class HBaseReaderTest {
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
             |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+            |  "message": {
+            |    "db": "core",
+            |    "collection": "addressDeclaration",
+            |    "_id": {
+            |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
+            |    },
+            |    "_timeBasedHash": "hashhhhhhhhhh",
+            |    "@type": "MONGO_INSERT",
+            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |    "encryption": {
+            |      "encryptionKeyId": "$encryptionKeyId",
+            |      "encryptedEncryptionKey": "$encryptedEncryptionKey",
+            |      "initialisationVector": "$initialisationVector",
+            |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
+            |    },
+            |    "dbObject": "$dbObject"
+            |  },
+            |  "version": "core-4.master.9790",
+            |  "timestamp": "$timestamp"
+            |}""".trimMargin()
+
+        given(current.timestamp).willReturn(10)
+        given(result.row).willReturn(rowId.toByteArray())
+        given(result.current()).willReturn(current)
+        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+        given(scanner.next()).willReturn(result)
+        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
+        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
+
+        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
+        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+                "core", "addressDeclaration",lastModified, "MONGO_INSERT")
+
+        val actual = hbaseReader.read()
+
+        assertEquals(expected.dbObject, actual?.dbObject)
+        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
+                expected.toString(), actual.toString())
+    }
+
+    @Test
+    fun testInnerTypeWhenEmptyOuterType() {
+        val table: Table = Mockito.mock(Table::class.java)
+        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
+        val result: Result = Mockito.mock(Result::class.java)
+        val current: Cell = Mockito.mock(Cell::class.java)
+        val connection: Connection = Mockito.mock(Connection::class.java)
+        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
+        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
+        val matches = listOf("db", "database", "collection")
+        given(matchResult.groupValues).willReturn(matches)
+        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
+
+        val hbaseReader = HBaseReader(connection, textUtils)
+        hbaseReader.resetScanner()
+
+        val lastModified = "2019-07-04T07:27:35.104+0000"
+        val cellData = """
+            |{
+            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
+            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
+            |  "@type": "",
             |  "message": {
             |    "db": "core",
             |    "collection": "addressDeclaration",
