@@ -128,10 +128,21 @@ class HBaseReader constructor(private val connection: Connection, private val te
         return scanner!!
     }
 
+    fun getScanTimeRangeStart() : Long {
+        return scanTimeRangeStart.toLongOrNull() ?: 0
+    }
+
+    fun getScanTimeRangeEnd() : Long {
+        val timeRangeEnd = scanTimeRangeEnd.toLongOrNull() ?: 0
+        return if (timeRangeEnd < 1.toLong()) Date().time else timeRangeEnd
+    }
 
     private fun scan(): Scan {
+        val timeStart = getScanTimeRangeStart()
+        val timeEnd = getScanTimeRangeEnd()
+
         val scan = Scan().apply {
-            setTimeRange(0, Date().time)
+            setTimeRange(timeStart, timeEnd)
 
             if (start == -1 && stop == -1) {
                 setRowPrefixFilter(byteArrayOf(-1))
@@ -158,13 +169,21 @@ class HBaseReader constructor(private val connection: Connection, private val te
             "scan.maxResultSize", "${scan.maxResultSize}",
             "cache_blocks", "${scan.cacheBlocks}",
             "useLatest", useLatest,
-            "start", "$start",
-            "stop", "$stop")
+            "start", "$start",,
+            "stop", "$stop",
+            "scan.time.range.start", timeStart.toString(),
+            "scan.time.range.end", timeEnd.toString())
 
         return scan
     }
 
     private var scanner: ResultScanner? = null
+
+    @Value("\${scan.time.range.start:0}")
+    private var scanTimeRangeStart: String = "0"
+
+    @Value("\${scan.time.range.end:0}")
+    private var scanTimeRangeEnd: String = "0"
 
     @Value("\${topic.name}")
     private var topicName: String = ""
