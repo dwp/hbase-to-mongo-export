@@ -129,18 +129,24 @@ class HBaseReader constructor(private val connection: Connection, private val te
         return scanner!!
     }
 
-    fun getScanTimeRangeEpoch(timeRange: String) : Long {
-        var startDateTime = ZonedDateTime.now()
+    fun getScanTimeRangeStartEpoch() : Long {
+        return if (scanTimeRangeStart != "")
+            ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
+            else 0;
+    }
+
+    fun getScanTimeRangeEndEpoch() : Long {
+        var endDateTime = ZonedDateTime.now()
         if (scanTimeRangeStart != "") {
-            startDateTime = ZonedDateTime.parse(scanTimeRangeStart)
+            endDateTime = ZonedDateTime.parse(scanTimeRangeStart)
         }
 
-        return startDateTime.toInstant().toEpochMilli();
+        return endDateTime.toInstant().toEpochMilli();
     }
 
     private fun scan(): Scan {
-        val timeStart = getScanTimeRangeEpoch(scanTimeRangeStart)
-        val timeEnd = getScanTimeRangeEpoch(scanTimeRangeEnd)
+        val timeStart = getScanTimeRangeStartEpoch()
+        val timeEnd = getScanTimeRangeEndEpoch()
 
         val scan = Scan().apply {
             setTimeRange(timeStart, timeEnd)
@@ -181,10 +187,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
     private var scanner: ResultScanner? = null
 
     @Value("\${scan.time.range.start}")
-    private var scanTimeRangeStart: String = "0"
+    private var scanTimeRangeStart: String = ""
 
     @Value("\${scan.time.range.end}")
-    private var scanTimeRangeEnd: String = "0"
+    private var scanTimeRangeEnd: String = ""
 
     @Value("\${topic.name}")
     private var topicName: String = ""
