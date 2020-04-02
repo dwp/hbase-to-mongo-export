@@ -169,7 +169,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
             "scan.maxResultSize", "${scan.maxResultSize}",
             "cache_blocks", "${scan.cacheBlocks}",
             "useLatest", useLatest,
-            "start", "$start",,
+            "start", "$start",
             "stop", "$stop",
             "scan.time.range.start", timeStart.toString(),
             "scan.time.range.end", timeEnd.toString())
