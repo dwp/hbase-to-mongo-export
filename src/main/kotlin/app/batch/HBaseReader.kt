@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 import java.util.*
+import java.time.ZonedDateTime
 
 @Component
 @StepScope
@@ -128,18 +129,18 @@ class HBaseReader constructor(private val connection: Connection, private val te
         return scanner!!
     }
 
-    fun getScanTimeRangeStart() : Long {
-        return scanTimeRangeStart.toLongOrNull() ?: 0
-    }
+    fun getScanTimeRangeEpoch(timeRange: String) : Long {
+        var startDateTime = ZonedDateTime.now()
+        if (scanTimeRangeStart != "") {
+            startDateTime = ZonedDateTime.parse(scanTimeRangeStart)
+        }
 
-    fun getScanTimeRangeEnd() : Long {
-        val timeRangeEnd = scanTimeRangeEnd.toLongOrNull() ?: 0
-        return if (timeRangeEnd < 1.toLong()) Date().time else timeRangeEnd
+        return startDateTime.toInstant().toEpochMilli();
     }
 
     private fun scan(): Scan {
-        val timeStart = getScanTimeRangeStart()
-        val timeEnd = getScanTimeRangeEnd()
+        val timeStart = getScanTimeRangeEpoch(scanTimeRangeStart)
+        val timeEnd = getScanTimeRangeEpoch(scanTimeRangeEnd)
 
         val scan = Scan().apply {
             setTimeRange(timeStart, timeEnd)
@@ -179,10 +180,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     private var scanner: ResultScanner? = null
 
-    @Value("\${scan.time.range.start:0}")
+    @Value("\${scan.time.range.start}")
     private var scanTimeRangeStart: String = "0"
 
-    @Value("\${scan.time.range.end:0}")
+    @Value("\${scan.time.range.end}")
     private var scanTimeRangeEnd: String = "0"
 
     @Value("\${topic.name}")
