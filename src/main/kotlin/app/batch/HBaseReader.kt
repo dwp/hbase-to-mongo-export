@@ -137,8 +137,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     fun getScanTimeRangeEndEpoch() : Long {
         var endDateTime = ZonedDateTime.now()
-        if (scanTimeRangeStart != "") {
-            endDateTime = ZonedDateTime.parse(scanTimeRangeStart)
+        if (scanTimeRangeEnd != "") {
+            endDateTime = ZonedDateTime.parse(scanTimeRangeEnd)
         }
 
         return endDateTime.toInstant().toEpochMilli();
@@ -186,10 +186,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     private var scanner: ResultScanner? = null
 
-    @Value("\${scan.time.range.start}")
+    @Value("\${scan.time.range.start:}")
     private var scanTimeRangeStart: String = ""
 
-    @Value("\${scan.time.range.end}")
+    @Value("\${scan.time.range.end:}")
     private var scanTimeRangeEnd: String = ""
 
     @Value("\${topic.name}")
