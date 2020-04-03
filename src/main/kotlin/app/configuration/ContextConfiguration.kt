@@ -93,7 +93,7 @@ class ContextConfiguration {
             var attempts = 0
             val path = Paths.get(dataReadyFlagLocation)
             val maxAttempts = 100
-            while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < maxAttempts) {
+            while (!Files.isDirectory(Paths.get(dataReadyvvvvvvvvvvvFlagLocation)) && ++attempts < maxAttempts) {
                 logInfo(logger, "Waiting for data ready flag to exist", "file_path", "$path", "attempt_no", "$attempts", "max_attempts", "$maxAttempts")
                 Thread.sleep(1000)
             }
