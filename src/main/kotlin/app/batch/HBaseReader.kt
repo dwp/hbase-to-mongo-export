@@ -130,14 +130,14 @@ class HBaseReader constructor(private val connection: Connection, private val te
     }
 
     fun getScanTimeRangeStartEpoch() : Long {
-        return if (scanTimeRangeStart != "")
+        return if (scanTimeRangeStart.isNotBlank())
             ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
             else 0;
     }
 
     fun getScanTimeRangeEndEpoch() : Long {
         var endDateTime = ZonedDateTime.now()
-        if (scanTimeRangeEnd != "") {
+        if (scanTimeRangeEnd.isNotBlank()) {
             endDateTime = ZonedDateTime.parse(scanTimeRangeEnd)
         }
 
@@ -178,8 +178,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
             "useLatest", useLatest,
             "start", "$start",
             "stop", "$stop",
-            "scan.time.range.start", timeStart.toString(),
-            "scan.time.range.end", timeEnd.toString())
+            "scan_time_range_start", timeStart.toString(),
+            "scan_time_range_end", timeEnd.toString())
 
         return scan
     }
