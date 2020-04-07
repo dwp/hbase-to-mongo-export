@@ -33,7 +33,7 @@ class ValidatorTest {
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
         val manifest = decrypted?.manifestRecord
-        val expectedManifest = ManifestRecord(id, 1562225255104, "db", "collection", "EXPORT", "HDI")
+        val expectedManifest = ManifestRecord(id, 1562225255104, "db", "collection", "EXPORT", "HDI", id)
         assertEquals(expectedManifest, manifest)
     }
 
@@ -50,7 +50,8 @@ class ValidatorTest {
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
         val manifest = decrypted?.manifestRecord
-        val expectedManifest = ManifestRecord(id, 1562225255104, "db", "collection", "EXPORT", "HDI")
+        val oid = "\$oid"
+        val expectedManifest = ManifestRecord("""{"$oid":"$id"}""", 1562225255104, "db", "collection", "EXPORT", "HDI", id)
         assertEquals(expectedManifest, manifest)
     }
 
