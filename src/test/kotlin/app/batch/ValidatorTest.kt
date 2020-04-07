@@ -162,8 +162,8 @@ class ValidatorTest {
                    "_lastModifiedDateTime": {"date": "2018-12-14T15:01:02.000+0000"}
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val exception = shouldThrow<BadDecryptedDataException> {
-            val lastModifiedDateTimeString = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        val exception = shouldThrow<Exception> {
+            validator.retrieveLastModifiedDateTime(jsonObject!!)
         }
         exception.message shouldBe "Last modified date time was an unknown format of \"{\"date\": \"2019-07-04T07:27:35.104+0000\"}\""
     }
