@@ -29,24 +29,32 @@ class Validator {
             val dbObject = parseDecrypted(decrypted)
             if (null != dbObject) {
                 val idElement = retrieveId(dbObject)
-                val (dbObject, originalId) = if (idElement is JsonObject) {
+                val (dbObjectWithId, originalId) = if (idElement is JsonObject) {
                     Pair(dbObject, idElement.toString())
                 } else {
                     replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asString)
                 }
 
-                var dateElement = retrieveLastModifiedDateTime(dbObject)
-                val (dbObject, originalLastModifiedDateTime) = if (dateElement is JsonObject) {
-                    Pair(dbObject, dateElement.toString())
+                var dateElement = retrieveLastModifiedDateTime(dbObjectWithId)
+                val (dbObjectWithIdAndDate, originalLastModifiedDateTime) = if (dateElement is JsonObject) {
+                    Pair(dbObjectWithId, dateElement.toString())
                 } else {
-                    replaceElementValueWithKeyValuePair(dbObject, "_lastModifiedDateTime", "\$date", dateElement.asString)
+                    replaceElementValueWithKeyValuePair(dbObjectWithId, "_lastModifiedDateTime", "\$date", dateElement.asString)
+                }
+
+                val newIdElement = dbObjectWithIdAndDate["_id"]
+                val newIdAsString = if (newIdElement is JsonObject) {
+                    newIdElement.toString()
+                } else {
+                    newIdElement.asString
                 }
 
                 val timeAsLong = timestampAsLong(originalLastModifiedDateTime)
-                val manifestRecord = ManifestRecord(id, timeAsLong, db, collection, "EXPORT", item.type, originalId)
+                val manifestRecord = ManifestRecord(newIdAsString, 
+                    timeAsLong, db, collection, "EXPORT", item.type, originalId)
                 
-                dbObject.addProperty("timestamp", item.hbaseTimestamp)
-                return DecryptedRecord(dbObject, manifestRecord)
+                dbObjectWithIdAndDate.addProperty("timestamp", item.hbaseTimestamp)
+                return DecryptedRecord(dbObjectWithIdAndDate, manifestRecord)
             }
         } catch (e: Exception) {
             e.printStackTrace(System.err)
