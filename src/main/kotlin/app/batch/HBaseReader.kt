@@ -151,14 +151,9 @@ class HBaseReader constructor(private val connection: Connection, private val te
         val scan = Scan().apply {
             setTimeRange(timeStart, timeEnd)
 
-            if (start == -1 && stop == -1) {
-                setRowPrefixFilter(byteArrayOf(-1))
-            }
-            else {
-                withStartRow(byteArrayOf(start.toByte()), true)
-                if (stop != 0) {
-                    withStopRow(byteArrayOf(stop.toByte()), true)
-                }
+            withStartRow(byteArrayOf(start.toByte()), true)
+            if (stop != 0) {
+                withStopRow(byteArrayOf(stop.toByte()), true)
             }
 
             cacheBlocks = scanCacheBlocks.toBoolean()

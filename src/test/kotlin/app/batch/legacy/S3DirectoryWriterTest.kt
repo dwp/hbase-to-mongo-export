@@ -67,7 +67,7 @@ class S3DirectoryWriterTest {
             for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
-                list.add(Record(item, ManifestRecord("id", 0, "db", "collection", "EXPORT", "@V4")))
+                list.add(Record(item, ManifestRecord("id", 0, "db", "collection", "EXPORT", "@V4", "OID")))
                 total += item.length
             }
             listOfLists.add(list)
@@ -90,8 +90,8 @@ class S3DirectoryWriterTest {
 
     @Test
     fun testCSVManifestGeneration() {
-        val manifestRecord1 = ManifestRecord("\"_id\":{\"declarationId\": \"1234567890\"}", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "EXPORT", "@V4")
-        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4")
+        val manifestRecord1 = ManifestRecord("\"_id\":{\"declarationId\": \"1234567890\"}", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "EXPORT", "@V4", "OID")
+        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4", "OID")
         val list = mutableListOf<ManifestRecord>()
         list.add(manifestRecord1)
         list.add(manifestRecord2)
@@ -103,8 +103,8 @@ class S3DirectoryWriterTest {
 
     @Test
     fun testManifest() {
-        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "EXPORT", "@V4")
-        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4")
+        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "EXPORT", "@V4", "OID")
+        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4", "OID")
         val list = mutableListOf<ManifestRecord>()
         list.add(manifestRecord1)
         list.add(manifestRecord2)
@@ -120,8 +120,8 @@ class S3DirectoryWriterTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         doThrow(RuntimeException()).whenever(s3DirectoryWriter).generateManifestFileFormat()
-        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "EXPORT", "@V4")
-        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4")
+        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "EXPORT", "@V4", "OID")
+        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4", "OID")
         val list = mutableListOf<ManifestRecord>()
         list.add(manifestRecord1)
         list.add(manifestRecord2)

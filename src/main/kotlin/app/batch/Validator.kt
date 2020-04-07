@@ -26,21 +26,25 @@ class Validator {
         val db = item.db
         val collection = item.collection
         try {
-            val jsonObject = parseDecrypted(decrypted)
-            if (null != jsonObject) {
-                val idElement = retrieveId(jsonObject)
+            val dbObject = parseDecrypted(decrypted)
+            if (null != dbObject) {
+                val idElement = retrieveId(dbObject)
 
-                val id = if (idElement is JsonObject) {
-                    idElement.toString()
+                val (id, originalId) = if (idElement is JsonObject) {
+                    Pair(idElement.toString(), idElement.toString())
                 }
                 else {
-                    idElement.asString
+                    val reconstructedMongoId = JsonObject()
+                    reconstructedMongoId.addProperty("\$oid", idElement.asString)
+                    dbObject.remove("_id")
+                    dbObject.add("_id", reconstructedMongoId)
+                    Pair(reconstructedMongoId.toString(), idElement.asString)
                 }
 
                 val timeAsLong = timestampAsLong(item.lastModified)
-                jsonObject.addProperty("timestamp", item.hbaseTimestamp)
-                val manifestRecord = ManifestRecord(id!!, timeAsLong, db, collection, "EXPORT", item.type)
-                return DecryptedRecord(jsonObject, manifestRecord)
+                dbObject.addProperty("timestamp", item.hbaseTimestamp)
+                val manifestRecord = ManifestRecord(id, timeAsLong, db, collection, "EXPORT", item.type, originalId)
+                return DecryptedRecord(dbObject, manifestRecord)
             }
         } catch (e: Exception) {
             e.printStackTrace(System.err)

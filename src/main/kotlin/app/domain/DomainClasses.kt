@@ -1,5 +1,6 @@
 package app.domain
 
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.text.StringEscapeUtils
 import java.io.BufferedOutputStream
@@ -56,7 +57,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
 
 data class DecryptedRecord(val dbObject: JsonObject, val manifestRecord: ManifestRecord)
 
-data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String, val source: String, val externalSource: String)
+data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String,
+                          val source: String, val externalSource: String, val originalId: String)
 
 data class Record(val dbObjectAsString: String, val manifestRecord: ManifestRecord)
 
@@ -76,9 +78,8 @@ data class EncryptingOutputStream(private val outputStream: BufferedOutputStream
 
     fun writeManifestRecord(manifestRecord: ManifestRecord) = manifestWriter.write(csv(manifestRecord))
 
-    private fun csv(manifestRecord: ManifestRecord): String {
-        return "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
-    }
+    private fun csv(manifestRecord: ManifestRecord) =
+            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)},${escape(manifestRecord.originalId)}\n"
 
-    private fun escape(value: String) =  StringEscapeUtils.escapeCsv(value)
+    private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
 }

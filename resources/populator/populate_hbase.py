@@ -65,14 +65,17 @@ def main():
                         tables.append(table_name)
                         print(f"Created table '{table_name}'.")
 
-                    print("Creating record %s timestamp %s topic %s in table %s"
-                          .format(record_id, timestamp, topic_name, table_name))
+                    print(f"Creating record '{record_id}' timestamp '{timestamp}' topic '{topic_name}' in table '{table_name}'.")
 
                     if 'dbObject' in value['message']:
                         db_object = value['message']['dbObject']
                         if db_object != "CORRUPT":
                             value['message']['dbObject'] = ""
                             record = unique_decrypted_db_object()
+                            if "mongo_format_stripped_from_id" in value['message']:
+                                if value["message"]["mongo_format_stripped_from_id"]:
+                                    record["_id"] = value["message"]["_id"]
+
                             value['message']['_lastModifiedDateTime'] = record['_lastModifiedDateTime']
                             record_string = json.dumps(record)
                             [iv, encrypted_record] = encrypt(encryption_key,
@@ -100,8 +103,7 @@ def main():
                         data_table = connection.table(table_name)
                         data_table.put(record_id, obj, timestamp=int(timestamp))
                         print(json.dumps(value, indent=4))
-                        print("Saved record '{}' timestamp '{}' topic '{}' in table '{}'."
-                               .format(record_id, timestamp, topic_name, table_name))
+                        print(f"Saved record '{record_id}' timestamp '{timestamp}' topic '{topic_name}' in table '{table_name}'.")
 
                     else:
                         print("Skipped record '{}' as dbObject was missing.".format(record_id))
