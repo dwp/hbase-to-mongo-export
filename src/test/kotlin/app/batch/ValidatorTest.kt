@@ -58,7 +58,7 @@ class ValidatorTest {
     @Test
     fun Should_Process_If_Decrypted_DbObject_Is_A_Valid_Json_With_Object_Id() {
         val id = """{"someId":"RANDOM_GUID","declarationId":1234}"""
-        val decryptedDbObject = """{"_id": $id, "type": "addressDeclaration", "contractId": 1234, "addressNumber": {"type": "AddressLine", "cryptoId": 1234}, "addressLine2": null, "townCity": {"type": "AddressLine", "cryptoId": 1234}, "postcode": "SM5 2LE", "processId": 1234, "effectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "paymentEffectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "createdDateTime": {"${"$"}date": "2015-03-20T12:23:25.183Z", "_archivedDateTime": "should be replaced by _archivedDateTime"}, "_version": 2, "_archived": "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime": {"\$date": "2019-07-04T07:27:35.104+0000"}}"""
+        val decryptedDbObject = """{"_id": $id, "type": "addressDeclaration", "contractId": 1234, "addressNumber": {"type": "AddressLine", "cryptoId": 1234}, "addressLine2": null, "townCity": {"type": "AddressLine", "cryptoId": 1234}, "postcode": "SM5 2LE", "processId": 1234, "effectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "paymentEffectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "createdDateTime": {"${"$"}date": "2015-03-20T12:23:25.183Z", "_archivedDateTime": "should be replaced by _archivedDateTime"}, "_version": 2, "_archived": "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime": {"{'$'}date": "2019-07-04T07:27:35.104+0000"}}"""
         val lastModified = "2018-12-14T15:01:02.000+0000"
         val encryptionBlock: EncryptionBlock =
             EncryptionBlock("keyEncryptionKeyId","initialisationVector","encryptedEncryptionKey")
@@ -171,12 +171,16 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"\$date": "$newDate"}
+                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
                 }"""
         val oldJsonObject = validator.parseDecrypted(oldJson)
         
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+
+        val actual = JsonObject()
+        if (oldJsonObject != null) {
+            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
+        }
         
         assertEquals(expected, actual)
     }
@@ -188,17 +192,21 @@ class ValidatorTest {
 
         val oldJson = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {"\$date": "$oldDate"}
+                   "_lastModifiedDateTime": {"{'$'}date": "$oldDate"}
                 }"""
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"\$date": "$newDate"}
+                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
                 }"""
         val oldJsonObject = validator.parseDecrypted(oldJson)
         
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        
+        val actual = JsonObject()
+        if (oldJsonObject != null) {
+            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        }
         
         assertEquals(expected, actual)
     }
@@ -215,12 +223,16 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"\$date": "$newDate"}
+                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
                 }"""
         val oldJsonObject = validator.parseDecrypted(oldJson)
         
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        
+        val actual = JsonObject()
+        if (oldJsonObject != null) {
+            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        }
         
         assertEquals(expected, actual)
     }
@@ -237,12 +249,16 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"\$date": "$newDate"}
+                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
                 }"""
         val oldJsonObject = validator.parseDecrypted(oldJson)
 
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        
+        val actual = JsonObject()
+        if (oldJsonObject != null) {
+            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        }
         
         assertEquals(expected, actual)
     }
