@@ -133,7 +133,7 @@ class ValidatorTest {
     fun Should_Retrieve_LastModifiedDateTime_If_DbObject_Is_A_Valid_Json_Object() {
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {"date": "2018-12-14T15:01:02.000+0000"}
+                   "_lastModifiedDateTime": {"${"$"}date": "2018-12-14T15:01:02.000+0000"}
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val lastModifiedDateTimeJsonObject = validator.retrieveLastModifiedDateTime(jsonObject!!)

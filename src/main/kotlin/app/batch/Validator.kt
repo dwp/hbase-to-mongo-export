@@ -38,7 +38,7 @@ class Validator {
 
                 var dateElement = retrieveLastModifiedDateTime(dbObjectWithId)
                 val (dbObjectWithIdAndDate, originalLastModifiedDateTime) = if (dateElement is JsonObject) {
-                    Pair(dbObjectWithId, dateElement.toString())
+                    Pair(dbObjectWithId, dateElement[0].asString)
                 } else {
                     replaceElementValueWithKeyValuePair(dbObjectWithId, "_lastModifiedDateTime", "\$date", dateElement.asString)
                 }
