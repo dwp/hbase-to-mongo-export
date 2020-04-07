@@ -19,6 +19,7 @@ import java.util.*
 class Validator {
     val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     val idNotFound = "_id field not found in the decrypted db object"
+    val lastModifiedDateTimeNotFound = "_lastModifiedDateTime field not found in the decrypted db object"
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
@@ -86,7 +87,7 @@ class Validator {
 
     fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
 
-    fun retrieveLastModifiedDateTime(jsonObject: JsonObject) = jsonObject["_lastModifiedDateTime"] ?: throw Exception(idNotFound)
+    fun retrieveLastModifiedDateTime(jsonObject: JsonObject) = jsonObject["_lastModifiedDateTime"] ?: throw Exception(lastModifiedDateTimeNotFound)
 
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
         validTimestamps.forEach {
