@@ -35,7 +35,7 @@ class Validator {
                     replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asString)
                 }
 
-                val dateElement = retrieveLastModifiedDateTime(dbObject)
+                var dateElement = retrieveLastModifiedDateTime(dbObject)
                 val (dbObject, originalLastModifiedDateTime) = if (dateElement is JsonObject) {
                     Pair(dbObject, dateElement.toString())
                 } else {
@@ -56,7 +56,7 @@ class Validator {
         return null
     }
 
-    fun replaceElementValueWithKeyValuePair(objectWithFieldIn: JsonObject, keyToReplace: String, newKey: String, value: String): Pair<String, String> {
+    fun replaceElementValueWithKeyValuePair(objectWithFieldIn: JsonObject, keyToReplace: String, newKey: String, value: String): Pair<JsonObject, String> {
         var objectWithChangedField = objectWithFieldIn
         val newElement = JsonObject()
         newElement.addProperty(newKeyString, value)

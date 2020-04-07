@@ -176,7 +176,7 @@ class ValidatorTest {
         val oldJsonObject = validator.parseDecrypted(oldJson)
         
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValue(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -198,7 +198,7 @@ class ValidatorTest {
         val oldJsonObject = validator.parseDecrypted(oldJson)
         
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValue(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -220,7 +220,7 @@ class ValidatorTest {
         val oldJsonObject = validator.parseDecrypted(oldJson)
         
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValue(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -242,7 +242,7 @@ class ValidatorTest {
         val oldJsonObject = validator.parseDecrypted(oldJson)
 
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValue(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "\$date", newDate)
         
         assertEquals(expected, actual)
     }
