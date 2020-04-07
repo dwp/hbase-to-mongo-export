@@ -36,17 +36,9 @@ class Validator {
                     replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asString)
                 }
 
-                var dateElement = retrieveLastModifiedDateTime(dbObjectWithId)
-                val (dbObjectWithIdAndDate, originalLastModifiedDateTime) = if (dateElement is JsonObject) {
-                    if (dateElement["\$date"] != null) {
-                        Pair(dbObjectWithId, dateElement["\$date"].asString)   
-                    } else {
-                        val dateAsString = $dateElement.toString()
-                        throw Exception("Last modified date time was an unknown format of \"$dateAsString\"")
-                    }
-                } else {
-                    replaceElementValueWithKeyValuePair(dbObjectWithId, "_lastModifiedDateTime", "\$date", dateElement.asString)
-                }
+                var dateAsString = retrieveLastModifiedDateTime(dbObjectWithId)
+                val (dbObjectWithIdAndDate, originalLastModifiedDateTime) = 
+                    replaceElementValueWithKeyValuePair(dbObjectWithId, "_lastModifiedDateTime", "\$date", dateAsString)
 
                 val newIdElement = dbObjectWithIdAndDate["_id"]
                 val newIdAsString = if (newIdElement is JsonObject) {
@@ -92,7 +84,19 @@ class Validator {
 
     fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
 
-    fun retrieveLastModifiedDateTime(jsonObject: JsonObject) = jsonObject["_lastModifiedDateTime"] ?: throw Exception(lastModifiedDateTimeNotFound)
+    fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
+        val dateElement = jsonObject["_lastModifiedDateTime"]
+        if (dateElement is JsonObject) {
+            if (dateElement["\$date"] != null) {
+                return dateElement["\$date"].asString
+            } else {
+                val dateAsString = dateElement.toString()
+                throw Exception("Last modified date time was an unknown format of \"$dateAsString\"")
+            }
+        }
+
+        return dateElement.asString
+    }
 
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
         validTimestamps.forEach {

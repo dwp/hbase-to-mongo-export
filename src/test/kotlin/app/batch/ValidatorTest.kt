@@ -140,8 +140,8 @@ class ValidatorTest {
                    "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val lastModifiedDateTimeJsonObject = validator.retrieveLastModifiedDateTime(jsonObject!!)
-        assertEquals("2018-12-14T15:01:02.000+0000", lastModifiedDateTimeJsonObject.asString)
+        val lastModifiedDateTimeString = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        assertEquals("2018-12-14T15:01:02.000+0000", lastModifiedDateTimeString)
     }
 
     @Test
@@ -151,8 +151,21 @@ class ValidatorTest {
                    "_lastModifiedDateTime": {"${"$"}date": "2018-12-14T15:01:02.000+0000"}
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val lastModifiedDateTimeJsonObject = validator.retrieveLastModifiedDateTime(jsonObject!!)
-        assertNotNull(lastModifiedDateTimeJsonObject)
+        val lastModifiedDateTimeString = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        assertEquals("2018-12-14T15:01:02.000+0000", lastModifiedDateTimeString)
+    }
+
+    @Test
+    fun Should_Throw_Exception_When_LastModifiedDateTime_Is_An_InValid_Json_Object() {
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": {"date": "2018-12-14T15:01:02.000+0000"}
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val exception = shouldThrow<BadDecryptedDataException> {
+            val lastModifiedDateTimeString = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        }
+        exception.message shouldBe "Last modified date time was an unknown format of \"{\"date\": \"2019-07-04T07:27:35.104+0000\"}\""
     }
 
     @Test
