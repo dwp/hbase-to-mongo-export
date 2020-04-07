@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import java.nio.ByteBuffer
 import java.util.zip.CRC32
+import com.google.gson.JsonObject
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [Validator::class])
@@ -177,7 +178,7 @@ class ValidatorTest {
         
         val expected = validator.parseDecrypted(newJson)
 
-        val actual = JsonObject()
+        var actual = JsonObject()
         if (oldJsonObject != null) {
             actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
         }
@@ -203,7 +204,7 @@ class ValidatorTest {
         
         val expected = validator.parseDecrypted(newJson)
         
-        val actual = JsonObject()
+        var actual = JsonObject()
         if (oldJsonObject != null) {
             actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         }
@@ -229,7 +230,7 @@ class ValidatorTest {
         
         val expected = validator.parseDecrypted(newJson)
         
-        val actual = JsonObject()
+        var actual = JsonObject()
         if (oldJsonObject != null) {
             actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         }
@@ -255,7 +256,7 @@ class ValidatorTest {
 
         val expected = validator.parseDecrypted(newJson)
         
-        val actual = JsonObject()
+        var actual = JsonObject()
         if (oldJsonObject != null) {
             actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         }
