@@ -165,7 +165,7 @@ class ValidatorTest {
         val exception = shouldThrow<Exception> {
             validator.retrieveLastModifiedDateTime(jsonObject!!)
         }
-        exception.message shouldBe "Last modified date time was an unknown format of \"{\"date\": \"2019-07-04T07:27:35.104+0000\"}\""
+        exception.message shouldBe "Last modified date time was an unknown format of \"{\"date\": \"2018-12-14T15:01:02.000+0000\"}\""
     }
 
     @Test
