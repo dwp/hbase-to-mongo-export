@@ -102,7 +102,7 @@ class ValidatorTest {
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
-        exception.message shouldBe "Exception in processing the decrypted record id '00003' in db 'db' in collection 'collection' with the reason 'Last modified date time was an unknown format of \"{\"date\": \"2019-07-04T07:27:35.104+0000\"}\"'"
+        exception.message shouldBe "Exception in processing the decrypted record id '00003' in db 'db' in collection 'collection' with the reason 'Last modified date time was an unknown format'"
     }
 
     @Test
@@ -165,7 +165,7 @@ class ValidatorTest {
         val exception = shouldThrow<Exception> {
             validator.retrieveLastModifiedDateTime(jsonObject!!)
         }
-        exception.message shouldBe "Last modified date time was an unknown format of \"{\"date\": \"2018-12-14T15:01:02.000+0000\"}\""
+        exception.message shouldBe "Last modified date time was an unknown format"
     }
 
     @Test

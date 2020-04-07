@@ -90,7 +90,7 @@ class Validator {
                 return dateElement["\$date"].asString
             } else {
                 val dateAsString = dateElement.toString()
-                throw Exception("Last modified date time was an unknown format of \"$dateAsString\"")
+                throw Exception("Last modified date time was an unknown format")
             }
         }
 
