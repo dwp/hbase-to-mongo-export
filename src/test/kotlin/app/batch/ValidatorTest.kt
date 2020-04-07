@@ -178,9 +178,10 @@ class ValidatorTest {
         
         val expected = validator.parseDecrypted(newJson)
 
-        var actual = JsonObject()
-        if (oldJsonObject != null) {
-            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
+        val (actual, dateString) = if (oldJsonObject != null) {
+            validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
+        } else {
+            (JsonObject(), "")
         }
         
         assertEquals(expected, actual)
@@ -205,9 +206,10 @@ class ValidatorTest {
         
         val expected = validator.parseDecrypted(newJson)
         
-        var actual = JsonObject()
-        if (oldJsonObject != null) {
-            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val (actual, dateString) = if (oldJsonObject != null) {
+            validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        } else {
+            (JsonObject(), "")
         }
         
         assertEquals(expected, actual)
@@ -232,9 +234,10 @@ class ValidatorTest {
         
         val expected = validator.parseDecrypted(newJson)
         
-        var actual = JsonObject()
-        if (oldJsonObject != null) {
-            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val (actual, dateString) = if (oldJsonObject != null) {
+            validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        } else {
+            (JsonObject(), "")
         }
         
         assertEquals(expected, actual)
@@ -259,9 +262,10 @@ class ValidatorTest {
 
         val expected = validator.parseDecrypted(newJson)
         
-        var actual = JsonObject()
-        if (oldJsonObject != null) {
-            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val (actual, dateString) = if (oldJsonObject != null) {
+            validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        } else {
+            (JsonObject(), "")
         }
         
         assertEquals(expected, actual)
