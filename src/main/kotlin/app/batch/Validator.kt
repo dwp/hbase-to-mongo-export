@@ -67,7 +67,7 @@ class Validator {
     fun replaceElementValueWithKeyValuePair(objectWithFieldIn: JsonObject, keyToReplace: String, newKey: String, value: String): Pair<JsonObject, String> {
         var objectWithChangedField = objectWithFieldIn
         val newElement = JsonObject()
-        newElement.addProperty(newKeyString, value)
+        newElement.addProperty(newKey, value)
         objectWithChangedField.remove(keyToReplace)
         objectWithChangedField.add(keyToReplace, newElement)
         return Pair(objectWithChangedField, value)
