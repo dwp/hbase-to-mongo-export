@@ -411,8 +411,8 @@
       "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
       "@type": "V4",
       "message": {
-        "db": "quartz",
-        "collection": "claimantEvent",
+        "db": "penalties-and-deductions",
+        "collection": "sanction",
         "_id": "ID_CONSTRUCTED_FROM_NATIVE_MONGO",
         "mongo_format_stripped_from_id": true,
         "_timeBasedHash": "hashhhhhhhhhh",
