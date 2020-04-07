@@ -28,16 +28,17 @@ class S3WriterIntegrationTest {
 
     @Test
     fun testMethod() {
-
+        val oid = "\$oid"
         val expected = """
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4
-            """.trimMargin().trimIndent()
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"
+            |"{""$oid"":""ID_CONSTRUCTED_FROM_NATIVE_MONGO""}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,ID_CONSTRUCTED_FROM_NATIVE_MONGO
+            """.trimMargin()
 
         val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
         val list = summaries.map {
