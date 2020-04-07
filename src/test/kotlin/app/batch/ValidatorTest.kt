@@ -180,10 +180,11 @@ class ValidatorTest {
 
         var actual = JsonObject()
         if (oldJsonObject != null) {
-            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
+            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
         }
         
         assertEquals(expected, actual)
+        assertEquals(dateString, newDate)
     }
 
     @Test
@@ -206,10 +207,11 @@ class ValidatorTest {
         
         var actual = JsonObject()
         if (oldJsonObject != null) {
-            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         }
         
         assertEquals(expected, actual)
+        assertEquals(dateString, newDate)
     }
 
     @Test
@@ -232,10 +234,11 @@ class ValidatorTest {
         
         var actual = JsonObject()
         if (oldJsonObject != null) {
-            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         }
         
         assertEquals(expected, actual)
+        assertEquals(dateString, newDate)
     }
 
     @Test
@@ -258,10 +261,11 @@ class ValidatorTest {
         
         var actual = JsonObject()
         if (oldJsonObject != null) {
-            actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+            (actual, dateString) = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         }
         
         assertEquals(expected, actual)
+        assertEquals(dateString, newDate)
     }
 
 
