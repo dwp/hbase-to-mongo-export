@@ -137,7 +137,7 @@ class ValidatorTest {
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val lastModifiedDateTimeJsonObject = validator.retrieveLastModifiedDateTime(jsonObject!!)
-        assertEquals("2018-12-14T15:01:02.000+0000", lastModifiedDateTimeJsonObject.asString)
+        assertNotNull(lastModifiedDateTimeJsonObject)
     }
 
     @Test
@@ -179,7 +179,7 @@ class ValidatorTest {
         val expected = validator.parseDecrypted(newJson)
 
         val (actual, dateString) = if (oldJsonObject != null) {
-            validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
+            validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         } else {
             Pair(null, "")
         }
