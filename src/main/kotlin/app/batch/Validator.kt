@@ -38,7 +38,12 @@ class Validator {
 
                 var dateElement = retrieveLastModifiedDateTime(dbObjectWithId)
                 val (dbObjectWithIdAndDate, originalLastModifiedDateTime) = if (dateElement is JsonObject) {
-                    Pair(dbObjectWithId, dateElement[0].asString)
+                    if (dateElement["\$date"] != null) {
+                        Pair(dbObjectWithId, dateElement["\$date"].asString)   
+                    } else {
+                        val dateAsString = $dateElement.toString()
+                        throw Exception("Last modified date time was an unknown format of \"$dateAsString\"")
+                    }
                 } else {
                     replaceElementValueWithKeyValuePair(dbObjectWithId, "_lastModifiedDateTime", "\$date", dateElement.asString)
                 }
