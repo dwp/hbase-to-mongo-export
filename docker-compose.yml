@@ -201,7 +201,7 @@ services:
     environment:
       - FILE_NAME=/opt/hbase-to-mongo-export/data
       - EXPECTED_TIMESTAMP=10
-      - EXPECTED_LINE_COUNT=7
+      - EXPECTED_LINE_COUNT=8
       - SPRING_PROFILES_ACTIVE=dummyS3Client
       - SPRING_CONFIG_LOCATION=application_integration.properties
 
