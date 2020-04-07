@@ -181,7 +181,7 @@ class ValidatorTest {
         val (actual, dateString) = if (oldJsonObject != null) {
             validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "date", newDate)
         } else {
-            (JsonObject(), "")
+            Pair(null, "")
         }
         
         assertEquals(expected, actual)
@@ -209,7 +209,7 @@ class ValidatorTest {
         val (actual, dateString) = if (oldJsonObject != null) {
             validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         } else {
-            (JsonObject(), "")
+            Pair(null, "")
         }
         
         assertEquals(expected, actual)
@@ -237,7 +237,7 @@ class ValidatorTest {
         val (actual, dateString) = if (oldJsonObject != null) {
             validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         } else {
-            (JsonObject(), "")
+            Pair(null, "")
         }
         
         assertEquals(expected, actual)
@@ -265,7 +265,7 @@ class ValidatorTest {
         val (actual, dateString) = if (oldJsonObject != null) {
             validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
         } else {
-            (JsonObject(), "")
+            Pair(null, "")
         }
         
         assertEquals(expected, actual)
