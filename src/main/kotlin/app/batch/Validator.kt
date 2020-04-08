@@ -29,22 +29,29 @@ class Validator {
             val dbObject = parseDecrypted(decrypted)
             if (null != dbObject) {
                 val idElement = retrieveId(dbObject)
-
-                val (id, originalId) = if (idElement is JsonObject) {
-                    Pair(idElement.toString(), idElement.toString())
-                }
-                else {
-                    val reconstructedMongoId = JsonObject()
-                    reconstructedMongoId.addProperty("\$oid", idElement.asString)
-                    dbObject.remove("_id")
-                    dbObject.add("_id", reconstructedMongoId)
-                    Pair(reconstructedMongoId.toString(), idElement.asString)
+                val (dbObjectWithId, originalId) = if (idElement is JsonObject) {
+                    Pair(dbObject, idElement.toString())
+                } else {
+                    replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asString)
                 }
 
-                val timeAsLong = timestampAsLong(item.lastModified)
-                dbObject.addProperty("timestamp", item.hbaseTimestamp)
-                val manifestRecord = ManifestRecord(id, timeAsLong, db, collection, "EXPORT", item.type, originalId)
-                return DecryptedRecord(dbObject, manifestRecord)
+                var dateAsString = retrieveLastModifiedDateTime(dbObjectWithId)
+                val (dbObjectWithIdAndDate, originalLastModifiedDateTime) = 
+                    replaceElementValueWithKeyValuePair(dbObjectWithId, "_lastModifiedDateTime", "\$date", dateAsString)
+
+                val newIdElement = dbObjectWithIdAndDate["_id"]
+                val newIdAsString = if (newIdElement is JsonObject) {
+                    newIdElement.toString()
+                } else {
+                    newIdElement.asString
+                }
+
+                val timeAsLong = timestampAsLong(originalLastModifiedDateTime)
+                val manifestRecord = ManifestRecord(newIdAsString, 
+                    timeAsLong, db, collection, "EXPORT", item.type, originalId)
+                
+                dbObjectWithIdAndDate.addProperty("timestamp", item.hbaseTimestamp)
+                return DecryptedRecord(dbObjectWithIdAndDate, manifestRecord)
             }
         } catch (e: Exception) {
             e.printStackTrace(System.err)
@@ -52,6 +59,15 @@ class Validator {
             throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
+    }
+
+    fun replaceElementValueWithKeyValuePair(objectWithFieldIn: JsonObject, keyToReplace: String, newKey: String, value: String): Pair<JsonObject, String> {
+        var objectWithChangedField = objectWithFieldIn
+        val newElement = JsonObject()
+        newElement.addProperty(newKey, value)
+        objectWithChangedField.remove(keyToReplace)
+        objectWithChangedField.add(keyToReplace, newElement)
+        return Pair(objectWithChangedField, value)
     }
 
     fun parseDecrypted(decrypted: String): JsonObject? {
@@ -67,6 +83,18 @@ class Validator {
 
     fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
 
+    fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
+        val dateElement = jsonObject["_lastModifiedDateTime"]
+        if (dateElement is JsonObject) {
+            if (dateElement["\$date"] != null) {
+                return dateElement["\$date"].asString
+            } else {
+                throw Exception("Last modified date time was an unknown format")
+            }
+        }
+
+        return dateElement.asString
+    }
 
     fun timestampAsLong(lastUpdatedTimestamp: String): Long {
         validTimestamps.forEach {

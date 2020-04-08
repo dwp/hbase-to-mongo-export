@@ -177,9 +177,7 @@ def decrypted_db_object():
         "carriageReturnWithText": "some\rtext",
         "carriageReturnLineFeed": "\r\n",
          "carriageReturnLineFeedWithText": "some\r\ntext",
-        "_lastModifiedDateTime": {
-            "$date": "2018-12-14T15:01:02.000+0000"
-        }
+        "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
     }
 
 
