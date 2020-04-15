@@ -62,7 +62,6 @@ class HBaseReader constructor(private val connection: Connection, private val te
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val db = messageInfo.getAsJsonPrimitive("db")?.asString
             val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
-            val lastModified = lastModifiedDateTime(messageInfo)
             val encryptionInfo = messageInfo.getAsJsonObject("encryption")
             val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
             val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
@@ -87,27 +86,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
                 else if (StringUtils.isNotBlank(innerType)) innerType
                 else "TYPE_NOT_SET"
 
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified, type!!)
+            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, type!!)
         }
-
-
-    fun lastModifiedDateTime(messageObject: JsonObject): String {
-        val lastModifiedElement = messageObject.get("_lastModifiedDateTime")
-        val epoch = "1980-01-01T00:00:00.000Z"
-        return if (lastModifiedElement != null) {
-            if (lastModifiedElement.isJsonPrimitive) {
-                lastModifiedElement.asJsonPrimitive.asString
-            }
-            else {
-                val asObject = lastModifiedElement.asJsonObject
-                val dateSubField = "\$date"
-                asObject.getAsJsonPrimitive(dateSubField)?.asString ?: epoch
-            }
-        }
-        else {
-            epoch
-        }
-    }
 
     fun resetScanner() {
         scanner = null
