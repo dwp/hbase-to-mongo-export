@@ -66,30 +66,30 @@ class Validator {
     }
 
     fun wrapDates(objectWithDatesIn: JsonObject): Pair<JsonObject, String> {
-        val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
-        val dbObjectWithCreatedDate = if (!StringUtils.isEmpty(createdDateTimeAsString)) { 
-            replaceElementValueWithKeyValuePair(
-                objectWithDatesIn, 
-                "createdDateTime", 
-                "\$date", 
-                createdDateTimeAsString) 
-            } else { objectWithDatesIn }
-
-        val removedDateTimeAsString = retrieveDateTimeElement("_removedDateTime", dbObjectWithCreatedDate)
-        val dbObjectWithCreatedAndRemovedDate = if (!StringUtils.isEmpty(removedDateTimeAsString)) { 
-            replaceElementValueWithKeyValuePair(
-                dbObjectWithCreatedDate, 
-                "_removedDateTime", 
-                "\$date", 
-                removedDateTimeAsString) 
-            } else { dbObjectWithCreatedDate }
-
-        val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(dbObjectWithCreatedAndRemovedDate, createdDateTimeAsString)
-        val dbObjectWithAllDates = replaceElementValueWithKeyValuePair(
+        val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn)
+        val dbObjectWithLastModifiedDate = replaceElementValueWithKeyValuePair(
             objectWithDatesIn, 
             "_lastModifiedDateTime", 
             "\$date", 
             lastModifiedDateTimeAsString)
+
+        val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
+        val dbObjectWithLastModifiedAndCreatedDate = if (!StringUtils.isEmpty(createdDateTimeAsString)) { 
+            replaceElementValueWithKeyValuePair(
+                dbObjectWithLastModifiedDate, 
+                "createdDateTime", 
+                "\$date", 
+                createdDateTimeAsString) 
+            } else { dbObjectWithLastModifiedDate }
+
+        val removedDateTimeAsString = retrieveDateTimeElement("_removedDateTime", objectWithDatesIn)
+        val dbObjectWithAllDates = if (!StringUtils.isEmpty(removedDateTimeAsString)) { 
+            replaceElementValueWithKeyValuePair(
+                dbObjectWithLastModifiedAndCreatedDate, 
+                "_removedDateTime", 
+                "\$date", 
+                removedDateTimeAsString) 
+            } else { dbObjectWithLastModifiedAndCreatedDate }
 
         return Pair(dbObjectWithAllDates, lastModifiedDateTimeAsString)
     }
@@ -116,9 +116,10 @@ class Validator {
 
     fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
 
-    fun retrieveLastModifiedDateTime(jsonObject: JsonObject, createdDateTime: String): String {
+    fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
         val epoch = "1980-01-01T00:00:00.000Z"
         val lastModifiedDateTime = retrieveDateTimeElement("_lastModifiedDateTime", jsonObject)
+        val createdDateTime = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
         
         if (!StringUtils.isBlank(lastModifiedDateTime)) {
             return lastModifiedDateTime
