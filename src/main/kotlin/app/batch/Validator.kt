@@ -119,7 +119,7 @@ class Validator {
     fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
         val epoch = "1980-01-01T00:00:00.000Z"
         val lastModifiedDateTime = retrieveDateTimeElement("_lastModifiedDateTime", jsonObject)
-        val createdDateTime = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
+        val createdDateTime = retrieveDateTimeElement("createdDateTime", jsonObject)
         
         if (!StringUtils.isBlank(lastModifiedDateTime)) {
             return lastModifiedDateTime
