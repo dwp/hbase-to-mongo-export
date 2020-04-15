@@ -265,7 +265,6 @@ class ValidatorTest {
 
         val decryptedDbObject = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": null,
                    "dateTimeTestElement": "$expected"
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)

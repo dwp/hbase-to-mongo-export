@@ -121,11 +121,11 @@ class Validator {
         val lastModifiedDateTime = retrieveDateTimeElement("_lastModifiedDateTime", jsonObject)
         val createdDateTime = retrieveDateTimeElement("createdDateTime", jsonObject)
         
-        if (StringUtils.isBlank(lastModifiedDateTime) == false) {
+        if (StringUtils.isEmpty(lastModifiedDateTime) == false) {
             return lastModifiedDateTime
         }
         
-        if (StringUtils.isBlank(createdDateTime) == false) {
+        if (StringUtils.isEmpty(createdDateTime) == false) {
             return createdDateTime
         }
 
@@ -133,8 +133,8 @@ class Validator {
     }
 
     fun retrieveDateTimeElement(key: String, jsonObject: JsonObject): String {
-        if (jsonObject[key] != null) {
-            val dateElement = jsonObject[key]
+        val dateElement = jsonObject[key]
+        if (dateElement.isJsonNull() == false && dateElement != null) {
             if (dateElement is JsonObject) {
                 if (dateElement["\$date"] != null) {
                     return dateElement["\$date"].asString
