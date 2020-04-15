@@ -67,7 +67,7 @@ class Validator {
 
     fun wrapDates(objectWithDatesIn: JsonObject): Pair<JsonObject, String> {
         val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", dbObjectWithId)
-        val dbObjectWithCreatedDate = if (!StringUtils.isBlank(createdDateTimeAsString)) { 
+        val dbObjectWithCreatedDate = if (!StringUtils.isEmpty(createdDateTimeAsString)) { 
             replaceElementValueWithKeyValuePair(
                 objectWithDatesIn, 
                 "createdDateTime", 
@@ -76,7 +76,7 @@ class Validator {
             } else { objectWithDatesIn }
 
         val removedDateTimeAsString = retrieveDateTimeElement("_removedDateTime", dbObjectWithCreatedDate)
-        val dbObjectWithCreatedAndRemovedDate = if (!StringUtils.isBlank(removedDateTimeAsString)) { 
+        val dbObjectWithCreatedAndRemovedDate = if (!StringUtils.isEmpty(removedDateTimeAsString)) { 
             replaceElementValueWithKeyValuePair(
                 dbObjectWithCreatedDate, 
                 "_removedDateTime", 

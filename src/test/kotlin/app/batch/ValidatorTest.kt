@@ -311,12 +311,12 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
+                    "_lastModifiedDateTime": {"${"$"}date": "$newDate"}
                 }"""
 
         val oldJsonObject = validator.parseDecrypted(oldJson)
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "${"$"}date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -328,17 +328,17 @@ class ValidatorTest {
 
         val oldJson = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                   "_lastModifiedDateTime": {"{'$'}date": "$oldDate"}
+                   "_lastModifiedDateTime": {"${"$"}date": "$oldDate"}
                 }"""
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
+                    "_lastModifiedDateTime": {"${"$"}date": "$newDate"}
                 }"""
 
         val oldJsonObject = validator.parseDecrypted(oldJson)
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "${"$"}date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -355,12 +355,12 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
+                    "_lastModifiedDateTime": {"${"$"}date": "$newDate"}
                 }"""
 
         val oldJsonObject = validator.parseDecrypted(oldJson)
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "${"$"}date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -377,12 +377,12 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"{'$'}date": "$newDate"}
+                    "_lastModifiedDateTime": {"${"$"}date": "$newDate"}
                 }"""
 
         val oldJsonObject = validator.parseDecrypted(oldJson)
         val expected = validator.parseDecrypted(newJson)
-        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "{'$'}date", newDate)
+        val actual = validator.replaceElementValueWithKeyValuePair(oldJsonObject, "_lastModifiedDateTime", "${"$"}date", newDate)
         
         assertEquals(expected, actual)
     }
@@ -402,9 +402,9 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "_lastModifiedDateTime": {"{'$'}date": "$dateOne"},
-                    "createdDateTime": {"{'$'}date": "$dateTwo"},
-                    "_removedDateTime": {"{'$'}date": "$dateThree"}
+                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"},
+                    "createdDateTime": {"${"$"}date": "$dateTwo"},
+                    "_removedDateTime": {"${"$"}date": "$dateThree"}
                 }"""
 
         val oldJsonObject = validator.parseDecrypted(oldJson)
@@ -413,6 +413,135 @@ class ValidatorTest {
         
         assertEquals(expected, actual)
         assertEquals(dateOne, lastModifiedDate)
+    }
+
+    @Test
+    fun Should_Keep_Wrapped_Dates_Within_Wrapper() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000" 
+        val dateThree = "2017-12-14T15:01:02.000+0000" 
+
+        val oldJson = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": {"${"$"}date": "$dateOne"},
+                   "createdDateTime": {"${"$"}date": "$dateTwo"},
+                   "_removedDateTime": {"${"$"}date": "$dateThree"}
+                }"""
+
+        val newJson = """{
+                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"},
+                    "createdDateTime": {"${"$"}date": "$dateTwo"},
+                    "_removedDateTime": {"${"$"}date": "$dateThree"}
+                }"""
+
+        val oldJsonObject = validator.parseDecrypted(oldJson)
+        val expected = validator.parseDecrypted(newJson)
+        val (actual, lastModifiedDate) = validator.wrapDates(oldJsonObject)
+        
+        assertEquals(expected, actual)
+        assertEquals(dateOne, lastModifiedDate)
+    }
+
+    @Test
+    fun Should_Allow_For_Missing_Created_And_Removed_Dates() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000" 
+        val dateThree = "2017-12-14T15:01:02.000+0000" 
+
+        val oldJson = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": "$dateOne"
+                }"""
+
+        val newJson = """{
+                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"}
+                }"""
+
+        val oldJsonObject = validator.parseDecrypted(oldJson)
+        val expected = validator.parseDecrypted(newJson)
+        val (actual, lastModifiedDate) = validator.wrapDates(oldJsonObject)
+        
+        assertEquals(expected, actual)
+        assertEquals(dateOne, lastModifiedDate)
+    }
+
+    @Test
+    fun Should_Allow_For_Empty_Created_And_Removed_Dates() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000" 
+        val dateThree = "2017-12-14T15:01:02.000+0000" 
+
+        val oldJson = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": "$dateOne",
+                   "createdDateTime": "",
+                   "_removedDateTime": ""
+                }"""
+
+        val newJson = """{
+                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"},
+                    "createdDateTime": "",
+                    "_removedDateTime": ""
+                }"""
+
+        val oldJsonObject = validator.parseDecrypted(oldJson)
+        val expected = validator.parseDecrypted(newJson)
+        val (actual, lastModifiedDate) = validator.wrapDates(oldJsonObject)
+        
+        assertEquals(expected, actual)
+        assertEquals(dateOne, lastModifiedDate)
+    }
+
+    @Test
+    fun Should_Allow_For_Null_Created_And_Removed_Dates() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000" 
+        val dateThree = "2017-12-14T15:01:02.000+0000" 
+
+        val oldJson = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": "$dateOne",
+                   "createdDateTime": null,
+                   "_removedDateTime": null
+                }"""
+
+        val newJson = """{
+                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"},
+                    "createdDateTime": null,
+                    "_removedDateTime": null
+                }"""
+
+        val oldJsonObject = validator.parseDecrypted(oldJson)
+        val expected = validator.parseDecrypted(newJson)
+        val (actual, lastModifiedDate) = validator.wrapDates(oldJsonObject)
+        
+        assertEquals(expected, actual)
+        assertEquals(dateOne, lastModifiedDate)
+    }
+
+    @Test
+    fun Should_Create_Last_Modified_If_Missing_Dates() {
+        val epoch = "2018-12-14T15:01:02.000+0000" 
+
+        val oldJson = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"}
+                }"""
+
+        val newJson = """{
+                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                    "_lastModifiedDateTime": {"${"$"}date": "$epoch"}
+                }"""
+
+        val oldJsonObject = validator.parseDecrypted(oldJson)
+        val expected = validator.parseDecrypted(newJson)
+        val (actual, lastModifiedDate) = validator.wrapDates(oldJsonObject)
+        
+        assertEquals(expected, actual)
+        assertEquals(epoch, lastModifiedDate)
     }
 
 
