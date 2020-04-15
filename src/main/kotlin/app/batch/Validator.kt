@@ -66,7 +66,7 @@ class Validator {
     }
 
     fun wrapDates(objectWithDatesIn: JsonObject): Pair<JsonObject, String> {
-        val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", dbObjectWithId)
+        val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
         val dbObjectWithCreatedDate = if (!StringUtils.isEmpty(createdDateTimeAsString)) { 
             replaceElementValueWithKeyValuePair(
                 objectWithDatesIn, 
@@ -118,7 +118,7 @@ class Validator {
 
     fun retrieveLastModifiedDateTime(jsonObject: JsonObject, createdDateTime: String): String {
         val epoch = "1980-01-01T00:00:00.000Z"
-        val lastModifiedDateTime = retrieveLastModifiedDateTime("_lastModifiedDateTime", jsonObject)
+        val lastModifiedDateTime = retrieveDateTimeElement("_lastModifiedDateTime", jsonObject)
         
         if (!StringUtils.isBlank(lastModifiedDateTime)) {
             return lastModifiedDateTime
