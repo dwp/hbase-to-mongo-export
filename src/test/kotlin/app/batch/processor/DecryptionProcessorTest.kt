@@ -42,8 +42,6 @@ class DecryptionProcessorTest {
 
     @Test(expected = DataKeyServiceUnavailableException::class)
     fun testDataKeyServiceUnavailable() {
-        val lastModified = "2019-07-04T07:27:35.104+0000"
-
         given(dataKeyService.decryptKey(anyString(), anyString()))
             .willThrow(DataKeyServiceUnavailableException::class.java)
         val encryptionBlock: EncryptionBlock =
@@ -58,7 +56,6 @@ class DecryptionProcessorTest {
 
     @Test(expected = DecryptionFailureException::class)
     fun testDataKeyDecryptionFailure() {
-        val lastModified = "2019-07-04T07:27:35.104+0000"
         given(dataKeyService.decryptKey(anyString(), anyString()))
             .willThrow(DataKeyDecryptionException::class.java)
 

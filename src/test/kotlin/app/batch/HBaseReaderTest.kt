@@ -65,7 +65,6 @@ class HBaseReaderTest {
         val hbaseReader = HBaseReader(connection, textUtils)
         hbaseReader.resetScanner()
 
-        val lastModified = "2019-07-04T07:27:35.104+0000"
         val cellData = """
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
@@ -127,7 +126,6 @@ class HBaseReaderTest {
         val hbaseReader = HBaseReader(connection, textUtils)
         hbaseReader.resetScanner()
 
-        val lastModified = "2019-07-04T07:27:35.104+0000"
         val cellData = """
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
@@ -188,7 +186,6 @@ class HBaseReaderTest {
         val hbaseReader = HBaseReader(connection, textUtils)
         hbaseReader.resetScanner()
 
-        val lastModified = "2019-07-04T07:27:35.104+0000"
         val cellData = """
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
