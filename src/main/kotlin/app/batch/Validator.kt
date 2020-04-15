@@ -134,10 +134,11 @@ class Validator {
 
     fun retrieveDateTimeElement(key: String, jsonObject: JsonObject): String {
         val dateElement = jsonObject[key]
-        if (dateElement.isJsonNull() == false && dateElement != null) {
+        if (dateElement != null && dateElement.isJsonNull() == false) {
             if (dateElement is JsonObject) {
-                if (dateElement["\$date"] != null) {
-                    return dateElement["\$date"].asString
+                val dateSubElement = dateElement["\$date"]
+                if (dateSubElement != null && dateSubElement.isJsonNull() == false) {
+                    return dateSubElement.asString
                 }
             } else {
                 return dateElement.asString
