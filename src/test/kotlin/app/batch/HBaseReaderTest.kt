@@ -102,7 +102,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",lastModified, "V4")
+                "core", "addressDeclaration", "V4")
 
         val actual = hbaseReader.read()
 
@@ -163,7 +163,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",lastModified, "MONGO_INSERT")
+                "core", "addressDeclaration", "MONGO_INSERT")
 
         val actual = hbaseReader.read()
 
@@ -225,7 +225,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",lastModified, "MONGO_INSERT")
+                "core", "addressDeclaration", "MONGO_INSERT")
 
         val actual = hbaseReader.read()
 
@@ -290,7 +290,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", lastModified, "V4")
+                "core", "addressDeclaration", "V4")
 
         val actual = hbaseReader.read()
 
@@ -349,7 +349,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z", "V4")
+                "core", "addressDeclaration", "V4")
 
         val actual = hbaseReader.read()
 
@@ -406,7 +406,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z", "TYPE_NOT_SET")
+                "core", "addressDeclaration", "TYPE_NOT_SET")
 
         val actual = hbaseReader.read()
 
