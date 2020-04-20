@@ -8,7 +8,7 @@ import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ResultScanner
