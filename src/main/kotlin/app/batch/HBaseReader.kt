@@ -8,7 +8,7 @@ import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ResultScanner
@@ -22,7 +22,6 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
-import java.util.*
 import java.time.ZonedDateTime
 
 @Component
@@ -56,9 +55,9 @@ class HBaseReader constructor(private val connection: Connection, private val te
             val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
-            val outerType = dataBlock.getAsJsonPrimitive("@type")?.asString
+            val outerType = dataBlock.getAsJsonPrimitive("@type")?.asString ?: ""
             val messageInfo = dataBlock.getAsJsonObject("message")
-            val innerType = messageInfo.getAsJsonPrimitive("@type")?.asString
+            val innerType = messageInfo.getAsJsonPrimitive("@type")?.asString ?: ""
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val db = messageInfo.getAsJsonPrimitive("db")?.asString
             val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
@@ -82,12 +81,9 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-
-            val type: String? = if (StringUtils.isNotBlank(outerType)) outerType
-                else if (StringUtils.isNotBlank(innerType)) innerType
-                else "TYPE_NOT_SET"
-
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified, type!!)
+            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection, lastModified,
+                    if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
+                    if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
         }
 
 
@@ -132,7 +128,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
     fun getScanTimeRangeStartEpoch() : Long {
         return if (scanTimeRangeStart.isNotBlank())
             ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
-            else 0;
+            else 0
     }
 
     fun getScanTimeRangeEndEpoch() : Long {
@@ -141,7 +137,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
             endDateTime = ZonedDateTime.parse(scanTimeRangeEnd)
         }
 
-        return endDateTime.toInstant().toEpochMilli();
+        return endDateTime.toInstant().toEpochMilli()
     }
 
     private fun scan(): Scan {

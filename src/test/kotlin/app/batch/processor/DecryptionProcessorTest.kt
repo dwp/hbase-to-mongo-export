@@ -52,7 +52,7 @@ class DecryptionProcessorTest {
                 "encryptedEncryptionKey")
 
         val sourceRecord = SourceRecord("00001".toByteArray(), 10, encryptionBlock,
-                "dbObject", "db", "collection", lastModified, "HDI")
+                "dbObject", "db", "collection", lastModified, "OUTER_TYPE", "INNER_TYPE")
         decryptionProcessor.process(sourceRecord)
     }
 
@@ -67,7 +67,7 @@ class DecryptionProcessorTest {
                 "initialisationVector",
                 "encryptedEncryptionKey")
         decryptionProcessor.process(SourceRecord("00001".toByteArray(), 10, encryptionBlock,
-                "dbObject", "db", "collection", lastModified, "HDI"))
+                "dbObject", "db", "collection", lastModified, "OUTER_TYPE", "INNER_TYPE"))
     }
 
     @MockBean

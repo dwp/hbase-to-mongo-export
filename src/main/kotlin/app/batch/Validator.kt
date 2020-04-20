@@ -48,7 +48,7 @@ class Validator {
 
                 val timeAsLong = timestampAsLong(originalLastModifiedDateTime)
                 val manifestRecord = ManifestRecord(newIdAsString, 
-                    timeAsLong, db, collection, "EXPORT", item.type, originalId)
+                    timeAsLong, db, collection, "EXPORT", item.outerType, item.innerType, originalId)
                 
                 dbObjectWithIdAndDate.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(dbObjectWithIdAndDate, manifestRecord)

@@ -8,14 +8,11 @@ import org.apache.hadoop.hbase.Cell
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
-import org.mockito.Mock
 import org.mockito.Mockito
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
@@ -70,7 +67,7 @@ class HBaseReaderTest {
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
             |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
-            |  "@type": "V4",
+            |  "@type": "OUTER_TYPE",
             |  "message": {
             |    "db": "core",
             |    "collection": "addressDeclaration",
@@ -78,7 +75,7 @@ class HBaseReaderTest {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
             |    "_timeBasedHash": "hashhhhhhhhhh",
-            |    "@type": "MONGO_INSERT",
+            |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
             |      "encryptionKeyId": "$encryptionKeyId",
@@ -102,7 +99,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",lastModified, "V4")
+                "core", "addressDeclaration",lastModified, "OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseReader.read()
 
@@ -139,7 +136,7 @@ class HBaseReaderTest {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
             |    "_timeBasedHash": "hashhhhhhhhhh",
-            |    "@type": "MONGO_INSERT",
+            |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
             |      "encryptionKeyId": "$encryptionKeyId",
@@ -163,7 +160,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",lastModified, "MONGO_INSERT")
+                "core", "addressDeclaration",lastModified, "TYPE_NOT_SET", "INNER_TYPE")
 
         val actual = hbaseReader.read()
 
@@ -201,7 +198,7 @@ class HBaseReaderTest {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
             |    "_timeBasedHash": "hashhhhhhhhhh",
-            |    "@type": "MONGO_INSERT",
+            |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
             |      "encryptionKeyId": "$encryptionKeyId",
@@ -225,7 +222,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",lastModified, "MONGO_INSERT")
+                "core", "addressDeclaration",lastModified, "TYPE_NOT_SET", "INNER_TYPE")
 
         val actual = hbaseReader.read()
 
@@ -256,7 +253,7 @@ class HBaseReaderTest {
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
             |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
-            |  "@type": "V4",
+            |  "@type": "OUTER_TYPE",
             |  "message": {
             |    "db": "core",
             |    "collection": "addressDeclaration",
@@ -264,7 +261,7 @@ class HBaseReaderTest {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
             |    "_timeBasedHash": "hashhhhhhhhhh",
-            |    "@type": "MONGO_INSERT",
+            |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": {
             |       $dateKey: "$lastModified"
             |    },
@@ -290,7 +287,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", lastModified, "V4")
+                "core", "addressDeclaration", lastModified, "OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseReader.read()
 
@@ -318,7 +315,7 @@ class HBaseReaderTest {
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
             |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
-            |  "@type": "V4",
+            |  "@type": "OUTER_TYPE",
             |  "message": {
             |    "db": "core",
             |    "collection": "addressDeclaration",
@@ -326,7 +323,7 @@ class HBaseReaderTest {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
             |    "_timeBasedHash": "hashhhhhhhhhh",
-            |    "@type": "MONGO_INSERT",
+            |    "@type": "INNER_TYPE",
             |    "encryption": {
             |      "encryptionKeyId": "$encryptionKeyId",
             |      "encryptedEncryptionKey": "$encryptedEncryptionKey",
@@ -349,7 +346,7 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z", "V4")
+                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z", "OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseReader.read()
 
@@ -406,7 +403,9 @@ class HBaseReaderTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z", "TYPE_NOT_SET")
+                "core", "addressDeclaration", "1980-01-01T00:00:00.000Z",
+                "TYPE_NOT_SET",
+                "TYPE_NOT_SET")
 
         val actual = hbaseReader.read()
 
@@ -463,9 +462,7 @@ class HBaseReaderTest {
         given(scanner.next()).willReturn(result)
         given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
-
         hbaseReader.read()
     }
-
 }
 

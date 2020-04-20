@@ -1,6 +1,5 @@
 package app.domain
 
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.text.StringEscapeUtils
 import java.io.BufferedOutputStream
@@ -23,7 +22,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
                         var db: String,
                         var collection: String,
                         val lastModified: String,
-                        val type: String) {
+                        val outerType: String,
+                        val innerType: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -37,7 +37,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
         if (db != other.db) return false
         if (collection != other.collection) return false
         if (lastModified != other.lastModified) return false
-        if (type != other.type) return false
+        if (outerType != other.outerType) return false
+        if (innerType != other.innerType) return false
 
         return true
     }
@@ -50,7 +51,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
         result = 31 * result + db.hashCode()
         result = 31 * result + collection.hashCode()
         result = 31 * result + lastModified.hashCode()
-        result = 31 * result + type.hashCode()
+        result = 31 * result + outerType.hashCode()
+        result = 31 * result + innerType.hashCode()
         return result
     }
 }
@@ -58,7 +60,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
 data class DecryptedRecord(val dbObject: JsonObject, val manifestRecord: ManifestRecord)
 
 data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String,
-                          val source: String, val externalSource: String, val originalId: String)
+                          val source: String, val externalOuterSource: String, val externalInnerSource: String,
+                          val originalId: String)
 
 data class Record(val dbObjectAsString: String, val manifestRecord: ManifestRecord)
 
@@ -79,7 +82,7 @@ data class EncryptingOutputStream(private val outputStream: BufferedOutputStream
     fun writeManifestRecord(manifestRecord: ManifestRecord) = manifestWriter.write(csv(manifestRecord))
 
     private fun csv(manifestRecord: ManifestRecord) =
-            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)},${escape(manifestRecord.originalId)}\n"
+            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalOuterSource)},${escape(manifestRecord.originalId)},${escape(manifestRecord.externalInnerSource)}\n"
 
     private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
 }

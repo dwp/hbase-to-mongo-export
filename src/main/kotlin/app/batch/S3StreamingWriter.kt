@@ -2,7 +2,6 @@ package app.batch
 
 import app.configuration.CompressionInstanceProvider
 import app.domain.EncryptingOutputStream
-import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
@@ -63,7 +62,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
     override fun write(items: MutableList<out Record>) {
         items.forEach {
-            currentBatchManifest.add(it.manifestRecord)
             val item = "${it.dbObjectAsString}\n"
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {
                 writeOutput()
@@ -158,7 +156,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private var totalRecords = 0
     private var totalManifestFiles = 0
     private var totalManifestRecords: Long = 0
-    private var currentBatchManifest = mutableListOf<ManifestRecord>()
+//    private var currentBatchManifest = mutableListOf<ManifestRecord>()
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
