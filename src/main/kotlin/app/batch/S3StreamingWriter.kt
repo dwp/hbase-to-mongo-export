@@ -156,7 +156,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private var totalRecords = 0
     private var totalManifestFiles = 0
     private var totalManifestRecords: Long = 0
-//    private var currentBatchManifest = mutableListOf<ManifestRecord>()
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0
