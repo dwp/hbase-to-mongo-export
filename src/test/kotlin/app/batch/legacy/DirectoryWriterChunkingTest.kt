@@ -57,7 +57,7 @@ class DirectoryWriterChunkingTest {
             for (j in 1..10) {
                 val token = "[%03d/%04d]".format(i, j)
                 val item = token.repeat(j * (11 - i) * 10)
-                list.add(Record(item, ManifestRecord("", 0, "", "", "", "", "")))
+                list.add(Record(item, ManifestRecord("", 0, "", "", "", "", "", "")))
                 total += item.length
             }
             listOfLists.add(list)

@@ -191,8 +191,8 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
 }
 
 fun getDurationInMilliseconds(epochTime: Long): String {
-    var elapsed_milliseconds = epochTime - LogConfiguration.start_time_milliseconds
-    return elapsed_milliseconds.toString()
+    var elapsedMilliseconds = epochTime - LogConfiguration.start_time_milliseconds
+    return elapsedMilliseconds.toString()
 }
 
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {
