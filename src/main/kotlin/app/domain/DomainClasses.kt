@@ -78,7 +78,7 @@ data class EncryptingOutputStream(private val outputStream: BufferedOutputStream
     fun writeManifestRecord(manifestRecord: ManifestRecord) = manifestWriter.write(csv(manifestRecord))
 
     private fun csv(manifestRecord: ManifestRecord) =
-            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalOuterSource)},${escape(manifestRecord.originalId)},${escape(manifestRecord.externalInnerSource)}\n"
+            "${escape(manifestRecord.id)}|${escape(manifestRecord.timestamp.toString())}|${escape(manifestRecord.db)}|${escape(manifestRecord.collection)}|${escape(manifestRecord.source)}|${escape(manifestRecord.externalOuterSource)}|${escape(manifestRecord.originalId)}|${escape(manifestRecord.externalInnerSource)}\n"
 
     private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
 }
