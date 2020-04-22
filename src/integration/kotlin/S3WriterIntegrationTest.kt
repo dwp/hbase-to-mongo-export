@@ -30,14 +30,14 @@ class S3WriterIntegrationTest {
     fun testMethod() {
         val oid = "\$oid"
         val expected = """
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",MONGO_INSERT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",TYPE_NOT_SET
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",TYPE_NOT_SET
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",TYPE_NOT_SET
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",TYPE_NOT_SET
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",TYPE_NOT_SET
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",TYPE_NOT_SET
-            |"{""$oid"":""ID_CONSTRUCTED_FROM_NATIVE_MONGO""}",1544799662000,penalties-and-deductions,sanction,EXPORT,V4,ID_CONSTRUCTED_FROM_NATIVE_MONGO,MONGO_INSERT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|MONGO_INSERT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|TYPE_NOT_SET
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|TYPE_NOT_SET
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|TYPE_NOT_SET
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|TYPE_NOT_SET
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|TYPE_NOT_SET
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|"{""someId"":""RANDOM_GUID"",""declarationId"":1234}"|TYPE_NOT_SET
+            |"{""$oid"":""ID_CONSTRUCTED_FROM_NATIVE_MONGO""}"|1544799662000|penalties-and-deductions|sanction|EXPORT|V4|ID_CONSTRUCTED_FROM_NATIVE_MONGO|MONGO_INSERT
             """.trimMargin()
 
         val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
