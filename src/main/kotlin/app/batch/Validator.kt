@@ -17,7 +17,9 @@ import java.util.*
 
 @Component
 class Validator {
-    val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    val validIncomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+    val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    val validTimestamps = listOf(validIncomingFormat, validOutgoingFormat)
     val idNotFound = "_id field not found in the decrypted db object"
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
@@ -67,29 +69,42 @@ class Validator {
 
     fun wrapDates(objectWithDatesIn: JsonObject): Pair<JsonObject, String> {
         val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn)
+        val formattedLastModifiedDateTimeAsString = formatDateTimeToValidOutgoingFormat(lastModifiedDateTimeAsString)
         val dbObjectWithLastModifiedDate = replaceElementValueWithKeyValuePair(
             objectWithDatesIn, 
             "_lastModifiedDateTime", 
             "\$date", 
-            lastModifiedDateTimeAsString)
+            formattedLastModifiedDateTimeAsString)
 
         val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
-        val dbObjectWithLastModifiedAndCreatedDate = if (!StringUtils.isEmpty(createdDateTimeAsString)) { 
+        val dbObjectWithLastModifiedAndCreatedDates = if (!StringUtils.isEmpty(createdDateTimeAsString)) { 
+            val formattedCreatedDateTimeAsString = formatDateTimeToValidOutgoingFormat(createdDateTimeAsString)
             replaceElementValueWithKeyValuePair(
                 dbObjectWithLastModifiedDate, 
                 "createdDateTime", 
                 "\$date", 
-                createdDateTimeAsString) 
+                formattedCreatedDateTimeAsString) 
             } else { dbObjectWithLastModifiedDate }
 
         val removedDateTimeAsString = retrieveDateTimeElement("_removedDateTime", objectWithDatesIn)
-        val dbObjectWithAllDates = if (!StringUtils.isEmpty(removedDateTimeAsString)) { 
+        val dbObjectWithLastModifiedCreatedAndRemovedDates = if (!StringUtils.isEmpty(removedDateTimeAsString)) { 
+            val formattedRemovedDateTimeAsString = formatDateTimeToValidOutgoingFormat(removedDateTimeAsString)
             replaceElementValueWithKeyValuePair(
-                dbObjectWithLastModifiedAndCreatedDate, 
+                dbObjectWithLastModifiedAndCreatedDates, 
                 "_removedDateTime", 
                 "\$date", 
-                removedDateTimeAsString) 
-            } else { dbObjectWithLastModifiedAndCreatedDate }
+                formattedRemovedDateTimeAsString) 
+            } else { dbObjectWithLastModifiedAndCreatedDates }
+
+        val archivedDateTimeAsString = retrieveDateTimeElement("_archivedDateTime", objectWithDatesIn)
+        val dbObjectWithAllDates = if (!StringUtils.isEmpty(archivedDateTimeAsString)) { 
+            val formattedArchivedDateTimeAsString = formatDateTimeToValidOutgoingFormat(archivedDateTimeAsString)
+            replaceElementValueWithKeyValuePair(
+                dbObjectWithLastModifiedCreatedAndRemovedDates, 
+                "_archivedDateTime", 
+                "\$date", 
+                formattedArchivedDateTimeAsString) 
+            } else { dbObjectWithLastModifiedCreatedAndRemovedDates }
 
         return Pair(dbObjectWithAllDates, lastModifiedDateTimeAsString)
     }
@@ -148,16 +163,27 @@ class Validator {
         return ""
     }
 
-    fun timestampAsLong(lastUpdatedTimestamp: String): Long {
+    fun formatDateTimeToValidOutgoingFormat(currentDateTime: String): String {
+        val parsedDateTime = getValidParsedDateTime(currentDateTime)
+        val df = SimpleDateFormat(validOutgoingFormat)
+        return df.format(parsedDateTime);
+    }
+
+    fun getValidParsedDateTime(timestampAsString: String): Date {
         validTimestamps.forEach {
             try {
                 val df = SimpleDateFormat(it)
-                return df.parse(lastUpdatedTimestamp).time
+                return df.parse(timestampAsString)
             } catch (e: Exception) {
-                logDebug(logger, "lastUpdatedTimestamp did not match valid formats", "last_updated_timestamp", lastUpdatedTimestamp, "failed_format", it)
+                logDebug(logger, "timestampAsString did not match valid formats", "date_time_string", timestampAsString, "failed_format", it)
             }
         }
-        throw Exception("Unparseable date found: \"$lastUpdatedTimestamp\", did not match any of $validTimestamps")
+        throw Exception("Unparseable date found: '$timestampAsString', did not match any supported date formats")
+    }
+
+    fun timestampAsLong(timestampAsString: String): Long {
+        val parsedDateTime = getValidParsedDateTime(timestampAsString)
+        return parsedDateTime.time
     }
 
     companion object {
