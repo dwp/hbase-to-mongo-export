@@ -418,7 +418,7 @@
         "last_modified_date_time_was_altered": false,
         "_timeBasedHash": "hashhhhhhhhhh",
         "@type": "MONGO_INSERT",
-        "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+        "_lastModifiedDateTime": "2019-07-04T07:27:35.104Z",
         "encryption": {
           "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
           "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
