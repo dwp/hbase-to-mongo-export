@@ -4,26 +4,21 @@ import argparse
 import base64
 import binascii
 import json
-import os
-import time
-import uuid
 import math
 import random
+import uuid
+
 import happybase
 import requests
-import thriftpy2
-
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
+
 def main():
     args = command_line_args()
-    connected = False
-    attempts = 0
     connection = happybase.Connection(args.zookeeper_quorum)
     connection.open()
-    topics_table = connection.table(args.topics_table_name)
     content = requests.get(args.data_key_service).json()
     encryption_key = content['plaintextDataKey']
     encrypted_key = content['ciphertextDataKey']
@@ -31,17 +26,14 @@ def main():
     tables = [x.decode('ascii') for x in connection.tables()]
     table_cache = {}
     print(f"tables: '{tables}'")
-    created = {}
     for i in range(int(args.records)):
         datum = kafka_message(i)
         salt = math.floor(random.random() * 256).to_bytes(length=1, byteorder='big')
         record_id = bytearray(datum['kafka_message_id'].encode('ascii'))
         db_id = bytes(salt + record_id)
-        timestamp = datum['kafka_message_timestamp']
         value = datum['kafka_message_value']
         db_name = value['message']['db']
         collection_name = value['message']['collection']
-        topic_name = "db." + db_name + "." + collection_name
         record = unique_decrypted_db_object()
         record_string = json.dumps(record)
         [iv, encrypted_record] = encrypt(encryption_key, record_string)
@@ -51,17 +43,17 @@ def main():
         value['message']['dbObject'] = encrypted_record.decode('ascii')
         table_name = db_name + ":" + collection_name
 
-        if not table_name in tables:
+        if table_name not in tables:
             connection.create_table(table_name, {'cf': dict(max_versions=1000000)})
             tables.append(table_name)
-            print(f"Created table '{table}'.")
+            print(f"Created table '{table_name}'.")
 
         obj = {'cf:record': json.dumps(value)}
         table = table_cache[table_name] if table_name in table_cache \
             else connection.table(table_name)
 
         table_cache[table_name] = table
-        table.put(db_id, obj) #, timestamp=int(timestamp))
+        table.put(db_id, obj)  # , timestamp=int(timestamp))
         print("Saved record '{}' in table '{}'.".format(db_id, table_name))
 
 
@@ -76,35 +68,35 @@ def encrypt(key, plaintext):
 
 
 def kafka_message(i):
-
-    return  {
-     "kafka_message_id": "%08d" % i,
-     "kafka_message_timestamp": "1",
-     "kafka_message_value": {
-         "traceId": f"{guid()}",
-         "unitOfWorkId": f"{guid()}",
-         "@type": "V4",
-         "message": {
-             "db": "quartz",
-             "collection": "claimantEvent",
-             "_id": {
-                 "claimantEventId": f"{guid()}"
-             },
-             "_timeBasedHash": "hash",
-             "@type": "MONGO_INSERT",
-             "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
-             "encryption": {
-                 "encryptionKeyId": "",
-                 "encryptedEncryptionKey": "",
-                 "initialisationVector": "",
-                 "keyEncryptionKeyId": ""
-             },
-             "dbObject": ""
-         },
-         "version": "core-4.master.9790",
-         "timestamp": "2019-07-04T07:27:35.104+0000"
-     }
+    return {
+        "kafka_message_id": "%08d" % i,
+        "kafka_message_timestamp": "1",
+        "kafka_message_value": {
+            "traceId": f"{guid()}",
+            "unitOfWorkId": f"{guid()}",
+            "@type": "V4",
+            "message": {
+                "db": "quartz",
+                "collection": "claimantEvent",
+                "_id": {
+                    "claimantEventId": f"{guid()}"
+                },
+                "_timeBasedHash": "hash",
+                "@type": "MONGO_INSERT",
+                "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+                "encryption": {
+                    "encryptionKeyId": "",
+                    "encryptedEncryptionKey": "",
+                    "initialisationVector": "",
+                    "keyEncryptionKeyId": ""
+                },
+                "dbObject": ""
+            },
+            "version": "core-4.master.9790",
+            "timestamp": "2019-07-04T07:27:35.104+0000"
+        }
     }
+
 
 def decrypted_db_object():
     return {
@@ -133,11 +125,11 @@ def decrypted_db_object():
             "knownDate": 20150320
         },
         "createdDateTime": {
-            "$date":"2015-03-20T12:23:25.183Z",
-            "_archivedDateTime":"should be replaced by _removedDateTime"
+            "$date": "2015-03-20T12:23:25.183Z",
+            "_archivedDateTime": "should be replaced by _removedDateTime"
         },
         "_version": 2,
-        "_archived":"should be replaced by _removed",
+        "_archived": "should be replaced by _removed",
         "unicodeNull": "\u0000",
         "unicodeNullwithText": "some\u0000text",
         "lineFeedChar": "\n",
@@ -145,7 +137,7 @@ def decrypted_db_object():
         "carriageReturn": "\r",
         "carriageReturnWithText": "some\rtext",
         "carriageReturnLineFeed": "\r\n",
-         "carriageReturnLineFeedWithText": "some\r\ntext",
+        "carriageReturnLineFeedWithText": "some\r\ntext",
         "_lastModifiedDateTime": {
             "$date": "2018-12-14T15:01:02.000+0000"
         }
@@ -154,6 +146,7 @@ def decrypted_db_object():
 
 def guid():
     return str(uuid.uuid4())
+
 
 def unique_decrypted_db_object():
     record = decrypted_db_object()
@@ -166,7 +159,7 @@ def unique_decrypted_db_object():
 
 def command_line_args():
     parser = argparse.ArgumentParser(description='Pre-populate hbase for profiling.')
-    parser.add_argument('-k', '--data-key-service',default='http://dks-standalone-http:8080/datakey',
+    parser.add_argument('-k', '--data-key-service', default='http://dks-standalone-http:8080/datakey',
                         help='Use the specified data key service.')
     parser.add_argument('-dt', '--data-table-name', default='ucfs-data',
                         help='The data table to write the records to.')
