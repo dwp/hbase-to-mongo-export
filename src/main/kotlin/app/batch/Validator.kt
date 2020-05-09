@@ -34,6 +34,12 @@ class Validator {
             val dbObject = parseDecrypted(decrypted)
             if (null != dbObject) {
                 val idElement = retrieveId(dbObject)
+                val originalIdAsString = if (idElement is JsonObject) {
+                    jsonUtils.sortJsonByKey(idElement.toString())
+                } else {
+                    idElement.asString
+                }
+                
                 val (originalId, idWithWrappedDates: JsonElement) = if (idElement is JsonObject) {
                     Pair(idElement.toString(), wrapDates(idElement, false).first)
                 }
@@ -57,11 +63,6 @@ class Validator {
                     jsonUtils.sortJsonByKey(newIdElement.toString())
                 } else {
                     newIdElement.asString
-                }
-                val originalIdAsString = if (idElement is JsonObject) {
-                    jsonUtils.sortJsonByKey(idElement.toString())
-                } else {
-                    idElement.asString
                 }
 
                 val timeAsLong = timestampAsLong(lastModifiedDate)
