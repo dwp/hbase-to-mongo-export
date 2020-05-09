@@ -11,12 +11,12 @@ import uuid
 import happybase
 import requests
 import thriftpy2
-
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
 DATA_COLUMN_FAMILY = 'cf'
+
 
 def main():
     args = command_line_args()
@@ -57,15 +57,15 @@ def main():
                     topic_name = "db." + db_name + "." + collection_name
                     table_name = f"{db_name}:{collection_name}".replace("-", "_")
 
-
-                    if not table_name in tables:
+                    if table_name not in tables:
                         print(f"Created table '{table_name}'.")
                         connection.create_table(table_name,
                                                 {'cf': dict(max_versions=1000000)})
                         tables.append(table_name)
                         print(f"Created table '{table_name}'.")
 
-                    print(f"Creating record '{record_id}' timestamp '{timestamp}' topic '{topic_name}' in table '{table_name}'.")
+                    print(f"Creating record '{record_id}' timestamp '{timestamp}' topic '{topic_name}' in table "
+                          f"'{table_name}'.")
 
                     if 'dbObject' in value['message']:
                         db_object = value['message']['dbObject']
@@ -95,15 +95,13 @@ def main():
                         else:
                             value['message']['encryption']['initialisationVector'] = "PHONEYVECTOR"
 
-
-
-
                         column_family_qualifier = DATA_COLUMN_FAMILY + ":record"
                         obj = {column_family_qualifier: json.dumps(value)}
                         data_table = connection.table(table_name)
                         data_table.put(record_id, obj, timestamp=int(timestamp))
                         print(json.dumps(value, indent=4))
-                        print(f"Saved record '{record_id}' timestamp '{timestamp}' topic '{topic_name}' in table '{table_name}'.")
+                        print(f"Saved record '{record_id}' timestamp '{timestamp}' topic '{topic_name}' in table "
+                              f"'{table_name}'.")
 
                     else:
                         print("Skipped record '{}' as dbObject was missing.".format(record_id))
@@ -137,7 +135,10 @@ def encrypt(key, plaintext):
 def decrypted_db_object():
     return {
         "_id": {
-            "someId": "RANDOM_GUID"
+            "someId": "RANDOM_GUID",
+            "createdDateTime": "2010-08-05T02:10:19.887+0000",
+            "_removedDateTime": "2011-08-05T02:10:19.887+0000",
+            "_lastModifiedDateTime": "2013-08-05T02:10:19.887+0000"
         },
         "@type": "V4",
         "type": "addressDeclaration",
@@ -164,11 +165,11 @@ def decrypted_db_object():
             "knownDate": 20150320
         },
         "createdDateTime": {
-            "$date":"2015-03-20T12:23:25.183Z",
-            "_archivedDateTime":"should be replaced by _archivedDateTime"
+            "$date": "2015-03-20T12:23:25.183Z",
+            "_archivedDateTime": "should be replaced by _removedDateTime"
         },
         "_version": 2,
-        "_archived":"should be replaced by _removed",
+        "_archived": "should be replaced by _removed",
         "unicodeNull": "\u0000",
         "unicodeNullwithText": "some\u0000text",
         "lineFeedChar": "\n",
@@ -176,7 +177,7 @@ def decrypted_db_object():
         "carriageReturn": "\r",
         "carriageReturnWithText": "some\rtext",
         "carriageReturnLineFeed": "\r\n",
-         "carriageReturnLineFeedWithText": "some\r\ntext",
+        "carriageReturnLineFeedWithText": "some\r\ntext",
         "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
     }
 
