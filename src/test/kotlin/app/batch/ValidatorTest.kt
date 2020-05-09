@@ -568,6 +568,28 @@ class ValidatorTest {
         assertEquals(epoch, lastModifiedDate)
     }
 
+    @Test
+    fun Should_Sort_Json_By_Key_Name() {
+        val jsonStringUnsorted = "{\"testA\":\"test1\", \"testC\":2, \"testB\":true}"
+        val jsonObjectUnsorted = validator.parseDecrypted(jsonStringUnsorted)
+        val jsonStringSorted = "{\"testA\":\"test1\",\"testB\":true,\"testC\":2}"
+
+        val sortedJson = validator.sortJsonByKey(jsonObjectUnsorted!!)
+
+        sortedJson shouldBe jsonStringSorted
+    }
+
+    @Test
+    fun Should_Sort_Json_By_Key_Name_Case_Sensitively() {
+        val jsonStringUnsorted = "{\"testb\":true, \"testA\":\"test1\", \"testC\":2}"
+        val jsonObjectUnsorted = validator.parseDecrypted(jsonStringUnsorted)
+        val jsonStringSorted = "{\"testA\":\"test1\",\"testC\":2,\"testb\":true}"
+
+        val sortedJson = validator.sortJsonByKey(jsonObjectUnsorted!!)
+
+        sortedJson shouldBe jsonStringSorted
+    }
+
 
     private fun generateFourByteChecksum(input: String): ByteArray {
         val bytes = input.toByteArray()

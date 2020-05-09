@@ -45,14 +45,19 @@ class Validator {
 
                 val newIdElement = dbObjectWithWrappedDates["_id"]
                 val newIdAsString = if (newIdElement is JsonObject) {
-                    newIdElement.toString()
+                    sortJsonByKey(newIdElement)
                 } else {
                     newIdElement.asString
+                }
+                val originalIdAsString = if (idElement is JsonObject) {
+                    sortJsonByKey(idElement)
+                } else {
+                    idElement.asString
                 }
 
                 val timeAsLong = timestampAsLong(lastModifiedDate)
                 val manifestRecord = ManifestRecord(newIdAsString, 
-                    timeAsLong, db, collection, "EXPORT", item.outerType, item.innerType, originalId)
+                    timeAsLong, db, collection, "EXPORT", item.outerType, item.innerType, originalIdAsString)
                 
                     dbObjectWithWrappedDates.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
@@ -162,5 +167,11 @@ class Validator {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())
+    }
+
+    fun sortJsonByKey(unsortedJson: JsonObject): String {
+        val sortedEntries = unsortedJson.toSortedMap(compareBy { it })
+        val json: JsonObject = JsonObject(sortedEntries)
+        return json.toString()
     }
 }
