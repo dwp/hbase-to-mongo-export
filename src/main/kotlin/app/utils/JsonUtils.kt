@@ -1,11 +1,9 @@
 package app.utils
 
-import org.springframework.stereotype.Component
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 
-@Component
-class JsonUtils {
+open class JsonUtils {
     fun sortJsonByKey(unsortedJson: String): String {
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(unsortedJson)

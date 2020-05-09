@@ -17,9 +17,10 @@ import java.util.*
 import app.utils.JsonUtils
 
 @Component
-class Validator constructor(private val jsonUtils: JsonUtils) {
+class Validator {
     val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     val idNotFound = "_id field not found in the decrypted db object"
+    val jsonUtils = JsonUtils()
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
