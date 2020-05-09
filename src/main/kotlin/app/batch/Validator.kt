@@ -14,9 +14,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.*
+import app.utils.JsonUtils
 
 @Component
-class Validator {
+class Validator constructor(private val jsonUtils: JsonUtils) {
     val validTimestamps = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     val idNotFound = "_id field not found in the decrypted db object"
 
@@ -45,12 +46,12 @@ class Validator {
 
                 val newIdElement = dbObjectWithWrappedDates["_id"]
                 val newIdAsString = if (newIdElement is JsonObject) {
-                    sortJsonByKey(newIdElement)
+                    jsonUtils.sortJsonByKey(newIdElement.toString())
                 } else {
                     newIdElement.asString
                 }
                 val originalIdAsString = if (idElement is JsonObject) {
-                    sortJsonByKey(idElement)
+                    jsonUtils.sortJsonByKey(idElement.toString())
                 } else {
                     idElement.asString
                 }
@@ -167,11 +168,5 @@ class Validator {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())
-    }
-
-    fun sortJsonByKey(unsortedJson: JsonObject): String {
-        val sortedEntries = unsortedJson.toSortedMap(compareBy { it })
-        val json: JsonObject = JsonObject(sortedEntries)
-        return json.toString()
     }
 }
