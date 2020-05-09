@@ -4,17 +4,18 @@ import base64
 import binascii
 import sys
 
-import requests
 import regex
-
+import requests
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
+
 
 def decrypt(key, iv, ciphertext):
     iv_int = int(binascii.hexlify(base64.b64decode(iv)), 16)
     ctr = Counter.new(AES.block_size * 8, initial_value=iv_int)
     aes = AES.new(key.encode("utf-8"), AES.MODE_CTR, counter=ctr)
     return aes.decrypt(base64.b64decode(ciphertext))
+
 
 def main():
     config = {}
@@ -35,6 +36,7 @@ def main():
         plaintext = content['plaintextDataKey']
         decrypted = decrypt(plaintext, config['iv'], contents)
         sys.stdout.buffer.write(decrypted)
+
 
 if __name__ == '__main__':
     main()
