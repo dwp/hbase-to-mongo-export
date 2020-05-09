@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.*
+import app.utils.JsonUtils
 
 @Component
 class Validator {
@@ -22,6 +23,7 @@ class Validator {
     private final val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     val validTimestamps = listOf(validIncomingFormat, validOutgoingFormat)
     val idNotFound = "_id field not found in the decrypted db object"
+    private final val jsonUtils = JsonUtils()
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
@@ -32,6 +34,12 @@ class Validator {
             val dbObject = parseDecrypted(decrypted)
             if (null != dbObject) {
                 val idElement = retrieveId(dbObject)
+                val originalIdAsString = if (idElement is JsonObject) {
+                    jsonUtils.sortJsonByKey(idElement.toString())
+                } else {
+                    idElement.asString
+                }
+                
                 val (originalId, idWithWrappedDates: JsonElement) = if (idElement is JsonObject) {
                     Pair(idElement.toString(), wrapDates(idElement, false).first)
                 }
@@ -52,15 +60,14 @@ class Validator {
 
                 val newIdElement = dbObjectWithWrappedDates["_id"]
                 val newIdAsString = if (newIdElement is JsonObject) {
-                    newIdElement.toString()
-                }
-                else {
+                    jsonUtils.sortJsonByKey(newIdElement.toString())
+                } else {
                     newIdElement.asString
                 }
 
                 val timeAsLong = timestampAsLong(lastModifiedDate)
                 val manifestRecord = ManifestRecord(newIdAsString,
-                        timeAsLong, db, collection, "EXPORT", item.outerType, item.innerType, originalId)
+                        timeAsLong, db, collection, "EXPORT", item.outerType, item.innerType, originalIdAsString)
 
                 dbObjectWithWrappedDates.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
