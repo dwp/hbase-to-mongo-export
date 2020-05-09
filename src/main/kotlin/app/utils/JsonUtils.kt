@@ -5,7 +5,6 @@ import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 
 @Component
-
 class JsonUtils {
     fun sortJsonByKey(unsortedJson: String): String {
         val parser: Parser = Parser.default()
