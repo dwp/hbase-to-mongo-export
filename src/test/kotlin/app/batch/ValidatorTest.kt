@@ -326,7 +326,7 @@ class ValidatorTest {
                    "createdDateTime": ""
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
         assertEquals("", actual)
     }
 
@@ -352,7 +352,7 @@ class ValidatorTest {
                    "createdDateTime": null
                 }"""
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
-        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
         assertEquals("", actual)
     }
 
