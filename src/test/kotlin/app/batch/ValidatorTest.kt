@@ -719,6 +719,15 @@ class ValidatorTest {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun Should_Change_Offset_Date_To_UTC() {
+        val dateOne = "2019-12-14T15:01:02.000+0100"
+        val expected = "2019-12-14T14:01:02.000Z"
+        val actual = validator.formatDateTimeToValidOutgoingFormat(dateOne)
+        
+        assertEquals(expected, actual)
+    }
+
     private fun generateFourByteChecksum(input: String): ByteArray {
         val bytes = input.toByteArray()
         val checksum = CRC32()
