@@ -797,7 +797,7 @@ class ValidatorTest {
     }
 
     @Test
-    fun Should_Change_Incoming_Format_Date_To_Outgoing_Format() {
+    fun Should_Change_Incoming_UTC_Format_Date_To_Outgoing_Format() {
         val dateOne = "2019-12-14T15:01:02.000+0000"
         val expected = "2019-12-14T15:01:02.000Z"
         val actual = validator.formatDateTimeToValidOutgoingFormat(dateOne)
@@ -815,9 +815,18 @@ class ValidatorTest {
     }
 
     @Test
-    fun Should_Change_Offset_Date_To_UTC() {
+    fun Should_Change_Positive_Offset_Date_To_UTC() {
         val dateOne = "2019-12-14T15:01:02.000+0100"
         val expected = "2019-12-14T14:01:02.000Z"
+        val actual = validator.formatDateTimeToValidOutgoingFormat(dateOne)
+        
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Change_Negative_Offset_Date_To_UTC() {
+        val dateOne = "2019-12-14T15:01:02.000-0100"
+        val expected = "2019-12-14T16:01:02.000Z"
         val actual = validator.formatDateTimeToValidOutgoingFormat(dateOne)
         
         assertEquals(expected, actual)
