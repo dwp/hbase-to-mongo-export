@@ -163,6 +163,19 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_Is_Present_And_LastModifiedDateTime_Is_Missing_With_No_Substitute_Option() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "createdDateTime": "$dateOne"
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
+        assertEquals("", actual)
+    }
+
+    @Test
     fun Should_Retrieve_CreatedDateTime_When_Present_And_LastModifiedDateTime_Is_An_InValid_Json_Object() {
         val dateOne = "2019-12-14T15:01:02.000+0000"
         val dateTwo = "2018-12-14T15:01:02.000+0000" 
@@ -175,6 +188,21 @@ class ValidatorTest {
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
         assertEquals(dateTwo, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_Is_Present_And_LastModifiedDateTime_Is_An_InValid_Json_Object_With_No_Substitute_Option() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000" 
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": {"date": "$dateOne"},
+                   "createdDateTime": {"${"$"}date": "$dateTwo"}
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
+        assertEquals("", actual)
     }
 
     @Test
@@ -192,6 +220,20 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_Is_Present_And_LastModifiedDateTime_Is_Empty_With_No_Substitute_Option() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": "",
+                   "createdDateTime": {"${"$"}date": "$dateOne"}
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
+        assertEquals("", actual)
+    }
+
+    @Test
     fun Should_Retrieve_CreatedDateTime_When_Present_And_LastModifiedDateTime_Is_Null() {
         val dateOne = "2019-12-14T15:01:02.000+0000"
 
@@ -203,6 +245,20 @@ class ValidatorTest {
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
         assertEquals(dateOne, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_Is_Present_And_LastModifiedDateTime_Is_Null_With_No_Substitute_Option() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": null,
+                   "createdDateTime": "$dateOne"
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
+        assertEquals("", actual)
     }
 
     @Test
@@ -234,6 +290,21 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_And_LastModifiedDateTime_Are_InValid_Json_Objects_With_No_Substitute_Option() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000" 
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": {"date": "$dateOne"},
+                   "createdDateTime": {"date": "$dateTwo"}
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!, false)
+        assertEquals("", actual)
+    }
+
+    @Test
     fun Should_Retrieve_Epoch_When_CreatedDateTime_And_LastModifiedDateTime_Are_Empty() {
         val epoch = "1980-01-01T00:00:00.000Z" 
 
@@ -248,6 +319,18 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_And_LastModifiedDateTime_Are_Empty_With_No_Substitute_Option() {
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": "",
+                   "createdDateTime": ""
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        assertEquals("", actual)
+    }
+
+    @Test
     fun Should_Retrieve_Epoch_When_CreatedDateTime_And_LastModifiedDateTime_Are_Null() {
         val epoch = "1980-01-01T00:00:00.000Z" 
 
@@ -259,6 +342,18 @@ class ValidatorTest {
         val jsonObject = validator.parseDecrypted(decryptedDbObject)
         val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
         assertEquals(epoch, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_Empty_When_CreatedDateTime_And_LastModifiedDateTime_Are_Null_With_No_Substitute_Option() {
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": null,
+                   "createdDateTime": null
+                }"""
+        val jsonObject = validator.parseDecrypted(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject!!)
+        assertEquals("", actual)
     }
 
     @Test
