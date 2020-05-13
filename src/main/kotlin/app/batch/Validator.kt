@@ -30,6 +30,7 @@ class Validator {
         val hbaseRowId = String(hbaseRowKey)
         val db = item.db
         val collection = item.collection
+        val type = item.innerType
         try {
             val dbObject = parseDecrypted(decrypted)
             if (null != dbObject) {
@@ -65,9 +66,10 @@ class Validator {
                     newIdElement.asString
                 }
 
-                val timeAsLong = timestampAsLong(lastModifiedDate)
+                val dateForManifest = getDateTimeForManifest(type, dbObjectWithId, lastModifiedDate)
+                val timeAsLong = timestampAsLong(dateForManifest)
                 val manifestRecord = ManifestRecord(newIdAsString,
-                        timeAsLong, db, collection, "EXPORT", item.outerType, item.innerType, originalIdAsString)
+                        timeAsLong, db, collection, "EXPORT", item.outerType, type, originalIdAsString)
 
                 dbObjectWithWrappedDates.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
@@ -88,44 +90,44 @@ class Validator {
             val formattedLastModifiedDateTimeAsString = formatDateTimeToValidOutgoingFormat(lastModifiedDateTimeAsString)
             replaceElementValueWithKeyValuePair(
                     objectWithDatesIn,
-                    "_lastModifiedDateTime",
-                    "\$date",
+                    LAST_MODIFIED_DATE_TIME_FIELD,
+                    INNER_DATE_FIELD,
                     formattedLastModifiedDateTimeAsString)
         }
         else {
             objectWithDatesIn
         }
 
-        val createdDateTimeAsString = retrieveDateTimeElement("createdDateTime", objectWithDatesIn)
+        val createdDateTimeAsString = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, objectWithDatesIn)
         val dbObjectWithLastModifiedAndCreatedDates = if (StringUtils.isNotBlank(createdDateTimeAsString)) {
             val formattedCreatedDateTimeAsString = formatDateTimeToValidOutgoingFormat(createdDateTimeAsString)
             replaceElementValueWithKeyValuePair(
                     dbObjectWithLastModifiedDate,
-                    "createdDateTime",
-                    "\$date",
+                    CREATED_DATE_TIME_FIELD,
+                    INNER_DATE_FIELD,
                     formattedCreatedDateTimeAsString)
         }
         else {
             dbObjectWithLastModifiedDate
         }
 
-        val removedDateTimeAsString = retrieveDateTimeElement("_removedDateTime", objectWithDatesIn)
+        val removedDateTimeAsString = retrieveDateTimeElement(REMOVED_DATE_TIME_FIELD, objectWithDatesIn)
         val dbObjectWithLastModifiedCreatedAndRemovedDates = if (StringUtils.isNotBlank(removedDateTimeAsString)) { 
             val formattedRemovedDateTimeAsString = formatDateTimeToValidOutgoingFormat(removedDateTimeAsString)
             replaceElementValueWithKeyValuePair(
                 dbObjectWithLastModifiedAndCreatedDates, 
-                "_removedDateTime", 
-                "\$date", 
+                REMOVED_DATE_TIME_FIELD, 
+                INNER_DATE_FIELD, 
                 formattedRemovedDateTimeAsString) 
             } else { dbObjectWithLastModifiedAndCreatedDates }
 
-        val archivedDateTimeAsString = retrieveDateTimeElement("_archivedDateTime", objectWithDatesIn)
+        val archivedDateTimeAsString = retrieveDateTimeElement(ARCHIVED_DATE_TIME_FIELD, objectWithDatesIn)
         val dbObjectWithAllDates = if (StringUtils.isNotBlank(archivedDateTimeAsString)) { 
             val formattedArchivedDateTimeAsString = formatDateTimeToValidOutgoingFormat(archivedDateTimeAsString)
             replaceElementValueWithKeyValuePair(
                 dbObjectWithLastModifiedCreatedAndRemovedDates, 
-                "_archivedDateTime", 
-                "\$date", 
+                ARCHIVED_DATE_TIME_FIELD, 
+                INNER_DATE_FIELD, 
                 formattedArchivedDateTimeAsString) 
             } else { dbObjectWithLastModifiedCreatedAndRemovedDates }
 
@@ -156,8 +158,8 @@ class Validator {
 
     fun retrieveLastModifiedDateTime(jsonObject: JsonObject, useSubstitute: Boolean = true): String {
         val epoch = "1980-01-01T00:00:00.000Z"
-        val lastModifiedDateTime = retrieveDateTimeElement("_lastModifiedDateTime", jsonObject)
-        val createdDateTime = retrieveDateTimeElement("createdDateTime", jsonObject)
+        val lastModifiedDateTime = retrieveDateTimeElement(LAST_MODIFIED_DATE_TIME_FIELD, jsonObject)
+        val createdDateTime = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
 
         if (StringUtils.isEmpty(lastModifiedDateTime) == false) {
             return lastModifiedDateTime
@@ -170,11 +172,33 @@ class Validator {
         return ""
     }
 
+    fun getDateTimeForManifest(type: String, jsonObject: JsonObject, fallbackDate: String): String {
+        if (type == MONGO_INSERT_TYPE) {
+            val createdDateTimeAsString = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
+            if (StringUtils.isNotBlank(createdDateTimeAsString)) {
+                return createdDateTimeAsString
+            }
+        }
+        
+        if (type == MONGO_DELETE_TYPE) {
+            val removedDateTimeAsString = retrieveDateTimeElement(REMOVED_DATE_TIME_FIELD, jsonObject)
+            if (StringUtils.isNotBlank(removedDateTimeAsString)) {
+                return removedDateTimeAsString
+            }
+            val archivedDateTimeAsString = retrieveDateTimeElement(ARCHIVED_DATE_TIME_FIELD, jsonObject)
+            if (StringUtils.isNotBlank(archivedDateTimeAsString)) {
+                return archivedDateTimeAsString
+            }
+        }
+
+        return fallbackDate
+    }
+
     fun retrieveDateTimeElement(key: String, jsonObject: JsonObject): String {
         val dateElement = jsonObject[key]
         if (dateElement != null && dateElement.isJsonNull == false) {
             if (dateElement is JsonObject) {
-                val dateSubElement = dateElement["\$date"]
+                val dateSubElement = dateElement[INNER_DATE_FIELD]
                 if (dateSubElement != null && dateSubElement.isJsonNull == false) {
                     return dateSubElement.asString
                 }
@@ -212,5 +236,14 @@ class Validator {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())
+
+        const val MONGO_INSERT_TYPE = "MONGO_INSERT"
+        const val MONGO_DELETE_TYPE = "MONGO_DELETE"
+
+        const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
+        const val CREATED_DATE_TIME_FIELD = "createdDateTime"
+        const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
+        const val INNER_DATE_FIELD = "\$date"
     }
 }
