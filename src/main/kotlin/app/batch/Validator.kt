@@ -228,7 +228,7 @@ class Validator {
                 logDebug(logger, "timestampAsString did not match valid formats", "date_time_string", timestampAsString, "failed_format", it)
             }
         }
-        throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats")
+        throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats", 0)
     }
 
     fun timestampAsLong(timestampAsString: String, fallbackDate: String): Long {
@@ -236,7 +236,9 @@ class Validator {
             val parsedDateTime = getValidParsedDateTime(timestampAsString)
             return parsedDateTime.time
         }
-        catch ParseException() {
+        catch (ex: ParseException) {
+            logDebug(logger, "Timestamp for manifest could not be parsed, so falling back to last modified date time", 
+                "manifest_date_time", timestampAsString, "last_modified_date_time", fallbackDate)
             val parsedDateTime = getValidParsedDateTime(fallbackDate)
             return parsedDateTime.time
         }
