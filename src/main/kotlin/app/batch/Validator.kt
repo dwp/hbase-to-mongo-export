@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.*
 import app.utils.JsonUtils
+import java.text.ParseException
 
 @Component
 class Validator {
@@ -67,7 +68,7 @@ class Validator {
                 }
 
                 val dateForManifest = getDateTimeForManifest(type, dbObjectWithId, lastModifiedDate)
-                val timeAsLong = timestampAsLong(dateForManifest)
+                val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate)
                 val manifestRecord = ManifestRecord(newIdAsString,
                         timeAsLong, db, collection, "EXPORT", item.outerType, type, originalIdAsString)
 
@@ -217,6 +218,7 @@ class Validator {
         return df.format(parsedDateTime)
     }
 
+    @Throws(ParseException::class)
     fun getValidParsedDateTime(timestampAsString: String): Date {
         validTimestamps.forEach {
             try {
@@ -226,12 +228,20 @@ class Validator {
                 logDebug(logger, "timestampAsString did not match valid formats", "date_time_string", timestampAsString, "failed_format", it)
             }
         }
-        throw Exception("Unparseable date found: '$timestampAsString', did not match any supported date formats")
+        throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats", 0)
     }
 
-    fun timestampAsLong(timestampAsString: String): Long {
-        val parsedDateTime = getValidParsedDateTime(timestampAsString)
-        return parsedDateTime.time
+    fun timestampAsLong(timestampAsString: String, fallbackDate: String): Long {
+        try {
+            val parsedDateTime = getValidParsedDateTime(timestampAsString)
+            return parsedDateTime.time
+        }
+        catch (ex: ParseException) {
+            logDebug(logger, "Timestamp for manifest could not be parsed, so falling back to last modified date time", 
+                "manifest_date_time", timestampAsString, "last_modified_date_time", fallbackDate)
+            val parsedDateTime = getValidParsedDateTime(fallbackDate)
+            return parsedDateTime.time
+        }
     }
 
     companion object {

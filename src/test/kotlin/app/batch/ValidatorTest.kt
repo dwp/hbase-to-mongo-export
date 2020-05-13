@@ -16,6 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.zip.CRC32
+import java.text.ParseException
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [Validator::class])
@@ -782,7 +783,7 @@ class ValidatorTest {
 
     @Test
     fun Should_Throw_Error_With_Invalid_Date_Format() {
-        val exception = shouldThrow<Exception> {
+        val exception = shouldThrow<ParseException> {
             validator.getValidParsedDateTime("2019-12-14T15:01:02")
         }
 
@@ -790,9 +791,20 @@ class ValidatorTest {
     }
 
     @Test
-    fun Should_Return_Timestamp_Of_Valid_Date() {
+    fun Should_Return_Timestamp_Of_Valid_Date_When_Parseable() {
+        val validDate = "2019-12-14T15:01:02.000Z"
+        val fallbackDate = "2018-12-14T15:01:02.000Z"
         val expected = 1576335662000L
-        val actual = validator.timestampAsLong("2019-12-14T15:01:02.000Z")
+        val actual = validator.timestampAsLong(validDate, fallbackDate)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Return_Timestamp_Of_Fallback_Date_When_Not_Parseable() {
+        val invalidDate = "2018-12-14T15:01:02"
+        val fallbackDate = "2019-12-14T15:01:02.000Z"
+        val expected = 1576335662000L
+        val actual = validator.timestampAsLong(invalidDate, fallbackDate)
         assertEquals(expected, actual)
     }
 
