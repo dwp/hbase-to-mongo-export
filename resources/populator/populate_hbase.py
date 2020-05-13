@@ -136,7 +136,7 @@ def decrypted_db_object():
     return {
         "_id": {
             "someId": "RANDOM_GUID",
-            "createdDateTime": "2010-08-05T02:10:19.887+0000",
+            "createdDateTime": "2010-08-05T02:10:19.000+0000",
             "_removedDateTime": "2011-08-05T02:10:19.887+0000",
             "_lastModifiedDateTime": "2013-08-05T02:10:19.887+0000"
         },
