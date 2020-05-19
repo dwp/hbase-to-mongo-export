@@ -17,13 +17,23 @@ class StreamingManifestWriter {
             val manifestFileName = manifestFile.name
             val prefix = "$manifestPrefix/$manifestFileName"
 
-            logInfo(logger, "Writing manifest manifestFile to s3",
+            logInfo(logger, "Writing manifest file to s3",
                 "s3_location", "s3://$manifestBucket/$prefix",
                 "manifest_size", "$manifestSize",
                 "total_manifest_files_already_written", "$totalManifestFiles",
                 "total_manifest_records_already_written", "$totalManifestRecords")
 
             s3.putObject(manifestBucket, prefix, manifestFile)
+
+            logInfo(logger, "Written manifest file to s3",
+                    "s3_location", "s3://$manifestBucket/$prefix",
+                    "manifest_file", "$manifestFile")
+
+            val deleted = manifestFile.delete()
+
+            logInfo(logger, "Deleted manifest file",
+                    "manifest_file", "$manifestFile", "success", "$deleted")
+
             totalManifestFiles++
             totalManifestRecords += manifestSize
             return true
