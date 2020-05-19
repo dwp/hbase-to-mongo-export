@@ -81,7 +81,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
             val data = currentOutputStream!!.data()
 
             val inputStream = ByteArrayInputStream(data)
-            val bufferedInputStream = BufferedInputStream(inputStream)
             val filePrefix = filePrefix()
             val slashRemovedPrefix = exportPrefix.replace(Regex("""/+$"""), "")
             val objectKey: String = "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
@@ -100,7 +99,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 "total_snapshot_files_already_written", "$totalBatches", "total_bytes_already_written", "$totalBytes",
                 "total_records_already_written", "$totalRecords")
 
-            bufferedInputStream.use {
+            inputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
             }
