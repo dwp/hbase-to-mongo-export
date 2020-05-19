@@ -4,13 +4,10 @@ import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.PutObjectRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.io.BufferedInputStream
 import java.io.File
-import java.io.FileInputStream
 
 @Component
 class StreamingManifestWriter {
@@ -28,11 +25,7 @@ class StreamingManifestWriter {
                 "total_manifest_files_already_written", "$totalManifestFiles",
                 "total_manifest_records_already_written", "$totalManifestRecords")
 
-            BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
-                val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
-                s3.putObject(request)
-            }
-
+            s3.putObject(manifestBucket, prefix, manifestFile)
             totalManifestFiles++
             totalManifestRecords += manifestSize
             return true
@@ -41,13 +34,6 @@ class StreamingManifestWriter {
             return false
         }
     }
-
-    fun manifestMetadata(fileName: String, size: Long) =
-            ObjectMetadata().apply {
-                contentType = "text/plain"
-                addUserMetadata("x-amz-meta-title", fileName)
-                contentLength = size
-            }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())
