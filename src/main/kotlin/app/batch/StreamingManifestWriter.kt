@@ -3,7 +3,6 @@ package app.batch
 import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.ObjectMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -16,7 +15,6 @@ class StreamingManifestWriter {
         try {
             val manifestSize = manifestFile.length()
             val manifestFileName = manifestFile.name
-            val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
             val prefix = "$manifestPrefix/$manifestFileName"
 
             logInfo(logger, "Writing manifest manifestFile to s3",
