@@ -3,10 +3,13 @@ package app.batch
 import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.model.PutObjectRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
+import java.io.FileInputStream
 
 @Component
 class StreamingManifestWriter {
@@ -15,24 +18,19 @@ class StreamingManifestWriter {
         try {
             val manifestSize = manifestFile.length()
             val manifestFileName = manifestFile.name
+            val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
             val prefix = "$manifestPrefix/$manifestFileName"
 
-            logInfo(logger, "Writing manifest file to s3",
-                "s3_location", "s3://$manifestBucket/$prefix",
-                "manifest_size", "$manifestSize",
-                "total_manifest_files_already_written", "$totalManifestFiles",
-                "total_manifest_records_already_written", "$totalManifestRecords")
-
-            s3.putObject(manifestBucket, prefix, manifestFile)
-
-            logInfo(logger, "Written manifest file to s3",
+            logInfo(logger, "Writing manifest manifestFile to s3",
                     "s3_location", "s3://$manifestBucket/$prefix",
-                    "manifest_file", "$manifestFile")
+                    "manifest_size", "$manifestSize",
+                    "total_manifest_files_already_written", "$totalManifestFiles",
+                    "total_manifest_records_already_written", "$totalManifestRecords")
 
-            val deleted = manifestFile.delete()
-
-            logInfo(logger, "Deleted manifest file",
-                    "manifest_file", "$manifestFile", "success", "$deleted")
+            FileInputStream(manifestFile).use { inputStream ->
+                val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
+                s3.putObject(request)
+            }
 
             totalManifestFiles++
             totalManifestRecords += manifestSize
@@ -42,6 +40,14 @@ class StreamingManifestWriter {
             return false
         }
     }
+
+    fun manifestMetadata(fileName: String, size: Long) =
+            ObjectMetadata().apply {
+                contentType = "text/plain"
+                addUserMetadata("x-amz-meta-title", fileName)
+                contentLength = size
+            }
+
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())
