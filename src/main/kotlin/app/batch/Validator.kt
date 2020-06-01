@@ -4,27 +4,30 @@ import app.domain.DecryptedRecord
 import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
+import app.utils.DateWrapper
+import app.utils.JsonUtils
 import app.utils.logging.logDebug
 import app.utils.logging.logError
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import app.utils.JsonUtils
-import java.text.ParseException
 
 @Component
 class Validator {
     private final val validIncomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
     private final val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+
     val validTimestamps = listOf(validIncomingFormat, validOutgoingFormat)
     val idNotFound = "_id field not found in the decrypted db object"
     private final val jsonUtils = JsonUtils()
+    private val gson = GsonBuilder().serializeNulls().create()
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
         val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
@@ -33,7 +36,7 @@ class Validator {
         val collection = item.collection
         val type = item.innerType
         try {
-            val dbObject = parseDecrypted(decrypted)
+            val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
             if (null != dbObject) {
                 val idElement = retrieveId(dbObject)
                 val originalIdAsString = if (idElement is JsonObject) {
@@ -87,7 +90,7 @@ class Validator {
 
     fun wrapDates(objectWithDatesIn: JsonObject, useDateTimeSubstitute: Boolean = true): Pair<JsonObject, String> {
         val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn, useDateTimeSubstitute)
-        val dbObjectWithLastModifiedDate = if (StringUtils.isNotBlank(lastModifiedDateTimeAsString)) {
+        val dbObject = if (StringUtils.isNotBlank(lastModifiedDateTimeAsString)) {
             val formattedLastModifiedDateTimeAsString = formatDateTimeToValidOutgoingFormat(lastModifiedDateTimeAsString)
             replaceElementValueWithKeyValuePair(
                     objectWithDatesIn,
@@ -99,40 +102,8 @@ class Validator {
             objectWithDatesIn
         }
 
-        val createdDateTimeAsString = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, objectWithDatesIn)
-        val dbObjectWithLastModifiedAndCreatedDates = if (StringUtils.isNotBlank(createdDateTimeAsString)) {
-            val formattedCreatedDateTimeAsString = formatDateTimeToValidOutgoingFormat(createdDateTimeAsString)
-            replaceElementValueWithKeyValuePair(
-                    dbObjectWithLastModifiedDate,
-                    CREATED_DATE_TIME_FIELD,
-                    INNER_DATE_FIELD,
-                    formattedCreatedDateTimeAsString)
-        }
-        else {
-            dbObjectWithLastModifiedDate
-        }
-
-        val removedDateTimeAsString = retrieveDateTimeElement(REMOVED_DATE_TIME_FIELD, objectWithDatesIn)
-        val dbObjectWithLastModifiedCreatedAndRemovedDates = if (StringUtils.isNotBlank(removedDateTimeAsString)) { 
-            val formattedRemovedDateTimeAsString = formatDateTimeToValidOutgoingFormat(removedDateTimeAsString)
-            replaceElementValueWithKeyValuePair(
-                dbObjectWithLastModifiedAndCreatedDates, 
-                REMOVED_DATE_TIME_FIELD, 
-                INNER_DATE_FIELD, 
-                formattedRemovedDateTimeAsString) 
-            } else { dbObjectWithLastModifiedAndCreatedDates }
-
-        val archivedDateTimeAsString = retrieveDateTimeElement(ARCHIVED_DATE_TIME_FIELD, objectWithDatesIn)
-        val dbObjectWithAllDates = if (StringUtils.isNotBlank(archivedDateTimeAsString)) { 
-            val formattedArchivedDateTimeAsString = formatDateTimeToValidOutgoingFormat(archivedDateTimeAsString)
-            replaceElementValueWithKeyValuePair(
-                dbObjectWithLastModifiedCreatedAndRemovedDates, 
-                ARCHIVED_DATE_TIME_FIELD, 
-                INNER_DATE_FIELD, 
-                formattedArchivedDateTimeAsString) 
-            } else { dbObjectWithLastModifiedCreatedAndRemovedDates }
-
-        return Pair(dbObjectWithAllDates, lastModifiedDateTimeAsString)
+        DateWrapper().processJsonObject(dbObject, false)
+        return Pair(dbObject, lastModifiedDateTimeAsString)
     }
 
     fun replaceElementValueWithKeyValuePair(objectWithFieldIn: JsonObject, keyToReplace: String, newKey: String, value: String): JsonObject {
@@ -142,10 +113,6 @@ class Validator {
         objectWithChangedField.remove(keyToReplace)
         objectWithChangedField.add(keyToReplace, newElement)
         return objectWithChangedField
-    }
-
-    fun parseDecrypted(decrypted: String): JsonObject? {
-        return Gson().fromJson(decrypted, JsonObject::class.java)
     }
 
     fun printableKey(key: ByteArray): String {
@@ -162,7 +129,7 @@ class Validator {
         val lastModifiedDateTime = retrieveDateTimeElement(LAST_MODIFIED_DATE_TIME_FIELD, jsonObject)
         val createdDateTime = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
 
-        if (StringUtils.isEmpty(lastModifiedDateTime) == false) {
+        if (!StringUtils.isEmpty(lastModifiedDateTime)) {
             return lastModifiedDateTime
         }
 
