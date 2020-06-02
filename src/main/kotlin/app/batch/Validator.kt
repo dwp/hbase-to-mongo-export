@@ -37,19 +37,17 @@ class Validator {
         val type = item.innerType
         try {
             val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
-            if (null != dbObject) {
+            if (dbObject != null) {
                 val (dbObjectWithWrappedDates, lastModifiedDate) = wrapDates(dbObject)
                 val idElement = retrieveId(dbObject)
-                val originalIdAsString = elementAsString(idElement)
                 if (idElement.isJsonPrimitive) {
                     replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
                 }
                 val newIdElement = dbObjectWithWrappedDates["_id"]
-                val newIdAsString = elementAsString(newIdElement)
                 val dateForManifest = getDateTimeForManifest(type, dbObjectWithWrappedDates, lastModifiedDate)
                 val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate)
-                val manifestRecord = ManifestRecord(newIdAsString,
-                        timeAsLong, db, collection, "EXPORT", item.outerType, type, originalIdAsString)
+                val manifestRecord = ManifestRecord(elementAsString(newIdElement),
+                        timeAsLong, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
                 dbObjectWithWrappedDates.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
             }
@@ -71,8 +69,8 @@ class Validator {
             idElement.asString
         }
 
-    fun wrapDates(objectWithDatesIn: JsonObject, useDateTimeSubstitute: Boolean = true): Pair<JsonObject, String> {
-        val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn, useDateTimeSubstitute)
+    fun wrapDates(objectWithDatesIn: JsonObject): Pair<JsonObject, String> {
+        val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn)
         val dbObject = if (StringUtils.isNotBlank(lastModifiedDateTimeAsString)) {
             val formattedLastModifiedDateTimeAsString = formatDateTimeToValidOutgoingFormat(lastModifiedDateTimeAsString)
             replaceElementValueWithKeyValuePair(
@@ -106,20 +104,22 @@ class Validator {
 
     fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
 
-    fun retrieveLastModifiedDateTime(jsonObject: JsonObject, useSubstitute: Boolean = true): String {
+    fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
         val epoch = "1980-01-01T00:00:00.000Z"
         val lastModifiedDateTime = retrieveDateTimeElement(LAST_MODIFIED_DATE_TIME_FIELD, jsonObject)
         val createdDateTime = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
 
-        if (!StringUtils.isEmpty(lastModifiedDateTime)) {
-            return lastModifiedDateTime
+        return when {
+            !StringUtils.isEmpty(lastModifiedDateTime) -> {
+                lastModifiedDateTime
+            }
+            StringUtils.isNotBlank(createdDateTime) -> {
+                createdDateTime
+            }
+            else -> {
+                epoch
+            }
         }
-
-        if (useSubstitute) {
-            return if (StringUtils.isNotBlank(createdDateTime)) createdDateTime else epoch
-        }
-
-        return ""
     }
 
     fun getDateTimeForManifest(type: String, jsonObject: JsonObject, fallbackDate: String): String {
@@ -146,10 +146,10 @@ class Validator {
 
     fun retrieveDateTimeElement(key: String, jsonObject: JsonObject): String {
         val dateElement = jsonObject[key]
-        if (dateElement != null && dateElement.isJsonNull == false) {
+        if (dateElement != null && !dateElement.isJsonNull) {
             if (dateElement is JsonObject) {
                 val dateSubElement = dateElement[INNER_DATE_FIELD]
-                if (dateSubElement != null && dateSubElement.isJsonNull == false) {
+                if (dateSubElement != null && !dateSubElement.isJsonNull) {
                     return dateSubElement.asString
                 }
             }
