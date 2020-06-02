@@ -103,7 +103,7 @@
               docker-compose up hbase-populate
               docker-compose up s3-bucket-provision
               docker-compose up hbase-to-mongo-export-file
-              docker-compose-up hbase-to-mongo-export-s3
+              docker-compose up hbase-to-mongo-export-s3
               docker-compose run hbase-to-mongo-export-itest
 
     snyk-pr:
