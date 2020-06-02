@@ -11,6 +11,7 @@ import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
+import org.apache.hadoop.hbase.client.Consistency
 import org.apache.hadoop.hbase.client.ResultScanner
 import org.apache.hadoop.hbase.client.Scan
 import org.slf4j.Logger
@@ -127,6 +128,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
         val scan = Scan().apply {
             setTimeRange(timeStart, timeEnd)
 
+            if (useTimelineConsistency.toBoolean()) {
+                consistency = Consistency.TIMELINE
+            }
+
             withStartRow(byteArrayOf(start.toByte()), true)
             if (stop != 0) {
                 withStopRow(byteArrayOf(stop.toByte()), true)
@@ -143,14 +148,14 @@ class HBaseReader constructor(private val connection: Connection, private val te
         }
 
         logInfo(logger, "Scan caching config",
-            "scan_caching", "${scan.caching}",
-            "scan.maxResultSize", "${scan.maxResultSize}",
-            "cache_blocks", "${scan.cacheBlocks}",
-            "useLatest", useLatest,
-            "start", "$start",
-            "stop", "$stop",
-            "scan_time_range_start", timeStart.toString(),
-            "scan_time_range_end", timeEnd.toString())
+                "scan_caching", "${scan.caching}",
+                "scan.maxResultSize", "${scan.maxResultSize}",
+                "cache_blocks", "${scan.cacheBlocks}",
+                "start", "$start",
+                "stop", "$stop",
+                "scan_time_range_start", timeStart.toString(),
+                "scan_time_range_end", timeEnd.toString(),
+                "use_timeline_consistency", useTimelineConsistency)
 
         return scan
     }
@@ -175,8 +180,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
     @Value("\${scan.cache.blocks:true}")
     private var scanCacheBlocks: String = "true"
 
-    @Value("\${latest.available:false}")
-    private var useLatest: String = "false"
+    @Value("\${use.timeline.consistency:true}")
+    private var useTimelineConsistency: String = "true"
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
