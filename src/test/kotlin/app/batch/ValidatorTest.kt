@@ -524,7 +524,7 @@ class ValidatorTest {
         val dateTwo = "2018-12-14T15:01:02.000Z" 
         val dateThree = "2017-12-14T15:01:02.000Z" 
         val dateFour = "2016-12-14T15:01:02.000Z" 
-
+        val dateKey = "\$date"
         val oldJson = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": "$dateOne",
@@ -535,10 +535,10 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "createdDateTime": {"d_date": "$dateTwo"},
-                    "_removedDateTime": {"d_date": "$dateThree"},
-                    "_archivedDateTime": {"d_date": "$dateFour"},
-                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"}
+                    "createdDateTime": {"$dateKey": "$dateTwo"},
+                    "_removedDateTime": {"$dateKey": "$dateThree"},
+                    "_archivedDateTime": {"$dateKey": "$dateFour"},
+                    "_lastModifiedDateTime": {"$dateKey": "$dateOne"}
                 }"""
 
         val oldJsonObject = parse(oldJson)
@@ -555,7 +555,7 @@ class ValidatorTest {
         val dateTwo = "2018-12-14T15:01:02.000+0000" 
         val dateThree = "2017-12-14T15:01:02.000+0000" 
         val dateFour = "2016-12-14T15:01:02.000+0000" 
-
+        val dateKey = "\$date"
         val oldJson = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": "$dateOne",
@@ -571,10 +571,10 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "createdDateTime": {"d_date": "$formattedDateTwo"},
-                    "_removedDateTime": {"d_date": "$formattedDateThree"},
-                    "_archivedDateTime": {"d_date": "$formattedDateFour"},
-                    "_lastModifiedDateTime": {"${"$"}date": "$formattedDateOne"}
+                    "createdDateTime": {"$dateKey": "$formattedDateTwo"},
+                    "_removedDateTime": {"$dateKey": "$formattedDateThree"},
+                    "_archivedDateTime": {"$dateKey": "$formattedDateFour"},
+                    "_lastModifiedDateTime": {"$dateKey": "$formattedDateOne"}
                 }"""
 
         val oldJsonObject = parse(oldJson)
@@ -590,7 +590,8 @@ class ValidatorTest {
         val dateOne = "2019-12-14T15:01:02.000Z"
         val dateTwo = "2018-12-14T15:01:02.000Z" 
         val dateThree = "2017-12-14T15:01:02.000Z" 
-        val dateFour = "2016-12-14T15:01:02.000Z" 
+        val dateFour = "2016-12-14T15:01:02.000Z"
+        val dateKey = "\$date"
 
         val oldJson = """{
                    "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
@@ -602,10 +603,10 @@ class ValidatorTest {
 
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "createdDateTime": {"d_date": "$dateTwo"},
-                    "_removedDateTime": {"d_date": "$dateThree"},
-                    "_archivedDateTime": {"d_date": "$dateFour"},
-                    "_lastModifiedDateTime": {"${"$"}date": "$dateOne"}
+                    "createdDateTime": {"$dateKey": "$dateTwo"},
+                    "_removedDateTime": {"$dateKey": "$dateThree"},
+                    "_archivedDateTime": {"$dateKey": "$dateFour"},
+                    "_lastModifiedDateTime": {"$dateKey": "$dateOne"}
                 }"""
 
         val oldJsonObject = parse(oldJson)
@@ -639,9 +640,9 @@ class ValidatorTest {
         val dateKey = "\$date"
         val newJson = """{
                     "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
-                    "createdDateTime": {"d_date": "$formattedDateTwo"},
-                    "_removedDateTime": {"d_date": "$formattedDateThree"},
-                    "_archivedDateTime": {"d_date": "$formattedDateFour"},
+                    "createdDateTime": {"$dateKey": "$formattedDateTwo"},
+                    "_removedDateTime": {"$dateKey": "$formattedDateThree"},
+                    "_archivedDateTime": {"$dateKey": "$formattedDateFour"},
                     "_lastModifiedDateTime": {"$dateKey": "$formattedDateOne"}
                 }"""
 

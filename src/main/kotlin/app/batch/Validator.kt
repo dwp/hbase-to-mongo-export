@@ -38,43 +38,18 @@ class Validator {
         try {
             val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
             if (null != dbObject) {
+                val (dbObjectWithWrappedDates, lastModifiedDate) = wrapDates(dbObject)
                 val idElement = retrieveId(dbObject)
-                val originalIdAsString = if (idElement is JsonObject) {
-                    jsonUtils.sortJsonByKey(idElement.toString())
-                } else {
-                    idElement.asString
+                val originalIdAsString = elementAsString(idElement)
+                if (idElement.isJsonPrimitive) {
+                    replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
                 }
-                
-                val (originalId, idWithWrappedDates: JsonElement) = if (idElement is JsonObject) {
-                    Pair(idElement.toString(), wrapDates(idElement, false).first)
-                }
-                else {
-                    Pair(idElement.asString, idElement)
-                }
-
-                val dbObjectWithId = if (idElement is JsonObject) {
-                    dbObject.remove("_id")
-                    dbObject.add("_id", idWithWrappedDates)
-                    dbObject
-                }
-                else {
-                    replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", originalId)
-                }
-
-                val (dbObjectWithWrappedDates, lastModifiedDate) = wrapDates(dbObjectWithId)
-
                 val newIdElement = dbObjectWithWrappedDates["_id"]
-                val newIdAsString = if (newIdElement is JsonObject) {
-                    jsonUtils.sortJsonByKey(newIdElement.toString())
-                } else {
-                    newIdElement.asString
-                }
-
-                val dateForManifest = getDateTimeForManifest(type, dbObjectWithId, lastModifiedDate)
+                val newIdAsString = elementAsString(newIdElement)
+                val dateForManifest = getDateTimeForManifest(type, dbObjectWithWrappedDates, lastModifiedDate)
                 val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate)
                 val manifestRecord = ManifestRecord(newIdAsString,
                         timeAsLong, db, collection, "EXPORT", item.outerType, type, originalIdAsString)
-
                 dbObjectWithWrappedDates.addProperty("timestamp", item.hbaseTimestamp)
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
             }
@@ -87,6 +62,14 @@ class Validator {
         }
         return null
     }
+
+    private fun elementAsString(idElement: JsonElement) =
+        if (idElement is JsonObject) {
+            jsonUtils.sortJsonByKey(idElement.toString())
+        }
+        else {
+            idElement.asString
+        }
 
     fun wrapDates(objectWithDatesIn: JsonObject, useDateTimeSubstitute: Boolean = true): Pair<JsonObject, String> {
         val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn, useDateTimeSubstitute)
@@ -107,12 +90,11 @@ class Validator {
     }
 
     fun replaceElementValueWithKeyValuePair(objectWithFieldIn: JsonObject, keyToReplace: String, newKey: String, value: String): JsonObject {
-        val objectWithChangedField = objectWithFieldIn
         val newElement = JsonObject()
         newElement.addProperty(newKey, value)
-        objectWithChangedField.remove(keyToReplace)
-        objectWithChangedField.add(keyToReplace, newElement)
-        return objectWithChangedField
+        objectWithFieldIn.remove(keyToReplace)
+        objectWithFieldIn.add(keyToReplace, newElement)
+        return objectWithFieldIn
     }
 
     fun printableKey(key: ByteArray): String {

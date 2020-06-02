@@ -38,10 +38,10 @@ class DateWrapper {
     }
 
     private fun processMongoDate(mongoDateObject: JsonObject) {
-        val timestamp = mongoDateObject["\$date"].asString
+        val timestamp = mongoDateObject[dateFieldKey].asString
         parsedDate(timestamp)?.let { date ->
-            mongoDateObject.remove("\$date")
-            mongoDateObject.addProperty("d_date", SimpleDateFormat(outgoingFormat).format(date))
+            mongoDateObject.remove(dateFieldKey)
+            mongoDateObject.addProperty(dateFieldKey, SimpleDateFormat(outgoingFormat).format(date))
         }
     }
 
@@ -49,8 +49,8 @@ class DateWrapper {
             jsonElement != null &&
                     jsonElement.isJsonObject &&
                     jsonElement.asJsonObject.size() == 1 &&
-                    jsonElement.asJsonObject["\$date"] != null &&
-                    jsonElement.asJsonObject["\$date"].isJsonPrimitive
+                    jsonElement.asJsonObject[dateFieldKey] != null &&
+                    jsonElement.asJsonObject[dateFieldKey].isJsonPrimitive
 
 
     private fun processJsonArray(jsonArray: JsonArray) {
@@ -82,7 +82,7 @@ class DateWrapper {
 
     private fun dateObject(date: Date): JsonObject {
         val dateObject = JsonObject()
-        dateObject.addProperty("d_date", SimpleDateFormat(outgoingFormat).format(date))
+        dateObject.addProperty(dateFieldKey, SimpleDateFormat(outgoingFormat).format(date))
         return dateObject
     }
 
@@ -100,6 +100,7 @@ class DateWrapper {
 
     private val incomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
     private val outgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    private val dateFieldKey = "\$date"
     private val incomingRe = Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+\d{4}""")
     private val outgoingRe = Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z""")
 }

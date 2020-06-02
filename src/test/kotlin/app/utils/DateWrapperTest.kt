@@ -7,31 +7,38 @@ import org.junit.Test
 
 class DateWrapperTest {
 
-    val dateOne = "2019-12-14T15:01:02.000+0000"
-    val dateTwo = "2018-12-14T15:01:02.000+0000"
-    val dateThree = "2017-12-14T15:01:02.000+0000"
-    val dateFour = "2016-12-14T15:01:02.000+0000"
-    val formattedDateOne = "2019-12-14T15:01:02.000Z"
-    val formattedDateTwo = "2018-12-14T15:01:02.000Z"
-    val formattedDateThree = "2017-12-14T15:01:02.000Z"
-    val formattedDateFour = "2016-12-14T15:01:02.000Z"
-
     @Test
     fun processesDeepDates() {
+        val dateKey = "\$date"
+
         val json = """{
+            |   _lastModifiedDateTime: {
+            |       $dateKey: "2001-12-14T15:01:02.000+0000"    
+            |   },
+            |   notDate1: 123,
+            |   notDate2: "abc",
             |   parentDate: "2017-12-14T15:01:02.000+0000",
             |   childObjectWithDates: {
+            |       _lastModifiedDateTime: {
+            |           $dateKey: "1980-12-14T15:01:02.000+0000"    
+            |       },
             |       "grandChildObjectWithDate": {
+            |           notDate1: 123,
+            |           notDate2: "abc",
             |           "grandChildDate1": "2019-12-14T15:01:02.000+0000"
             |       },
             |       "childDate": "2018-12-14T15:01:02.000+0000",
             |       arrayWithDates: [
+            |           789,
+            |           "xyz",
             |           "2010-12-14T15:01:02.000+0000",
             |           [
-            |               "2011-12-14T15:01:02.000+0000"
+            |               "2011-12-14T15:01:02.000+0000",
+            |               "qwerty"
             |           ],
             |           {
-            |               grandChildDate3: "2012-12-14T15:01:02.000+0000"
+            |               grandChildDate3: "2012-12-14T15:01:02.000+0000",
+            |               _lastModifiedDateTime: "1995-12-14T15:01:02.000+0000"
             |           }
             |       ]
             |   }
@@ -39,28 +46,42 @@ class DateWrapperTest {
         """.trimMargin()
 
         val jsonObject = Gson().fromJson(json, JsonObject::class.java)
-        DateWrapper().processJsonObject(jsonObject)
+        DateWrapper().processJsonObject(jsonObject, false)
 
         val wrapped = """{
+            |   _lastModifiedDateTime: {
+            |       $dateKey: "2001-12-14T15:01:02.000+0000"    
+            |   },
+            |   notDate1: 123,
+            |   notDate2: "abc",
             |   "parentDate": {
-            |       d_date: "2017-12-14T15:01:02.000Z"
+            |       $dateKey: "2017-12-14T15:01:02.000Z"
             |   },
             |   "childObjectWithDates": {
+            |       _lastModifiedDateTime: {
+            |           $dateKey: "1980-12-14T15:01:02.000Z"    
+            |       },
             |       "grandChildObjectWithDate": {
+            |           notDate1: 123,
+            |           notDate2: "abc",
             |           "grandChildDate1": {
-            |               "d_date": "2019-12-14T15:01:02.000Z"
+            |               "$dateKey": "2019-12-14T15:01:02.000Z"
             |           }
             |       },
             |       "childDate": {
-            |           "d_date": "2018-12-14T15:01:02.000Z"
+            |           "$dateKey": "2018-12-14T15:01:02.000Z"
             |       },
             |       arrayWithDates: [
-            |           { d_date: "2010-12-14T15:01:02.000Z" },
+            |           789,
+            |           "xyz",
+            |           { $dateKey: "2010-12-14T15:01:02.000Z" },
             |           [
-            |               { d_date: "2011-12-14T15:01:02.000Z" }
+            |               { $dateKey: "2011-12-14T15:01:02.000Z" },
+            |               "qwerty"
             |           ],
             |           {
-            |               grandChildDate3: { d_date: "2012-12-14T15:01:02.000Z" }
+            |               grandChildDate3: { $dateKey: "2012-12-14T15:01:02.000Z" },
+            |               _lastModifiedDateTime: { $dateKey: "1995-12-14T15:01:02.000Z" }
             |           }
             |       ]
             |    }

@@ -166,7 +166,6 @@ def decrypted_db_object():
         },
         "createdDateTime": {
             "$date": "2015-03-20T12:23:25.183Z",
-            "_archivedDateTime": "should be replaced by _removedDateTime"
         },
         "_version": 2,
         "_archived": "should be replaced by _removed",
