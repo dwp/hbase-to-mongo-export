@@ -1,5 +1,5 @@
 SHELL:=bash
-
+S3_READY_REGEX=^Ready\.$
 hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 aws_default_region=eu-west-2
 aws_secret_access_key=DummyKey
@@ -81,7 +81,8 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose build hbase dks-standalone-http dks-standalone-https hbase-populate s3-dummy s3-bucket-provision; \
+		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision; \
+		docker-compose build --no-cache dks-standalone-http dks-standalone-https; \
 		docker-compose build --no-cache hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
@@ -99,15 +100,17 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose up -d hbase s3-dummy dks-standalone-http dks-standalone-https; \
-		echo "Waiting for hbase and s3"; \
-		sleep 15; \
+		docker-compose up -d hbase s3-dummy; \
+		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
+			echo Waiting for s3.; \
+			sleep 2; \
+		done; \
+		docker-compose up s3-bucket-provision; \
+		docker-compose up -d dks-standalone-http dks-standalone-https; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
-		docker-compose up -d s3-bucket-provision hbase-populate; \
-		echo "Waiting for s3 bucket create and hbase population"; \
-		sleep 5; \
+		docker-compose up hbase-populate; \
 		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3; \
 	}
 
