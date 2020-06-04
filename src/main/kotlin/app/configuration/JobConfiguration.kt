@@ -104,7 +104,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
 
-    @Value("\${chunk.size:5000}")
+    @Value("\${chunk.size:1000}")
     lateinit var chunkSize: String
 
     @Value("\${thread.count:256}")
