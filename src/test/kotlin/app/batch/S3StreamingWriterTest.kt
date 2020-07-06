@@ -5,9 +5,13 @@ import app.domain.DataKeyResult
 import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
+import app.services.ExportStatusService
 import app.services.KeyService
+import app.services.SnapshotSenderMessagingService
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
+import com.amazonaws.services.sqs.AmazonSQS
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.times
@@ -37,7 +41,11 @@ import java.security.SecureRandom
     "s3.manifest.bucket=manifestbucket",
     "s3.manifest.prefix.folder=manifestprefix",
     "s3.prefix.folder=prefix",
-    "topic.name=topic"
+    "topic.name=topic",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.reprocess.files=true",
+    "snapshot.sender.shutdown.flag=true",
+    "snapshot.sender.export.date=2020-06-05"
 ])
 
 class S3StreamingWriterTest {
@@ -169,4 +177,16 @@ class S3StreamingWriterTest {
 
     @SpyBean
     private lateinit var s3StreamingWriter: S3StreamingWriter
+
+    @MockBean
+    private lateinit var amazonDynamoDb: AmazonDynamoDB
+
+    @MockBean
+    private lateinit var amazonSQS: AmazonSQS
+
+    @MockBean
+    private lateinit var exportStatusService: ExportStatusService
+
+    @MockBean
+    private lateinit var snapshotSenderMessagingService: SnapshotSenderMessagingService
 }

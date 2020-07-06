@@ -7,6 +7,8 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.utils.UUIDGenerator
 import app.utils.logging.overrideLoggerStaticFieldsForTests
 import app.utils.logging.resetLoggerStaticFieldsForTests
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.sqs.AmazonSQS
 import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.firstValue
 import com.nhaarman.mockitokotlin2.whenever
@@ -28,6 +30,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -48,7 +51,11 @@ import java.io.ByteArrayInputStream
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2"
+    "aws.region=eu-west-2",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.reprocess.files=true",
+    "snapshot.sender.shutdown.flag=true",
+    "snapshot.sender.export.date=2020-06-05"
 ])
 class HttpKeyServiceTest {
 
@@ -366,5 +373,12 @@ class HttpKeyServiceTest {
             assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
+
+    @MockBean
+    private lateinit var amazonDynamoDb: AmazonDynamoDB
+
+    @MockBean
+    private lateinit var amazonSQS: AmazonSQS
+
 
 }

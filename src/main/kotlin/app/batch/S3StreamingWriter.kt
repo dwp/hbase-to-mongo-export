@@ -4,7 +4,9 @@ import app.configuration.CompressionInstanceProvider
 import app.domain.EncryptingOutputStream
 import app.domain.Record
 import app.services.CipherService
+import app.services.ExportStatusService
 import app.services.KeyService
+import app.services.SnapshotSenderMessagingService
 import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
@@ -38,7 +40,10 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val secureRandom: SecureRandom,
                         private val s3: AmazonS3,
                         private val streamingManifestWriter: StreamingManifestWriter,
-                        private val compressionInstanceProvider: CompressionInstanceProvider) : ItemWriter<Record> {
+                        private val compressionInstanceProvider: CompressionInstanceProvider,
+                        private val exportStatusService: ExportStatusService,
+                        private val snapshotSenderMessagingService: SnapshotSenderMessagingService):
+        ItemWriter<Record> {
 
     private var absoluteStart: Int = Int.MIN_VALUE
     private var absoluteStop: Int = Int.MAX_VALUE
@@ -104,6 +109,9 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 s3.putObject(request)
             }
 
+            exportStatusService.incrementExportedCount()
+            snapshotSenderMessagingService.notifySnapshotSender(objectKey)
+            
             totalBatches++
             totalBytes += batchSizeBytes
             totalRecords += recordsInBatch

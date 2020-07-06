@@ -1,4 +1,4 @@
-import app.configuration.S3DummyConfiguration
+import app.configuration.LocalStackConfiguration
 import com.amazonaws.services.s3.AmazonS3
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -13,8 +13,8 @@ import java.io.InputStreamReader
 import java.io.Reader
 
 @RunWith(SpringRunner::class)
-@ContextConfiguration(classes = [S3DummyConfiguration::class])
-@ActiveProfiles("dummyS3Client")
+@ContextConfiguration(classes = [LocalStackConfiguration::class])
+@ActiveProfiles("localstackConfiguration")
 class S3WriterIntegrationTest {
 
     @Autowired

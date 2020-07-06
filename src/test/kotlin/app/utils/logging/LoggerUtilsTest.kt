@@ -9,12 +9,17 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
 import ch.qos.logback.classic.spi.ThrowableProxy
 import ch.qos.logback.classic.spi.ThrowableProxyUtil
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.sqs.AmazonSQS
 import com.nhaarman.mockitokotlin2.*
-import org.junit.*
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
+import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -37,7 +42,11 @@ import org.springframework.test.context.junit4.SpringRunner
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2"
+    "aws.region=eu-west-2",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.reprocess.files=true",
+    "snapshot.sender.shutdown.flag=true",
+    "snapshot.sender.export.date=2020-06-05"
 ])
 class LoggerUtilsTest {
 
@@ -192,15 +201,15 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
 
         val trace = "java.lang.RuntimeException: boom1 - /:'!@£\$%^&*()\n" +
-            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89)\n" +
-            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:98)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:74)\n" +
             "\t... 58 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
         assertEquals(trace, throwableStr)
 
         val result = inlineStackTrace(throwableStr)
-        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65) |  ... 58 common frames omitted | ", result)
+        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:98) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:74) |  ... 58 common frames omitted | ", result)
     }
 
     @Test
@@ -234,7 +243,7 @@ class LoggerUtilsTest {
 
         val result = throwableProxyEventToString(mockEvent)
 
-        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65) |  ... 58 common frames omitted | \", ", result)
+        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:98) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:74) |  ... 58 common frames omitted | \", ", result)
     }
 
     @Test
@@ -330,7 +339,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n"
+        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:98) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:74) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n"
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
@@ -339,4 +348,9 @@ class LoggerUtilsTest {
             result)
     }
 
+    @MockBean
+    private lateinit var amazonDynamoDb: AmazonDynamoDB
+
+    @MockBean
+    private lateinit var amazonSQS: AmazonSQS
 }

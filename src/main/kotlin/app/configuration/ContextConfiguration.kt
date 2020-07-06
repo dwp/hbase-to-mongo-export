@@ -24,6 +24,12 @@ import javax.crypto.Cipher
 @Configuration
 class ContextConfiguration {
 
+//    --dynamodb.status.table.name="${STATUS_TABLE_NAME}" \
+//    --snapshot.sender.sqs.queue.url="${SQS_SNAPSHOT_SENDER_QUEUE_URL}" \
+//    --snapshot.sender.reprocess.files="${SQS_SNAPSHOT_SENDER_QUEUE_URL}" \
+//    --snapshot.sender.shutdown.flag="${SNAPSHOT_SENDER_SHUTDOWN_FLAG}" \
+//    --snapshot.sender.export.date="${SNAPSHOT_SENDER_EXPORT_DATE}" \
+
     @Bean
     @Profile("bz2Compressor")
     fun bz2Compressor() = object: CompressionInstanceProvider {
@@ -133,7 +139,7 @@ class ContextConfiguration {
     @Value("\${hbase.rpc.timeout.ms:1800000}")
     private lateinit var hbaseRpcTimeoutMs: String
 
-    @Value("\${hbase.scanner.timeout.ms:1200000}")
+    @Value("\${hbase.scanner.timeout.ms:1800000}")
     private lateinit var hbaseTimeoutMs: String
 
     @Value("\${hbase.zookeeper.quorum}")

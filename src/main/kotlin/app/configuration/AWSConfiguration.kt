@@ -11,34 +11,29 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 
 @Configuration
-@Profile("realS3Client")
-class S3RealConfiguration {
+@Profile("awsConfiguration")
+class AWSConfiguration {
 
     @Bean
-    fun amazonS3(): AmazonS3 {
-
-        // eu-west-1 -> EU_WEST_2 (i.e tf style to enum name)
-        val updatedRegion = region.toUpperCase().replace("-", "_")
-        val clientRegion = Regions.valueOf(updatedRegion)
-
-        val clientConfiguration = ClientConfiguration().apply {
-            maxConnections = maximumS3Connections.toInt()
-        }
-
-        //This code expects that you have AWS credentials set up per:
-        // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
-        return AmazonS3ClientBuilder.standard()
+    fun amazonS3(): AmazonS3 =
+        AmazonS3ClientBuilder.standard()
             .withCredentials(DefaultAWSCredentialsProviderChain())
-            .withRegion(clientRegion)
-            .withClientConfiguration(clientConfiguration.withSocketTimeout(socketTimeOut.toInt()))
+            .withRegion(region)
+            .withClientConfiguration(ClientConfiguration().apply {
+                maxConnections = maximumS3Connections.toInt()
+                socketTimeout = socketTimeOut.toInt()
+            })
             .build()
+
+    private val region by lazy {
+        Regions.valueOf(awsRegion.toUpperCase().replace("-", "_"))
     }
 
     @Value("\${aws.s3.max.connections:256}")
     private lateinit var maximumS3Connections: String
 
     @Value("\${aws.region}")
-    private lateinit var region: String
+    private lateinit var awsRegion: String
 
     @Value("\${s3.socket.timeout:1800000}")
     private lateinit var socketTimeOut: String

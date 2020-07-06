@@ -45,4 +45,5 @@ class TestContextConfiguration {
     fun amazonS3(): AmazonS3 {
         return Mockito.mock(AmazonS3::class.java)
     }
+
 }
