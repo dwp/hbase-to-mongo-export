@@ -6,12 +6,17 @@ import com.amazonaws.services.sqs.model.SendMessageRequest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 
 
 @Service
 class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : SnapshotSenderMessagingService {
 
+    @Retryable(value = [Exception::class],
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun notifySnapshotSender(prefix: String) {
         amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
         logger.info("Sent message to snapshot sender queue", "prefix", prefix)
@@ -58,6 +63,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderSQSMessagingService::class.toString())
+        const val maxAttempts = 5
+        const val initialBackoffMillis = 1000L
+        const val backoffMultiplier = 2.0
     }
 }
 
