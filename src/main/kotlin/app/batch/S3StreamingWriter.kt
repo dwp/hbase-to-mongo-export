@@ -57,6 +57,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @AfterStep
     fun afterStep(stepExecution: StepExecution): ExitStatus {
         writeOutput(openNext = false)
+        exportStatusService.setExportedStatus()
         return stepExecution.exitStatus
     }
 

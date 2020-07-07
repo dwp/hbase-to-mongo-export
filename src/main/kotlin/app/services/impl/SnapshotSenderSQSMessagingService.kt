@@ -24,9 +24,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     private fun sendMessageRequest(message: String) =
             SendMessageRequest().apply {
-            queueUrl = sqsQueueUrl
-            messageBody = message
-        }
+                queueUrl = sqsQueueUrl
+                messageBody = message
+            }
 
     private fun message(prefix: String): String {
         val message = """
