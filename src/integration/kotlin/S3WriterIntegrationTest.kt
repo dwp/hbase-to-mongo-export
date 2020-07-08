@@ -50,6 +50,3 @@ class S3WriterIntegrationTest {
         assertEquals(expected, joinedContent)
     }
 }
-
-
-

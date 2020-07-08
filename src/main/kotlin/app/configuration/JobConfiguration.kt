@@ -28,8 +28,9 @@ import java.io.IOException
 class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
-    fun importUserJob() =
+    fun importUserJob(listener: JobCompletionNotificationListener) =
             jobBuilderFactory.get("nightlyExportBatchJob")
+                    .listener(listener)
                     .incrementer(RunIdIncrementer())
                     .flow(step1())
                     .end()
@@ -59,25 +60,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .processor(itemProcessor())
                 .writer(itemWriter)
                 .build()
-
-//    @Bean
-//    fun step() =
-//        stepBuilderFactory.get("step")
-//            .chunk<SourceRecord, Record>(chunkSize.toInt())
-//            .reader(itemReader)
-//            .faultTolerant()
-//            .retry(IOException::class.java)
-//            .retryPolicy(SimpleRetryPolicy().apply {
-//                maxAttempts = maxRetries.toInt()
-//            })
-//            .skip(MissingFieldException::class.java)
-//            .skip(DecryptionFailureException::class.java)
-//            .skip(BadDecryptedDataException::class.java)
-//            .skipLimit(Integer.MAX_VALUE)
-//            .processor(itemProcessor())
-//            .writer(itemWriter)
-//            .build()
-
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("htme").apply {

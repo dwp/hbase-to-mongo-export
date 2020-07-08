@@ -79,6 +79,8 @@ services:
       --trust.store.password=changeit
       --encrypt.output=false
       --compress.output=false
+      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
+      --snapshot.sender.reprocess.files=true
     environment:
       - TOPIC_NAME=db.penalties-and-deductions.sanction
       - ENVIRONMENT=local-docker
@@ -119,6 +121,7 @@ services:
       --identity.store.alias=cid
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
+      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
     environment:
     - TOPIC_NAME=db.penalties-and-deductions.sanction
     - ENVIRONMENT=local-docker
@@ -167,6 +170,10 @@ services:
       --s3.secret.key=DummySecret
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.manifest.bucket=manifestbucket
+      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
+      --snapshot.sender.reprocess.files=true
+      --snapshot.sender.shutdown.flag=false
+      --snapshot.sender.export.date=2020-07-06
     environment:
      - TOPIC_NAME=db.penalties-and-deductions.sanction
      - ENVIRONMENT=local-docker

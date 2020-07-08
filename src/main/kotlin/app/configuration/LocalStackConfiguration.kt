@@ -18,13 +18,13 @@ import org.springframework.context.annotation.Profile
 @Configuration
 @Profile("localstackConfiguration")
 class LocalStackConfiguration {
+
     @Bean
     fun amazonS3(): AmazonS3 =
             AmazonS3ClientBuilder.standard()
                     .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint, signingRegion))
                     .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                    .withCredentials(
-                            AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
+                    .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
                     .withPathStyleAccessEnabled(true)
                     .disableChunkedEncoding()
                     .build()
@@ -46,10 +46,9 @@ class LocalStackConfiguration {
                 .build()
 
     private companion object {
-        const val serviceEndPoint = "http://aws:4566/"
+        const val serviceEndPoint = "http://localhost:4566/"
         const val signingRegion = "eu-west-2"
         const val accessKey = "accessKey"
         const val secretKey = "secretKey"
     }
-
 }

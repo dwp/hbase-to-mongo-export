@@ -18,16 +18,18 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun incrementExportedCount() {
+        logger.info("Incrementing exported count")
         val result = dynamoDB.updateItem(incrementFilesExportedRequest())
-        logger.info("Update FilesExported: ${result.attributes["FilesExported"]}")
+        logger.info("Incremented exported count",  "files_exported", result.attributes["FilesExported"])
     }
 
     @Retryable(value = [Exception::class],
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    @Synchronized
     override fun setExportedStatus() {
         val req = setStatusExportedRequest()
-        logger.info("reg: $req")
+        logger.info("Updating exported status", "request", "$req")
         val result = dynamoDB.updateItem(req)
         logger.info("Update CollectionStatus: ${result.attributes["CollectionStatus"]}")
     }

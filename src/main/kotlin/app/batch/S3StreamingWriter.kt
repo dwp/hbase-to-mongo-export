@@ -57,7 +57,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @AfterStep
     fun afterStep(stepExecution: StepExecution): ExitStatus {
         writeOutput(openNext = false)
-        exportStatusService.setExportedStatus()
         return stepExecution.exitStatus
     }
 
@@ -109,6 +108,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
             }
+
+            logInfo(logger, "Put batch object into bucket")
 
             exportStatusService.incrementExportedCount()
             snapshotSenderMessagingService.notifySnapshotSender(objectKey)
