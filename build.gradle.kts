@@ -52,7 +52,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.commons:commons-compress:1.19")
     implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
-    implementation("commons-codec:commons-codec:1.12")
     implementation("org.spockframework:spock-core:1.3-groovy-2.5")
     implementation("junit:junit:4.12")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.6")

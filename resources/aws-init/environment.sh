@@ -1,26 +1,10 @@
 #!/usr/bin/env bash
 
-aws_local() {
-  aws --endpoint-url http://aws:4566 --region=eu-west-2 "$@"
-}
-
 init() {
     aws_local configure set aws_access_key_id access_key_id
     aws_local configure set aws_secret_access_key secret_access_key
 }
 
-make_bucket() {
-    local bucket_name=$1
-
-    if ! aws_local s3 ls s3://$bucket_name 2>/dev/null; then
-        echo Making $bucket_name
-        aws_local s3 mb s3://$bucket_name
-        aws_local s3api put-bucket-acl --bucket $bucket_name --acl public-read
-    else
-        echo Bucket \'$bucket_name\' exists.
-    fi
-
-}
 
 create_export_bucket() {
     make_bucket demobucket
@@ -92,4 +76,21 @@ ucc_ecc_table_name() {
 
 sqs_queue_url() {
   aws_local sqs list-queues --query "QueueUrls[0]" | jq -r .
+}
+
+make_bucket() {
+    local bucket_name=$1
+
+    if ! aws_local s3 ls s3://$bucket_name 2>/dev/null; then
+        echo Making $bucket_name
+        aws_local s3 mb s3://$bucket_name
+        aws_local s3api put-bucket-acl --bucket $bucket_name --acl public-read
+    else
+        echo Bucket \'$bucket_name\' exists.
+    fi
+
+}
+
+aws_local() {
+  aws --endpoint-url http://aws:4566 --region=eu-west-2 "$@"
 }

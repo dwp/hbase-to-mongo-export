@@ -86,20 +86,6 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		docker-compose build --no-cache hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
-build-dks: build-jar build-base-images ## Build the hbase, population, and exporter images
-	@{ \
-		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
-		export AWS_DEFAULT_REGION=$(aws_default_region); \
-		export AWS_ACCESS_KEY_ID=$(aws_access_key_id); \
-		export AWS_SECRET_ACCESS_KEY=$(aws_secret_access_key); \
-		export S3_BUCKET=$(s3_bucket); \
-		export S3_MANIFEST_BUCKET=$(s3_manifest_bucket); \
-		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
-		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
-		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose build --no-cache dks-standalone-http dks-standalone-https; \
-	}
-
 up: build-all up-all
 
 .PHONY: up-all
