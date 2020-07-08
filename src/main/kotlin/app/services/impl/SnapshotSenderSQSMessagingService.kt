@@ -18,8 +18,10 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun notifySnapshotSender(prefix: String) {
-        amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
-        logger.info("Sent message to snapshot sender queue", "prefix", prefix)
+        if (triggerSnapshotSender.toBoolean()) {
+            amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
+            logger.info("Sent message to snapshot sender queue", "prefix", prefix)
+        }
     }
 
     private fun sendMessageRequest(message: String) =
@@ -60,6 +62,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     @Value("\${snapshot.sender.export.date}")
     private lateinit var exportDate: String
+
+    @Value("\${trigger.snapshot.sender}")
+    private lateinit var triggerSnapshotSender: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderSQSMessagingService::class.toString())

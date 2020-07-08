@@ -40,7 +40,8 @@ import java.nio.charset.Charset
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05"
+    "snapshot.sender.export.date=2020-06-05",
+    "trigger.snapshot.sender=false"
 ])
 class HBaseReaderTest {
 

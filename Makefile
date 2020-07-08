@@ -125,7 +125,9 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate; \
-		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3; \
+		docker-compose up hbase-to-mongo-export-file; \
+		docker-compose up hbase-to-mongo-export-directory; \
+		docker-compose up hbase-to-mongo-export-s3; \
 	}
 
 up-some: ## Bring up hbase, population, and sample exporter services
@@ -220,8 +222,6 @@ integration-tests: ## (Re-)Run the integration tests in a Docker container
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		echo "Waiting for exporters"; \
-		sleep 5; \
 		docker-compose up hbase-to-mongo-export-itest; \
 	}
 

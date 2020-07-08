@@ -46,7 +46,7 @@ class LocalStackConfiguration {
                 .build()
 
     private companion object {
-        const val serviceEndPoint = "http://localhost:4566/"
+        const val serviceEndPoint = "http://aws:4566/"
         const val signingRegion = "eu-west-2"
         const val accessKey = "accessKey"
         const val secretKey = "secretKey"

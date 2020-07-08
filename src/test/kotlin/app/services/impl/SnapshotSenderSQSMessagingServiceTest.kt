@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.util.ReflectionTestUtils
 
 @RunWith(SpringRunner::class)
 @EnableRetry
@@ -24,7 +25,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "snapshot.sender.reprocess.files=false",
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
-    "topic.name=db.database.collection"
+    "topic.name=db.database.collection",
+    "trigger.snapshot.sender=true"
 ])
 class SnapshotSenderSQSMessagingServiceTest {
 
@@ -38,6 +40,7 @@ class SnapshotSenderSQSMessagingServiceTest {
     fun init() {
         reset(amazonSQS)
         System.setProperty("correlation_id", "correlation-id")
+        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "true")
     }
 
     @Test
@@ -53,7 +56,7 @@ class SnapshotSenderSQSMessagingServiceTest {
 
 
     @Test
-    fun notifySnapshotSenderSendCorrectMessage() {
+    fun notifySnapshotSenderSendsCorrectMessageIfFlagTrue() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
         snapshotSenderMessagingService.notifySnapshotSender("db.collection")
@@ -72,5 +75,13 @@ class SnapshotSenderSQSMessagingServiceTest {
         }
         verify(amazonSQS, times(1)).sendMessage(expected)
         verifyNoMoreInteractions(amazonSQS)
+    }
+
+
+    @Test
+    fun notifySnapshotSenderDoesNotSendMessageIfFlagFalse() {
+        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
+        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        verifyZeroInteractions(amazonSQS)
     }
 }

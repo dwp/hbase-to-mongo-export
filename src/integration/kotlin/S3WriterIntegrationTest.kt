@@ -1,6 +1,17 @@
 import app.configuration.LocalStackConfiguration
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.Protocol
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder
+import io.kotlintest.shouldBe
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,4 +60,60 @@ class S3WriterIntegrationTest {
         val joinedContent = list.joinToString("\n")
         assertEquals(expected, joinedContent)
     }
+
+    @Test
+    fun exportStatusIsExported() {
+        val dynamoDB = AmazonDynamoDBClientBuilder.standard()
+                .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration("http://aws:4566/",
+                        "eu-west-2"))
+                .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+                .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
+                .build()
+        val correlationIdAttributeValue = AttributeValue().apply { s = "integration_test_correlation_id" }
+        val collectionNameAttributeValue = AttributeValue().apply { s = "db.penalties-and-deductions.sanction" }
+        val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
+                "CollectionName" to collectionNameAttributeValue)
+
+        val getItemRequest = GetItemRequest().apply {
+            tableName = "UCExportToCrownStatus"
+            key = primaryKey
+        }
+        val result = dynamoDB.getItem(getItemRequest)
+        val item = result.item
+        val status = item["CollectionStatus"]
+        val filesExported = item["FilesExported"]
+        val filesSent = item["FilesSent"]
+        status?.s shouldBe "Exported"
+        filesExported?.n shouldBe "7"
+        filesSent?.n shouldBe "0"
+    }
+
+    @Test
+    fun messageSentToSnapshotSender() {
+        val sqs = AmazonSQSClientBuilder.standard()
+                .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration("http://aws:4566/", "eu-west-2"))
+                .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+                .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
+                .build()
+
+        for (i in 1 .. 7) {
+            val messageResult = sqs.receiveMessage("http://aws:4566/000000000000/integration-queue")
+            assertNotNull(messageResult)
+            val messages = messageResult?.messages
+            val expectedMessageBody = """
+            {
+               "shutdown_flag": "false",
+               "correlation_id": "integration_test_correlation_id",
+               "topic_name": "db.penalties-and-deductions.sanction",
+               "export_date": "2020-07-06",
+               "reprocess_files": "true",
+               "s3_full_folder": "test-exporter/db.penalties-and-deductions.sanction-045-050-00000${i}.txt.bz2.enc"
+            }
+            """.trimIndent()
+
+            assertEquals(expectedMessageBody, messages?.get(0)?.body)
+
+        }
+    }
+
 }
