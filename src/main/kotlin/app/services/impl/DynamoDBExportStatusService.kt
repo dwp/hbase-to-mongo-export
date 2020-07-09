@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.services.ExportStatusService
+import app.utils.logging.logInfo
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
@@ -18,9 +19,10 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun incrementExportedCount() {
-        logger.info("Incrementing exported count")
+        logInfo(logger, "Incrementing exported count")
         val result = dynamoDB.updateItem(incrementFilesExportedRequest())
-        logger.info("Incremented exported count",  "files_exported", result.attributes["FilesExported"])
+        logInfo(logger, "Incremented exported count",
+                "files_exported", "${result.attributes["FilesExported"]?.n}")
     }
 
     private fun incrementFilesExportedRequest() =
