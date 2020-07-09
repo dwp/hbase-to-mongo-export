@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.services.SnapshotSenderMessagingService
+import app.utils.logging.logInfo
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import org.slf4j.Logger
@@ -20,7 +21,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     override fun notifySnapshotSender(prefix: String) {
         if (triggerSnapshotSender.toBoolean()) {
             amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
-            logger.info("Sent message to snapshot sender queue", "prefix", prefix)
+            logInfo(logger, "Sent message to snapshot sender queue", "prefix", prefix)
         }
     }
 

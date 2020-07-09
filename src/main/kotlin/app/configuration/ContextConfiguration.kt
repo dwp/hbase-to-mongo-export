@@ -114,7 +114,7 @@ class ContextConfiguration {
 
         val connection = ConnectionFactory.createConnection(configuration)
         addShutdownHook(connection)
-        logger.info("Got connection to hbase.")
+        logInfo(logger, "Got connection to hbase.")
         return connection
     }
 
