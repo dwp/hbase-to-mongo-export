@@ -3,8 +3,12 @@ package app.configuration
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.sqs.AmazonSQS
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -24,6 +28,20 @@ class AWSConfiguration {
                 socketTimeout = socketTimeOut.toInt()
             })
             .build()
+
+    @Bean
+    fun amazonDynamoDb(): AmazonDynamoDB =
+            AmazonDynamoDBClientBuilder.standard()
+                    .withCredentials(DefaultAWSCredentialsProviderChain())
+                    .withRegion(awsRegion)
+                    .build()
+
+    @Bean
+    fun amazonSqs(): AmazonSQS =
+            AmazonSQSClientBuilder.standard()
+                    .withCredentials(DefaultAWSCredentialsProviderChain())
+                    .withRegion(awsRegion)
+                    .build()
 
     private val region by lazy {
         Regions.valueOf(awsRegion.toUpperCase().replace("-", "_"))
