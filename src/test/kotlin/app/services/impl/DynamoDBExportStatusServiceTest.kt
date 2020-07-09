@@ -38,14 +38,4 @@ class DynamoDBExportStatusServiceTest {
         exportStatusService.incrementExportedCount()
         verify(exportStatusService, times(3)).incrementExportedCount()
     }
-
-    @Test
-    fun setExportedStatusRetries() {
-        given(amazonDynamoDB.updateItem(any()))
-                .willThrow(SdkClientException(""))
-                .willThrow(SdkClientException(""))
-                .willReturn(mock())
-        exportStatusService.setExportedStatus()
-        verify(exportStatusService, times(3)).setExportedStatus()
-    }
 }
