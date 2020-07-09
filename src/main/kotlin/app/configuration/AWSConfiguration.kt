@@ -33,14 +33,14 @@ class AWSConfiguration {
     fun amazonDynamoDb(): AmazonDynamoDB =
             AmazonDynamoDBClientBuilder.standard()
                     .withCredentials(DefaultAWSCredentialsProviderChain())
-                    .withRegion(awsRegion)
+                    .withRegion(region)
                     .build()
 
     @Bean
     fun amazonSqs(): AmazonSQS =
             AmazonSQSClientBuilder.standard()
                     .withCredentials(DefaultAWSCredentialsProviderChain())
-                    .withRegion(awsRegion)
+                    .withRegion(region)
                     .build()
 
     private val region by lazy {
