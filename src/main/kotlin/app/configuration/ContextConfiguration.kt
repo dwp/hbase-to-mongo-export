@@ -133,7 +133,7 @@ class ContextConfiguration {
     @Value("\${hbase.rpc.timeout.ms:1800000}")
     private lateinit var hbaseRpcTimeoutMs: String
 
-    @Value("\${hbase.scanner.timeout.ms:1200000}")
+    @Value("\${hbase.scanner.timeout.ms:1800000}")
     private lateinit var hbaseTimeoutMs: String
 
     @Value("\${hbase.zookeeper.quorum}")

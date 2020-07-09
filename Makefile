@@ -81,7 +81,7 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose build hbase hbase-populate s3-dummy s3-bucket-provision; \
+		docker-compose build hbase hbase-populate aws aws-init; \
 		docker-compose build --no-cache dks-standalone-http dks-standalone-https; \
 		docker-compose build --no-cache hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
@@ -100,19 +100,22 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		docker-compose up -d hbase s3-dummy; \
-		while ! docker logs s3-dummy 2> /dev/null | grep -q $(S3_READY_REGEX); do \
-			echo Waiting for s3.; \
+		docker-compose up -d hbase aws; \
+		while ! docker logs aws 2> /dev/null | grep -q $(S3_READY_REGEX); do \
+			echo Waiting for aws.; \
 			sleep 2; \
 		done; \
-		docker-compose up s3-bucket-provision; \
+		docker-compose up aws-init; \
 		docker-compose up -d dks-standalone-http dks-standalone-https; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate; \
-		docker-compose up -d hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3; \
+		docker-compose up hbase-to-mongo-export-file; \
+		docker-compose up hbase-to-mongo-export-directory; \
+		docker-compose up hbase-to-mongo-export-s3; \
 	}
+
 
 .PHONY: restart
 restart: ## Restart hbase and other services
@@ -163,8 +166,6 @@ integration-tests: ## (Re-)Run the integration tests in a Docker container
 		export S3_PREFIX_FOLDER=$(s3_prefix_folder); \
 		export DATA_KEY_SERVICE_URL=$(data_key_service_url); \
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
-		echo "Waiting for exporters"; \
-		sleep 5; \
 		docker-compose up hbase-to-mongo-export-itest; \
 	}
 
@@ -185,7 +186,7 @@ hbase-shell: ## Open an Hbase shell onto the running hbase container
 
 .PHONY: logs-s3-provision
 logs-s3-provision: ## Show the logs of the s3 bucket provision. Update follow_flag as required.
-	docker logs $(follow_flag) s3-bucket-provision
+	docker logs $(follow_flag) aws-init
 
 .PHONY: logs-hbase-populate
 logs-hbase-populate: ## Show the logs of the hbase-populater. Update follow_flag as required.

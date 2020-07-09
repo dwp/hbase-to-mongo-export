@@ -4,6 +4,8 @@ import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
 import app.utils.TextUtils
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.sqs.AmazonSQS
 import org.apache.hadoop.hbase.Cell
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
@@ -14,6 +16,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -33,7 +36,12 @@ import java.nio.charset.Charset
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2"
+    "aws.region=eu-west-2",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.reprocess.files=true",
+    "snapshot.sender.shutdown.flag=true",
+    "snapshot.sender.export.date=2020-06-05",
+    "trigger.snapshot.sender=false"
 ])
 class HBaseReaderTest {
 
@@ -461,5 +469,11 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
         hbaseReader.read()
     }
+
+    @MockBean
+    private lateinit var amazonDynamoDb: AmazonDynamoDB
+
+    @MockBean
+    private lateinit var amazonSQS: AmazonSQS
 }
 

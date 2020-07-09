@@ -39,7 +39,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
     echo ""
 
     java -jar "${JAR_FILE}" \
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,dummyS3Client,outputToS3,batchRun,strongRng,secureHttpClient \
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,strongRng,secureHttpClient \
       --hbase.zookeeper.quorum="${HBASE_URL}" \
       --data.key.service.url="${DATA_KEY_SERVICE_URL}" \
       --aws.region="${AWS_DEFAULT_REGION}" \

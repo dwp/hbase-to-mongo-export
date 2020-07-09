@@ -62,8 +62,8 @@ communicate over 2-way https. To generate these:
   | `outputToConsole`      | No                 | Output is written to console as is (not encrypted or compressed).
   | `outputToDirectory`    | No                 | Output is chunked and written to the configured directory.
   | `outputToFile`         | No                 | Output is written to configured local file as is (used for the hbase integration test).
-  | `realS3Client`         | Yes                | AWS S3 Client to communicate to the real AWS S3 service
-  | `dummyS3Client`        | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
+  | `awsConfiguration`         | Yes                | AWS S3 Client to communicate to the real AWS S3 service
+  | `localstackConfiguration`        | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
   | `outputToS3`           | Yes                | Output is chunked and written to configured S3 folder.
   | `phoneyCipherService`  | No                 | Use a cipher service that does not do real encryption.
   | `phoneyDataKeyService` | No                 | Use a dummy key service that does not require a configured DKS instance.
@@ -158,7 +158,7 @@ It should now be possible to run code in an IDE against the local instance.
 
 Run the application from class file `HBaseToMongoExport` and add arguments to the profile:
 ```
---spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,dummyS3Client,batchRun,strongRng
+--spring.profiles.active=phoneyCipherService,realHttpClient,httpDataKeyService,realHbaseDataSource,outputToS3,localstackConfiguration,batchRun,strongRng
 --hbase.zookeeper.quorum=local-hbase
 --data.key.service.url=http://local-dks-insecure:8080
 --data.table.name=ucfs-data

@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.retry.policy.SimpleRetryPolicy
+import java.io.IOException
 
 @Configuration
 @Profile("batchRun")
@@ -33,7 +35,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
                     .end()
                     .build()
 
-    // Master
     @Bean
     fun step1() = stepBuilderFactory["step1"]
                 .partitioner(slaveStep().name, partitioner)
@@ -42,12 +43,15 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .taskExecutor(taskExecutor())
                 .build()
 
-    // slave step
     @Bean
     fun slaveStep() = stepBuilderFactory["slaveStep"]
                 .chunk<SourceRecord, Record>(chunkSize.toInt())
                 .reader(itemReader)
                 .faultTolerant()
+                .retry(IOException::class.java)
+                .retryPolicy(SimpleRetryPolicy().apply {
+                    maxAttempts = maxRetries.toInt()
+                })
                 .skip(MissingFieldException::class.java)
                 .skip(DecryptionFailureException::class.java)
                 .skip(BadDecryptedDataException::class.java)
@@ -55,21 +59,6 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .processor(itemProcessor())
                 .writer(itemWriter)
                 .build()
-
-    @Bean
-    fun step() =
-        stepBuilderFactory.get("step")
-            .chunk<SourceRecord, Record>(chunkSize.toInt())
-            .reader(itemReader)
-            .faultTolerant()
-            .skip(MissingFieldException::class.java)
-            .skip(DecryptionFailureException::class.java)
-            .skip(BadDecryptedDataException::class.java)
-            .skipLimit(Integer.MAX_VALUE)
-            .processor(itemProcessor())
-            .writer(itemWriter)
-            .build()
-
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("htme").apply {
@@ -112,4 +101,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Value("\${scan.width:5}")
     private lateinit var scanWidth: String
+
+    @Value("\${s3.max.retries:20}")
+    private lateinit var maxRetries: String
 }

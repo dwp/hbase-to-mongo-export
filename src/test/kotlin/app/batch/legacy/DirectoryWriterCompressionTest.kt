@@ -2,6 +2,8 @@ package app.batch.legacy
 
 import app.domain.ManifestRecord
 import app.domain.Record
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.sqs.AmazonSQS
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -9,6 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -36,7 +39,12 @@ import java.nio.file.Paths
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2"
+    "aws.region=eu-west-2",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.reprocess.files=true",
+    "snapshot.sender.shutdown.flag=true",
+    "snapshot.sender.export.date=2020-06-05",
+    "trigger.snapshot.sender=false"
 ])
 class DirectoryWriterCompressionTest {
 
@@ -107,6 +115,12 @@ class DirectoryWriterCompressionTest {
 
     @Autowired
     private lateinit var directoryWriter: DirectoryWriter
+
+    @MockBean
+    private lateinit var amazonDynamoDb: AmazonDynamoDB
+
+    @MockBean
+    private lateinit var amazonSQS: AmazonSQS
 
     private val outputDirectoryPath = "ephemera"
 
