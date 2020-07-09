@@ -28,9 +28,8 @@ import java.io.IOException
 class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
-    fun importUserJob(listener: JobCompletionNotificationListener) =
+    fun importUserJob() =
             jobBuilderFactory.get("nightlyExportBatchJob")
-                    .listener(listener)
                     .incrementer(RunIdIncrementer())
                     .flow(step1())
                     .end()

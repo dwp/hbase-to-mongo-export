@@ -49,7 +49,7 @@ add_status_item() {
           --key $(status_item_id) \
           --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
           --return-values "ALL_NEW" \
-          --expression-attribute-values '{":cs": {"S":"Exported"}, ":fe": {"N":"0"}, ":fs": {"N":"0"}}'
+          --expression-attribute-values '{":cs": {"S":"Exporting"}, ":fe": {"N":"0"}, ":fs": {"N":"0"}}'
 }
 
 create_sqs_queue() {

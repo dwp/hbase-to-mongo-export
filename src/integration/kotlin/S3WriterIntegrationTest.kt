@@ -83,7 +83,7 @@ class S3WriterIntegrationTest {
         val status = item["CollectionStatus"]
         val filesExported = item["FilesExported"]
         val filesSent = item["FilesSent"]
-        status?.s shouldBe "Exported"
+        status?.s shouldBe "Exporting"
         filesExported?.n shouldBe "7"
         filesSent?.n shouldBe "0"
     }
