@@ -111,7 +111,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
             logInfo(logger, "Put batch object into bucket")
 
-            exportStatusService.incrementExportedCount()
+            exportStatusService.incrementExportedCount(objectKey)
             snapshotSenderMessagingService.notifySnapshotSender(objectKey)
             
             totalBatches++

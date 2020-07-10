@@ -1,5 +1,5 @@
 package app.services
 
 interface ExportStatusService {
-    fun incrementExportedCount()
+    fun incrementExportedCount(exportedFile: String)
 }
