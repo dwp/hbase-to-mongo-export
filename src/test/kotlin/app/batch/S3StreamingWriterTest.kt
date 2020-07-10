@@ -87,7 +87,7 @@ class S3StreamingWriterTest {
         val record = Record(dbObject, manifestRecord)
         s3StreamingWriter.write(mutableListOf(record))
         s3StreamingWriter.writeOutput()
-        verify(exportStatusService, times(1)).incrementExportedCount()
+        verify(exportStatusService, times(1)).incrementExportedCount(any())
         val key = "prefix/db.database.collection-${Int.MIN_VALUE}-${Int.MAX_VALUE}-000001.txt.bz2.enc"
         verify(snapshotSenderMessagingService, times(1)).notifySnapshotSender(key)
     }
