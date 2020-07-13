@@ -11,6 +11,7 @@ import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
+import org.apache.hadoop.hbase.util.Bytes
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepExecution
@@ -49,10 +50,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val idBytes = result.row
-            result.advance()
-            val cell = result.current()
+            val cell = result.getColumnLatestCell(Bytes.toBytes("cf"), Bytes.toBytes(("record")))
             val timestamp = cell.timestamp
-            cell.qualifierArray
             val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
