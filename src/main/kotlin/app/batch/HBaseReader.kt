@@ -10,10 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.Connection
-import org.apache.hadoop.hbase.client.Consistency
-import org.apache.hadoop.hbase.client.ResultScanner
-import org.apache.hadoop.hbase.client.Scan
+import org.apache.hadoop.hbase.client.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepExecution
@@ -21,6 +18,8 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 import java.time.ZonedDateTime
@@ -41,11 +40,12 @@ class HBaseReader constructor(private val connection: Connection, private val te
     var recordCount = 0
 
     override fun read() =
-        scanner().next()?.let { result ->
+            scanner().next()?.let { result ->
+
             recordCount++
 
             if (recordCount % 10000 == 0) {
-                logInfo(logger, "$this: Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
+                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
             }
 
             val idBytes = result.row
@@ -89,6 +89,12 @@ class HBaseReader constructor(private val connection: Connection, private val te
     fun resetScanner() {
         scanner = null
     }
+
+
+    @Retryable(value = [Exception::class],
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    fun next(): Result? = scanner().next()
 
     @Synchronized
     fun scanner(): ResultScanner {
@@ -185,5 +191,8 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
+        const val maxAttempts = 5
+        const val initialBackoffMillis = 1000L
+        const val backoffMultiplier = 2.0
     }
 }
