@@ -11,7 +11,6 @@ import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
-import org.apache.hadoop.hbase.util.Bytes
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepExecution
@@ -50,8 +49,6 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val idBytes = result.row
-            val cell = result.getColumnLatestCell(Bytes.toBytes("cf"), Bytes.toBytes(("record")))
-            val timestamp = cell.timestamp
             val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
@@ -80,7 +77,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection,
+            SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
                     if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                     if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
         }

@@ -105,7 +105,7 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration","OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseReader.read()
@@ -165,7 +165,7 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
 
         val actual = hbaseReader.read()
@@ -226,7 +226,7 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
 
         val actual = hbaseReader.read()
@@ -291,7 +291,7 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseReader.read()
@@ -350,7 +350,7 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseReader.read()
@@ -407,7 +407,7 @@ class HBaseReaderTest {
         given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), 10, expectedEncryptionBlock, dbObject,
+        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration",
                 "TYPE_NOT_SET",
                 "TYPE_NOT_SET")

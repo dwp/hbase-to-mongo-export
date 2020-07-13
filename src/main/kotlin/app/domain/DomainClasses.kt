@@ -16,7 +16,6 @@ data class EncryptionResult(val initialisationVector: String, val encrypted: Str
 data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKey: String, val ciphertextDataKey: String)
 
 data class SourceRecord(val hbaseRowId: ByteArray,
-                        val hbaseTimestamp: Long,
                         val encryption: EncryptionBlock,
                         var dbObject: String,
                         var db: String,
@@ -30,7 +29,6 @@ data class SourceRecord(val hbaseRowId: ByteArray,
         other as SourceRecord
 
         if (!hbaseRowId.contentEquals(other.hbaseRowId)) return false
-        if (hbaseTimestamp != other.hbaseTimestamp) return false
         if (encryption != other.encryption) return false
         if (dbObject != other.dbObject) return false
         if (db != other.db) return false
@@ -42,7 +40,6 @@ data class SourceRecord(val hbaseRowId: ByteArray,
 
     override fun hashCode(): Int {
         var result = hbaseRowId.contentHashCode()
-        result = 31 * result + hbaseTimestamp.hashCode()
         result = 31 * result + encryption.hashCode()
         result = 31 * result + dbObject.hashCode()
         result = 31 * result + db.hashCode()

@@ -9,11 +9,9 @@ import spock.lang.Specification
 class FileWriterIntegrationTest extends Specification {
 
     Logger log
-    String expected_content = "{\"_id\":{\"someId\":\"RANDOM_GUID\",\"createdDateTime\":{\"d_date\":\"2010-08-05T02:10:19.000Z\"},\"_removedDateTime\":{\"d_date\":\"2011-08-05T02:10:19.887Z\"},\"_lastModifiedDateTime\":{\"d_date\":\"2013-08-05T02:10:19.887Z\"},\"declarationId\":1234},\"@type\":\"V4\",\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000Z\"},\"timestamp\":10}"
-    String expected_content_native_id = "{\"@type\":\"V4\",\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000Z\"},\"_id\":{\"d_oid\":\"ID_CONSTRUCTED_FROM_NATIVE_MONGO\"},\"timestamp\":1}"
+    String expected_content = "{\"_id\":{\"someId\":\"RANDOM_GUID\",\"createdDateTime\":{\"d_date\":\"2010-08-05T02:10:19.000Z\"},\"_removedDateTime\":{\"d_date\":\"2011-08-05T02:10:19.887Z\"},\"_lastModifiedDateTime\":{\"d_date\":\"2013-08-05T02:10:19.887Z\"},\"declarationId\":1234},\"@type\":\"V4\",\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000Z\"}}"
+    String expected_content_native_id = "{\"@type\":\"V4\",\"type\":\"addressDeclaration\",\"contractId\":1234,\"addressNumber\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"addressLine2\":null,\"townCity\":{\"type\":\"AddressLine\",\"cryptoId\":1234},\"postcode\":\"SM5 2LE\",\"processId\":1234,\"effectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"paymentEffectiveDate\":{\"type\":\"SPECIFIC_EFFECTIVE_DATE\",\"date\":20150320,\"knownDate\":20150320},\"createdDateTime\":{\"d_date\":\"2015-03-20T12:23:25.183Z\"},\"_version\":2,\"_removed\":\"should be replaced by _removed\",\"unicodeNull\":\"\",\"unicodeNullwithText\":\"sometext\",\"lineFeedChar\":\"\",\"lineFeedCharWithText\":\"sometext\",\"carriageReturn\":\"\",\"carriageReturnWithText\":\"sometext\",\"carriageReturnLineFeed\":\"\",\"carriageReturnLineFeedWithText\":\"sometext\",\"_lastModifiedDateTime\":{\"d_date\":\"2018-12-14T15:01:02.000Z\"},\"_id\":{\"d_oid\":\"ID_CONSTRUCTED_FROM_NATIVE_MONGO\"}}"
     String fileName = System.getenv("FILE_NAME") ?: "tmp"
-    Integer expectedTimestamp = Integer.valueOf(System.getenv("EXPECTED_TIMESTAMP") ?: "10")
-    Integer expectedTimestampNative = Integer.valueOf(System.getenv("EXPECTED_TIMESTAMP_NATIVE") ?: "1")
     Integer expectedLineCount = Integer.valueOf(System.getenv("EXPECTED_LINE_COUNT") ?: "8")
 
     def setup() {
@@ -75,22 +73,17 @@ class FileWriterIntegrationTest extends Specification {
         while ((line = reader.readLine()) != null) {
             def jsonSlurper = new JsonSlurper()
             def object = jsonSlurper.parse(line.getBytes())
-            def timestamp = object.get('timestamp')
 
             if (line.contains("ID_CONSTRUCTED_FROM_NATIVE_MONGO")) {
 
                 assert line == expected_content_native_id
-                assert timestamp == expectedTimestampNative
             }
             else {
                 assert line == expected_content
-                assert timestamp == expectedTimestamp
             }
 
             lineCount++
             log.info("lineCount = " + lineCount)
-            log.info("timestamp = " + timestamp)
-            log.info("Checking timestamp = " + expectedTimestamp)
         }
         log.info("Checking lineCount = " + expectedLineCount)
         lineCount == expectedLineCount
