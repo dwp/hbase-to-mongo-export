@@ -124,7 +124,10 @@ def decrypted_db_object():
             "date": 20150320,
             "knownDate": 20150320
         },
-        "createdDateTime": "2015-03-20T12:23:25.183Z",
+        "createdDateTime": {
+            "$date": "2015-03-20T12:23:25.183Z",
+            "_archivedDateTime": "should be replaced by _removedDateTime"
+        },
         "_version": 2,
         "_archived": "should be replaced by _removed",
         "unicodeNull": "\u0000",
@@ -135,7 +138,9 @@ def decrypted_db_object():
         "carriageReturnWithText": "some\rtext",
         "carriageReturnLineFeed": "\r\n",
         "carriageReturnLineFeedWithText": "some\r\ntext",
-        "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
+        "_lastModifiedDateTime": {
+            "$date": "2018-12-14T15:01:02.000+0000"
+        }
     }
 
 
