@@ -41,7 +41,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
     var recordCount = 0
 
     override fun read() =
-            scanner().next()?.let { result ->
+            next()?.let { result ->
 
             recordCount++
 
@@ -50,8 +50,6 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val idBytes = result.row
-            val cell = result.getColumnLatestCell(Bytes.toBytes("cf"), Bytes.toBytes(("record")))
-            val timestamp = cell.timestamp
             val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
@@ -80,7 +78,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection,
+            SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
                     if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                     if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
         }

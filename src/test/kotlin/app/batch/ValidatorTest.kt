@@ -32,7 +32,7 @@ class ValidatorTest {
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
-                10, encryptionBlock, "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
+                encryptionBlock, "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
         val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
@@ -48,7 +48,7 @@ class ValidatorTest {
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
-                10, encryptionBlock, "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
+                encryptionBlock, "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
         val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
@@ -66,7 +66,7 @@ class ValidatorTest {
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
         val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
-                10, encryptionBlock, "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
+                encryptionBlock, "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
         val decrypted = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
@@ -83,7 +83,7 @@ class ValidatorTest {
                 EncryptionBlock("keyEncryptionKeyId",
                         "initialisationVector",
                         "encryptedEncryptionKey")
-        val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), 10, encryptionBlock,
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), encryptionBlock,
                 "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
@@ -99,7 +99,7 @@ class ValidatorTest {
                 EncryptionBlock("keyEncryptionKeyId",
                         "initialisationVector",
                         "encryptedEncryptionKey")
-        val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), 10, encryptionBlock,
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00003"), encryptionBlock,
                 "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
         val exception = shouldThrow<BadDecryptedDataException> {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
@@ -328,7 +328,7 @@ class ValidatorTest {
                    "_id1":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
                 }"""
-        val sourceRecord = SourceRecord(generateFourByteChecksum("00002"), 10, encryptionBlock,
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00002"), encryptionBlock,
                 "dbObject", "db", "collection",
                 "OUTER_TYPE", "INNER_TYPE")
         val exception = shouldThrow<BadDecryptedDataException> {
