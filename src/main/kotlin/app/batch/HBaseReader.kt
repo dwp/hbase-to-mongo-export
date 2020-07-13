@@ -11,7 +11,6 @@ import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
-import org.apache.hadoop.hbase.util.Bytes
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepExecution
