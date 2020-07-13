@@ -56,7 +56,7 @@ class DecryptionProcessorTest {
                 "initialisationVector",
                 "encryptedEncryptionKey")
 
-        val sourceRecord = SourceRecord("00001".toByteArray(), 10, encryptionBlock,
+        val sourceRecord = SourceRecord("00001".toByteArray(), encryptionBlock,
                 "dbObject", "db", "collection", "OUTER_TYPE", "INNER_TYPE")
         decryptionProcessor.process(sourceRecord)
     }
@@ -70,7 +70,7 @@ class DecryptionProcessorTest {
             EncryptionBlock("keyEncryptionKeyId",
                 "initialisationVector",
                 "encryptedEncryptionKey")
-        decryptionProcessor.process(SourceRecord("00001".toByteArray(), 10, encryptionBlock,
+        decryptionProcessor.process(SourceRecord("00001".toByteArray(), encryptionBlock,
                 "dbObject", "db", "collection","OUTER_TYPE", "INNER_TYPE"))
     }
 

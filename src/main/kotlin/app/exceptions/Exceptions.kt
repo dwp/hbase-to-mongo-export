@@ -6,10 +6,9 @@ class MissingFieldException(id: ByteArray, field: String) :
 class DecryptionFailureException(database: String,
                                  collection: String,
                                  id: ByteArray,
-                                 timestamp: Long,
                                  masterKeyId: String,
                                  cause: Throwable) :
-        Exception("Failed to decrypt record '$id', timestamp '$timestamp' sourced from collection '$collection' on database '$database', master key id: '$masterKeyId'", cause)
+        Exception("Failed to decrypt record '$id' sourced from collection '$collection' on database '$database', master key id: '$masterKeyId'", cause)
 
 class DataKeyDecryptionException(message: String) : Exception(message)
 

@@ -40,7 +40,6 @@ class DecryptionProcessor(private val cipherService: CipherService,
                 "database-unknown",
                 "collection-unknown",
                 item.hbaseRowId,
-                item.hbaseTimestamp,
                 item.encryption.keyEncryptionKeyId,
                 e)
         }

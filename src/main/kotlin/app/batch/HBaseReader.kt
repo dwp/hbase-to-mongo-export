@@ -49,10 +49,6 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val idBytes = result.row
-            result.advance()
-            val cell = result.current()
-            val timestamp = cell.timestamp
-            cell.qualifierArray
             val value = result.value()
             val json = value.toString(Charset.defaultCharset())
             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
@@ -81,7 +77,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            SourceRecord(idBytes, timestamp, encryptionBlock, encryptedDbObject, db, collection,
+            SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
                     if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                     if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
         }
