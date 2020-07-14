@@ -14,6 +14,7 @@ import org.apache.hadoop.hbase.client.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepExecution
+import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
@@ -39,9 +40,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     var recordCount = 0
 
-    override fun read() =
-            next()?.let { result ->
+    override fun read(): SourceRecord? {
+        val result = next()
 
+        if (result != null) {
             recordCount++
 
             if (recordCount % 10000 == 0) {
@@ -77,10 +79,17 @@ class HBaseReader constructor(private val connection: Connection, private val te
             }
 
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
+            return SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
                     if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                     if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
+
         }
+        else {
+            logInfo(logger, "Closing scanner")
+            scanner().close()
+            return null
+        }
+    }
 
     fun resetScanner() {
         scanner = null
