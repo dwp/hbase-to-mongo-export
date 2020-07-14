@@ -40,7 +40,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
     var recordCount = 0
 
     override fun read() =
-            scanner().next()?.let { result ->
+            next()?.let { result ->
 
             recordCount++
 
@@ -147,6 +147,9 @@ class HBaseReader constructor(private val connection: Connection, private val te
             if (scanMaxResultSize.toInt() > 0) {
                 maxResultSize = scanMaxResultSize.toLong()
             }
+
+            allowPartialResults = partialResultsAllowed.toBoolean()
+
         }
 
         logInfo(logger, "Scan caching config",
@@ -184,6 +187,9 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     @Value("\${use.timeline.consistency:true}")
     private var useTimelineConsistency: String = "true"
+
+    @Value("\${allow.partial.results:true}")
+    private var partialResultsAllowed: String = "true"
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
