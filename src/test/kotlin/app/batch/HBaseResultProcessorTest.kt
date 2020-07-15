@@ -1,18 +1,15 @@
 package app.batch
 
+import app.batch.processor.HBaseResultProcessor
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
-import app.utils.TextUtils
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.sqs.AmazonSQS
-import org.apache.hadoop.hbase.Cell
-import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.*
+import org.apache.hadoop.hbase.client.Result
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import org.springframework.boot.test.context.SpringBootTest
@@ -43,7 +40,7 @@ import java.nio.charset.Charset
     "snapshot.sender.export.date=2020-06-05",
     "trigger.snapshot.sender=false"
 ])
-class HBaseReaderTest {
+class HBaseResultProcessorTest {
 
     private val rowId = "EXPECTED_ID"
     private val timestamp = "EXPECTED_TIMESTAMP"
@@ -56,20 +53,8 @@ class HBaseReaderTest {
 
     @Test
     fun testRead() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
-        hbaseReader.resetScanner()
-
+        val hbaseResultProcessor = HBaseResultProcessor()
         val cellData = """
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
@@ -96,41 +81,23 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration","OUTER_TYPE", "INNER_TYPE")
 
-        val actual = hbaseReader.read()
+        val actual = hbaseResultProcessor.process(result)
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
-            expected.toString(), actual.toString())
+        assertEquals(expected.toString(), actual.toString())
     }
 
     @Test
     fun testInnerTypeWhenNoOuterType() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
-        hbaseReader.resetScanner()
-
+        val hbaseResultProcessor = HBaseResultProcessor()
         val cellData = """
             |{
             |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
@@ -156,40 +123,22 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
-
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
 
-        val actual = hbaseReader.read()
+        val actual = hbaseResultProcessor.process(result)
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
-                expected.toString(), actual.toString())
+        assertEquals(expected.toString(), actual.toString())
     }
 
     @Test
     fun testInnerTypeWhenEmptyOuterType() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
-        hbaseReader.resetScanner()
+        val hbaseResultProcessor = HBaseResultProcessor()
 
         val cellData = """
             |{
@@ -217,20 +166,12 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
-
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
-
-        val actual = hbaseReader.read()
-
+        val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
@@ -238,20 +179,9 @@ class HBaseReaderTest {
 
     @Test
     fun testReadModifiedIsObject() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
+        val hbaseResultProcessor = HBaseResultProcessor()
         val dateKey = "\$date"
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
-        hbaseReader.resetScanner()
 
         val lastModified = "2019-07-04T07:27:35.104+0000"
         val cellData = """
@@ -282,39 +212,23 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
 
-        val actual = hbaseReader.read()
+        val actual = hbaseResultProcessor.process(result)
 
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
-                expected.toString(), actual.toString())
+        assertEquals(expected.toString(), actual.toString())
     }
 
     @Test
     fun testReadModifiedIsAbsent() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
+        val hbaseResultProcessor = HBaseResultProcessor()
 
         val cellData = """
             |{
@@ -341,20 +255,12 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
-
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
-
-        val actual = hbaseReader.read()
-
+        val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
@@ -362,18 +268,8 @@ class HBaseReaderTest {
 
     @Test
     fun testReadNoType() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
+        val hbaseResultProcessor = HBaseResultProcessor()
 
         val cellData = """
             |{
@@ -398,22 +294,15 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 "core", "addressDeclaration",
                 "TYPE_NOT_SET",
                 "TYPE_NOT_SET")
-
-        val actual = hbaseReader.read()
-
+        val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
                 expected.toString(), actual.toString())
@@ -421,19 +310,8 @@ class HBaseReaderTest {
 
     @Test(expected = MissingFieldException::class)
     fun testReject() {
-        val table: Table = Mockito.mock(Table::class.java)
-        val scanner: ResultScanner = Mockito.mock(ResultScanner::class.java)
         val result: Result = Mockito.mock(Result::class.java)
-        val current: Cell = Mockito.mock(Cell::class.java)
-
-        val connection: Connection = Mockito.mock(Connection::class.java)
-        val textUtils: TextUtils = Mockito.mock(TextUtils::class.java)
-        val matchResult: MatchResult = Mockito.mock(MatchResult::class.java)
-        val matches = listOf("db", "database", "collection")
-        given(matchResult.groupValues).willReturn(matches)
-        given(textUtils.topicNameTableMatcher(ArgumentMatchers.anyString())).willReturn(matchResult)
-
-        val hbaseReader = HBaseReader(connection, textUtils)
+        val hbaseResultProcessor = HBaseResultProcessor()
 
         val cellData = """
             |{
@@ -460,14 +338,9 @@ class HBaseReaderTest {
             |  "timestamp": "$timestamp"
             |}""".trimMargin()
 
-        given(current.timestamp).willReturn(10)
         given(result.row).willReturn(rowId.toByteArray())
-        given(result.current()).willReturn(current)
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        given(scanner.next()).willReturn(result)
-        given(table.getScanner(ArgumentMatchers.any(Scan::class.java))).willReturn(scanner)
-        given(connection.getTable(ArgumentMatchers.any(TableName::class.java))).willReturn(table)
-        hbaseReader.read()
+        hbaseResultProcessor.process(result)
     }
 
     @MockBean

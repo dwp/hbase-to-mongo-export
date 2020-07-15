@@ -1,14 +1,7 @@
 package app.batch
 
-import app.domain.EncryptionBlock
-import app.domain.SourceRecord
-import app.exceptions.MissingFieldException
 import app.utils.TextUtils
-import app.utils.logging.logError
 import app.utils.logging.logInfo
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.slf4j.Logger
@@ -19,15 +12,12 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
-import java.nio.charset.Charset
 import java.time.ZonedDateTime
 
 @Component
 @StepScope
-class HBaseReader constructor(private val connection: Connection, private val textUtils: TextUtils): ItemReader<SourceRecord> {
+class HBaseReader(private val connection: Connection, private val textUtils: TextUtils) : ItemReader<Result> {
 
     private var start: Int = Int.MIN_VALUE
     private var stop: Int = Int.MAX_VALUE
@@ -38,92 +28,41 @@ class HBaseReader constructor(private val connection: Connection, private val te
         stop = stepExecution.executionContext["stop"] as Int
     }
 
-    var recordCount = 0
-
-    override fun read(): SourceRecord? {
-        val result = next()
-
-        if (result != null) {
-            recordCount++
-
-            if (recordCount % 10000 == 0) {
-                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
-            }
-
-            val idBytes = result.row
-            val value = result.value()
-            val json = value.toString(Charset.defaultCharset())
-            val dataBlock = Gson().fromJson(json, JsonObject::class.java)
-            val outerType = dataBlock.getAsJsonPrimitive("@type")?.asString ?: ""
-            val messageInfo = dataBlock.getAsJsonObject("message")
-            val innerType = messageInfo.getAsJsonPrimitive("@type")?.asString ?: ""
-            val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
-            val db = messageInfo.getAsJsonPrimitive("db")?.asString
-            val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
-            val encryptionInfo = messageInfo.getAsJsonObject("encryption")
-            val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
-            val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
-            val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
-
-            if (encryptedDbObject.isNullOrEmpty()) {
-                logError(logger, "Missing dbObject field, skipping this record", "id_bytes", "$idBytes")
-                throw MissingFieldException(idBytes, "dbObject")
-            }
-            if (db.isNullOrEmpty()) {
-                logError(logger, "Missing db field, skipping this record", "id_bytes", "$idBytes")
-                throw MissingFieldException(idBytes, "db")
-            }
-            if (collection.isNullOrEmpty()) {
-                logError(logger, "Missing collection field, skipping this record", "id_bytes", "$idBytes")
-                throw MissingFieldException(idBytes, "collection")
-            }
-
-            val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            return SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
-                    if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
-                    if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
-
-        }
-        else {
-            logInfo(logger, "Closing scanner")
-            scanner().close()
-            return null
-        }
+    @AfterStep
+    fun afterStep() {
+        logInfo(logger, "Closing scanner", "start", "$start", "stop", "$stop")
+        scanner().close()
     }
+
+    override fun read(): Result? = scanner().next()
 
     fun resetScanner() {
         scanner = null
     }
 
-
-    @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    fun next(): Result? = scanner().next()
-
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "topic_name", topicName)
-            val matcher = textUtils.topicNameTableMatcher(topicName)
-            if (matcher != null) {
-                val namespace = matcher.groupValues[1]
-                val tableName = matcher.groupValues[2]
-                val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
-                val table = connection.getTable(TableName.valueOf(qualifiedTableName))
-                scanner = table.getScanner(scan())
-            }
+            scanner = newScanner(start)
         }
         return scanner!!
     }
 
-    fun getScanTimeRangeStartEpoch() : Long {
-        return if (scanTimeRangeStart.isNotBlank())
-            ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
-            else 0
+    private fun newScanner(start: Int): ResultScanner {
+        val matcher = textUtils.topicNameTableMatcher(topicName)
+        val namespace = matcher?.groupValues?.get(1)
+        val tableName = matcher?.groupValues?.get(2)
+        val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
+        val table = connection.getTable(TableName.valueOf(qualifiedTableName))
+        return table.getScanner(scan(start))
     }
 
-    fun getScanTimeRangeEndEpoch() : Long {
+    fun getScanTimeRangeStartEpoch() =
+            if (scanTimeRangeStart.isNotBlank())
+                ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
+            else 0
+
+    fun getScanTimeRangeEndEpoch(): Long {
         var endDateTime = ZonedDateTime.now()
         if (scanTimeRangeEnd.isNotBlank()) {
             endDateTime = ZonedDateTime.parse(scanTimeRangeEnd)
@@ -132,7 +71,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
         return endDateTime.toInstant().toEpochMilli()
     }
 
-    private fun scan(): Scan {
+    private fun scan(startId: Int): Scan {
         val timeStart = getScanTimeRangeStartEpoch()
         val timeEnd = getScanTimeRangeEndEpoch()
 
@@ -143,7 +82,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
                 consistency = Consistency.TIMELINE
             }
 
-            withStartRow(byteArrayOf(start.toByte()), true)
+            withStartRow(byteArrayOf(startId.toByte()), true)
             if (stop != 0) {
                 withStopRow(byteArrayOf(stop.toByte()), true)
             }
@@ -202,8 +141,5 @@ class HBaseReader constructor(private val connection: Connection, private val te
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }
