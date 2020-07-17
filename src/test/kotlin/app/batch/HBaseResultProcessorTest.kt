@@ -6,8 +6,10 @@ import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.sqs.AmazonSQS
+import com.nhaarman.mockitokotlin2.reset
 import org.apache.hadoop.hbase.client.Result
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
@@ -41,7 +43,146 @@ import java.nio.charset.Charset
     "trigger.snapshot.sender=false"
 ])
 class HBaseResultProcessorTest {
+    @Before
+    fun setUp() {
+        reset(result)
+    }
 
+    @Test
+    fun testRead() {
+        val cellData = """
+            |{
+            |  "@type": "OUTER_TYPE",
+            |  "message": {
+            |   $commonBlock,
+            |   "@type": "INNER_TYPE",
+            |   "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |   "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+        init(cellData)
+        assertResult(expectedSourceRecord("OUTER_TYPE", "INNER_TYPE"), HBaseResultProcessor().process(result))
+    }
+
+    @Test
+    fun testInnerTypeWhenNoOuterType() {
+        val cellData = """
+            |{
+            |  "message": {
+            |   $commonBlock,
+            |    "@type": "INNER_TYPE",
+            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |    "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+
+        init(cellData)
+        assertResult(expectedSourceRecord("TYPE_NOT_SET", "INNER_TYPE"), HBaseResultProcessor().process(result))
+    }
+
+    @Test
+    fun testInnerTypeWhenEmptyOuterType() {
+        val cellData = """
+            |{
+            |  "@type": "",
+            |  "message": {
+            |   $commonBlock,
+            |    "@type": "INNER_TYPE",
+            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |    "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+        init(cellData)
+        assertResult(expectedSourceRecord("TYPE_NOT_SET", "INNER_TYPE"), HBaseResultProcessor().process(result))
+    }
+
+    @Test
+    fun testReadModifiedIsObject() {
+        val dateKey = "\$date"
+
+        val lastModified = "2019-07-04T07:27:35.104+0000"
+        val cellData = """
+            |{
+            |  "@type": "OUTER_TYPE",
+            |  "message": {
+            |   $commonBlock,
+            |    "@type": "INNER_TYPE",
+            |    "_lastModifiedDateTime": {
+            |       $dateKey: "$lastModified"
+            |    },
+            |    "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+
+        init(cellData)
+        assertResult(expectedSourceRecord("OUTER_TYPE", "INNER_TYPE"), HBaseResultProcessor().process(result))
+    }
+
+    @Test
+    fun testReadModifiedIsAbsent() {
+        val cellData = """
+            |{
+            |  "@type": "OUTER_TYPE",
+            |  "message": {
+            |   $commonBlock,
+            |    "@type": "INNER_TYPE",
+            |    "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+
+        init(cellData)
+        assertResult(expectedSourceRecord("OUTER_TYPE", "INNER_TYPE"), HBaseResultProcessor().process(result))
+    }
+
+    @Test
+    fun testReadNoType() {
+        val cellData = """
+            |{
+            |  "message": {
+            |   $commonBlock,
+            |    "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+
+        init(cellData)
+        assertResult(expectedSourceRecord("TYPE_NOT_SET","TYPE_NOT_SET"), HBaseResultProcessor().process(result))
+    }
+
+    @Test(expected = MissingFieldException::class)
+    fun testReject() {
+        val cellData = """
+            |{
+            |  "@type": "V4",
+            |  "message": {
+            |   $commonBlock,
+            |    "@type": "MONGO_INSERT",
+            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000"
+            |  }
+            |}""".trimMargin()
+
+        init(cellData)
+        HBaseResultProcessor().process(result)
+    }
+
+    @MockBean
+    private lateinit var amazonDynamoDb: AmazonDynamoDB
+
+    @MockBean
+    private lateinit var amazonSQS: AmazonSQS
+
+    private fun assertResult(expected: SourceRecord, actual: SourceRecord?) {
+        assertEquals(expected.dbObject, actual?.dbObject)
+        assertEquals(expected.toString(), actual.toString())
+    }
+
+    private fun init(cellData: String) {
+        given(result.row).willReturn(rowId.toByteArray())
+        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+    }
+
+    private fun expectedSourceRecord(outerType: String, innerType: String) =
+            SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
+                database, collection, outerType, innerType)
 
     companion object {
         const val rowId = "EXPECTED_ID"
@@ -74,197 +215,9 @@ class HBaseResultProcessorTest {
         """.trimMargin()
 
         val commonBlock = "$topicBlock, $idBlock, $encryptionBlock"
-
-    }
-
-    @Test
-    fun testRead() {
-        val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-
-        val cellData = """
-            |{
-            |  "@type": "OUTER_TYPE",
-            |  "message": {
-            |   $commonBlock,
-            |   "@type": "INNER_TYPE",
-            |   "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
-            |   "dbObject": "$dbObject"
-            |  }
-            |}""".trimMargin()
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                database, collection,"OUTER_TYPE", "INNER_TYPE")
-
-        val actual = hbaseResultProcessor.process(result)
-
-        assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals(expected.toString(), actual.toString())
-    }
-
-    @Test
-    fun testInnerTypeWhenNoOuterType() {
         val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-        val cellData = """
-            |{
-            |  "message": {
-            |   $commonBlock,
-            |    "@type": "INNER_TYPE",
-            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
-            |    "dbObject": "$dbObject"
-            |  }
-            |}""".trimMargin()
-
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                database, collection, "TYPE_NOT_SET", "INNER_TYPE")
-
-        val actual = hbaseResultProcessor.process(result)
-
-        assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals(expected.toString(), actual.toString())
     }
 
-    @Test
-    fun testInnerTypeWhenEmptyOuterType() {
-        val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-
-        val cellData = """
-            |{
-            |  "@type": "",
-            |  "message": {
-            |   $commonBlock,
-            |    "@type": "INNER_TYPE",
-            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
-            |    "dbObject": "$dbObject"
-            |  }
-            |}""".trimMargin()
-
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                database, collection, "TYPE_NOT_SET", "INNER_TYPE")
-        val actual = hbaseResultProcessor.process(result)
-        assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals(expected.toString(), actual.toString())
-    }
-
-    @Test
-    fun testReadModifiedIsObject() {
-        val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-        val dateKey = "\$date"
-
-        val lastModified = "2019-07-04T07:27:35.104+0000"
-        val cellData = """
-            |{
-            |  "@type": "OUTER_TYPE",
-            |  "message": {
-            |   $commonBlock,
-            |    "@type": "INNER_TYPE",
-            |    "_lastModifiedDateTime": {
-            |       $dateKey: "$lastModified"
-            |    },
-            |    "dbObject": "$dbObject"
-            |  }
-            |}""".trimMargin()
-
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-
-        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                database, collection, "OUTER_TYPE", "INNER_TYPE")
-
-        val actual = hbaseResultProcessor.process(result)
-
-        assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals(expected.toString(), actual.toString())
-    }
-
-    @Test
-    fun testReadModifiedIsAbsent() {
-        val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-
-        val cellData = """
-            |{
-            |  "@type": "OUTER_TYPE",
-            |  "message": {
-            |   $commonBlock,
-            |    "@type": "INNER_TYPE",
-            |    "dbObject": "$dbObject"
-            |  }
-            |}""".trimMargin()
-
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                database, collection, "OUTER_TYPE", "INNER_TYPE")
-        val actual = hbaseResultProcessor.process(result)
-        assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals(expected.toString(), actual.toString())
-    }
-
-    @Test
-    fun testReadNoType() {
-        val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-
-        val cellData = """
-            |{
-            |  "message": {
-            |   $commonBlock,
-            |    "dbObject": "$dbObject"
-            |  }
-            |}""".trimMargin()
-
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-
-        val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
-        val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                database, collection,
-                "TYPE_NOT_SET",
-                "TYPE_NOT_SET")
-        val actual = hbaseResultProcessor.process(result)
-        assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals(expected.toString(), actual.toString())
-    }
-
-    @Test(expected = MissingFieldException::class)
-    fun testReject() {
-        val result: Result = Mockito.mock(Result::class.java)
-        val hbaseResultProcessor = HBaseResultProcessor()
-
-        val cellData = """
-            |{
-            |  "@type": "V4",
-            |  "message": {
-            |   $commonBlock,
-            |    "@type": "MONGO_INSERT",
-            |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000"
-            |  }
-            |}""".trimMargin()
-
-        given(result.row).willReturn(rowId.toByteArray())
-        given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
-        hbaseResultProcessor.process(result)
-    }
-
-    @MockBean
-    private lateinit var amazonDynamoDb: AmazonDynamoDB
-
-    @MockBean
-    private lateinit var amazonSQS: AmazonSQS
 }
 
