@@ -6,6 +6,7 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
+import org.apache.hadoop.hbase.client.Result
 import org.springframework.batch.core.configuration.annotation.*
 import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.batch.core.partition.support.Partitioner
@@ -45,7 +46,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
     fun slaveStep() = stepBuilderFactory["slaveStep"]
-                .chunk<SourceRecord, Record>(chunkSize.toInt())
+            .chunk<Result, Record>(chunkSize.toInt())
                 .reader(itemReader)
                 .faultTolerant()
                 .retry(IOException::class.java)
@@ -67,16 +68,19 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
     @StepScope
-    fun itemProcessor(): ItemProcessor<SourceRecord, Record> =
-        CompositeItemProcessor<SourceRecord, Record>().apply {
-            setDelegates(listOf(decryptionProcessor, sanitisationProcessor))
-        }
+    fun itemProcessor(): ItemProcessor<Result, Record> =
+            CompositeItemProcessor<Result, Record>().apply {
+                setDelegates(listOf(resultProcessor, decryptionProcessor, sanitisationProcessor))
+            }
 
     @Autowired
     lateinit var partitioner: Partitioner
 
     @Autowired
-    lateinit var itemReader: ItemReader<SourceRecord>
+    lateinit var itemReader: ItemReader<Result>
+
+    @Autowired
+    lateinit var resultProcessor: ItemProcessor<Result, SourceRecord>
 
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<SourceRecord, DecryptedRecord>

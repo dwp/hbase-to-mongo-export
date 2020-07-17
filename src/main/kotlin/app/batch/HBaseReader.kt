@@ -1,14 +1,10 @@
 package app.batch
 
-import app.domain.EncryptionBlock
-import app.domain.SourceRecord
-import app.exceptions.MissingFieldException
+import app.exceptions.ScanRetriesExhaustedException
 import app.utils.TextUtils
 import app.utils.logging.logError
 import app.utils.logging.logInfo
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import org.apache.commons.lang3.StringUtils
+import app.utils.logging.logWarn
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.slf4j.Logger
@@ -19,18 +15,53 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
-import java.nio.charset.Charset
 import java.time.ZonedDateTime
 
 @Component
 @StepScope
-class HBaseReader constructor(private val connection: Connection, private val textUtils: TextUtils): ItemReader<SourceRecord> {
+class HBaseReader(private val connection: Connection, private val textUtils: TextUtils) : ItemReader<Result> {
 
-    private var start: Int = Int.MIN_VALUE
-    private var stop: Int = Int.MAX_VALUE
+    override fun read(): Result? =
+        try {
+            val result = scanner().next()
+            if (result != null) {
+                latestId = result.row
+            }
+            retryAttempts = 0
+            result
+        }
+        catch (e: Exception) {
+            reopenScannerAndRetry(e)
+        }
+
+    private fun reopenScannerAndRetry(e: Exception): Result? {
+        val lastKey = latestId ?: byteArrayOf(start.toByte())
+        return if (++retryAttempts < scanMaxRetries.toInt()) {
+            logWarn(logger, "Failed to get next record, reopening scanner",
+                    "exception", e.message ?: "",
+                    "attempt", "$retryAttempts",
+                    "max_attempts", scanMaxRetries,
+                    "latest_id", printableKey(lastKey))
+
+            scanner?.close()
+            Thread.sleep(scanRetrySleepMs.toLong())
+            scanner = newScanner(lastKey)
+            read()
+        }
+        else {
+            logError(logger, "Failed to get next record after max retries", e,
+                    "exception", e.message ?: "",
+                    "attempt", "$retryAttempts",
+                    "max_attempts", scanMaxRetries,
+                    "latest_id", printableKey(lastKey))
+            throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
+        }
+    }
+
+
+    private var latestId: ByteArray? = null
+    private var retryAttempts = 0
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
@@ -38,92 +69,35 @@ class HBaseReader constructor(private val connection: Connection, private val te
         stop = stepExecution.executionContext["stop"] as Int
     }
 
-    var recordCount = 0
-
-    override fun read(): SourceRecord? {
-        val result = next()
-
-        if (result != null) {
-            recordCount++
-
-            if (recordCount % 10000 == 0) {
-                logInfo(logger, "Processed records for topic", "record_count", "$recordCount", "topic_name", topicName)
-            }
-
-            val idBytes = result.row
-            val value = result.value()
-            val json = value.toString(Charset.defaultCharset())
-            val dataBlock = Gson().fromJson(json, JsonObject::class.java)
-            val outerType = dataBlock.getAsJsonPrimitive("@type")?.asString ?: ""
-            val messageInfo = dataBlock.getAsJsonObject("message")
-            val innerType = messageInfo.getAsJsonPrimitive("@type")?.asString ?: ""
-            val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
-            val db = messageInfo.getAsJsonPrimitive("db")?.asString
-            val collection = messageInfo.getAsJsonPrimitive("collection")?.asString
-            val encryptionInfo = messageInfo.getAsJsonObject("encryption")
-            val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
-            val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
-            val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
-
-            if (encryptedDbObject.isNullOrEmpty()) {
-                logError(logger, "Missing dbObject field, skipping this record", "id_bytes", "$idBytes")
-                throw MissingFieldException(idBytes, "dbObject")
-            }
-            if (db.isNullOrEmpty()) {
-                logError(logger, "Missing db field, skipping this record", "id_bytes", "$idBytes")
-                throw MissingFieldException(idBytes, "db")
-            }
-            if (collection.isNullOrEmpty()) {
-                logError(logger, "Missing collection field, skipping this record", "id_bytes", "$idBytes")
-                throw MissingFieldException(idBytes, "collection")
-            }
-
-            val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            return SourceRecord(idBytes, encryptionBlock, encryptedDbObject, db, collection,
-                    if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
-                    if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
-
-        }
-        else {
-            logInfo(logger, "Closing scanner")
-            scanner().close()
-            return null
-        }
+    @AfterStep
+    fun afterStep() {
+        logInfo(logger, "Closing scanner", "start", "$start", "stop", "$stop")
+        scanner().close()
     }
-
-    fun resetScanner() {
-        scanner = null
-    }
-
-
-    @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    fun next(): Result? = scanner().next()
 
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            logInfo(logger, "Getting data table from hbase connection", "connection", "$connection", "topic_name", topicName)
-            val matcher = textUtils.topicNameTableMatcher(topicName)
-            if (matcher != null) {
-                val namespace = matcher.groupValues[1]
-                val tableName = matcher.groupValues[2]
-                val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
-                val table = connection.getTable(TableName.valueOf(qualifiedTableName))
-                scanner = table.getScanner(scan())
-            }
+            scanner = newScanner(byteArrayOf(start.toByte()))
         }
         return scanner!!
     }
 
-    fun getScanTimeRangeStartEpoch() : Long {
-        return if (scanTimeRangeStart.isNotBlank())
-            ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
-            else 0
+    private fun newScanner(start: ByteArray): ResultScanner {
+        val matcher = textUtils.topicNameTableMatcher(topicName)
+        val namespace = matcher?.groupValues?.get(1)
+        val tableName = matcher?.groupValues?.get(2)
+        val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
+        val table = connection.getTable(TableName.valueOf(qualifiedTableName))
+        return table.getScanner(scan(start))
     }
 
-    fun getScanTimeRangeEndEpoch() : Long {
+    fun getScanTimeRangeStartEpoch() =
+            if (scanTimeRangeStart.isNotBlank())
+                ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
+            else 0
+
+    fun getScanTimeRangeEndEpoch(): Long {
         var endDateTime = ZonedDateTime.now()
         if (scanTimeRangeEnd.isNotBlank()) {
             endDateTime = ZonedDateTime.parse(scanTimeRangeEnd)
@@ -132,7 +106,7 @@ class HBaseReader constructor(private val connection: Connection, private val te
         return endDateTime.toInstant().toEpochMilli()
     }
 
-    private fun scan(): Scan {
+    private fun scan(startId: ByteArray): Scan {
         val timeStart = getScanTimeRangeStartEpoch()
         val timeEnd = getScanTimeRangeEndEpoch()
 
@@ -143,9 +117,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
                 consistency = Consistency.TIMELINE
             }
 
-            withStartRow(byteArrayOf(start.toByte()), true)
+            withStartRow(startId, false)
+
             if (stop != 0) {
-                withStopRow(byteArrayOf(stop.toByte()), true)
+                withStopRow(byteArrayOf(stop.toByte()), false)
             }
 
             cacheBlocks = scanCacheBlocks.toBoolean()
@@ -174,6 +149,17 @@ class HBaseReader constructor(private val connection: Connection, private val te
         return scan
     }
 
+    fun printableKey(key: ByteArray) =
+            if (key.size > 4) {
+                val hash = key.slice(IntRange(0, 3))
+                val hex = hash.map { String.format("\\x%02X", it) }.joinToString("")
+                val renderable = key.slice(IntRange(4, key.size - 1)).map { it.toChar() }.joinToString("")
+                "${hex}${renderable}"
+            }
+            else {
+                String(key)
+            }
+
     private var scanner: ResultScanner? = null
 
     @Value("\${scan.time.range.start:}")
@@ -191,6 +177,12 @@ class HBaseReader constructor(private val connection: Connection, private val te
     @Value("\${scan.max.result.size:-1}")
     private var scanMaxResultSize: String = "-1"
 
+    @Value("\${scan.max.retries:100}")
+    private var scanMaxRetries: String = "100"
+
+    @Value("\${scan.retry.sleep.ms:10000}")
+    private var scanRetrySleepMs: String = "10000"
+
     @Value("\${scan.cache.blocks:true}")
     private var scanCacheBlocks: String = "true"
 
@@ -200,10 +192,10 @@ class HBaseReader constructor(private val connection: Connection, private val te
     @Value("\${allow.partial.results:true}")
     private var partialResultsAllowed: String = "true"
 
+    private var start: Int = Int.MIN_VALUE
+    private var stop: Int = Int.MAX_VALUE
+
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }
