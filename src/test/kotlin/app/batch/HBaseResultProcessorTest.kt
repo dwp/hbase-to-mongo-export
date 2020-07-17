@@ -61,7 +61,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedSourceRecord("OUTER_TYPE", "INNER_TYPE"), HBaseResultProcessor().process(result))
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE"), actualResult())
     }
 
     @Test
@@ -77,7 +77,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedSourceRecord("TYPE_NOT_SET", "INNER_TYPE"), HBaseResultProcessor().process(result))
+        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE"), actualResult())
     }
 
     @Test
@@ -93,7 +93,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedSourceRecord("TYPE_NOT_SET", "INNER_TYPE"), HBaseResultProcessor().process(result))
+        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE"), actualResult())
     }
 
     @Test
@@ -115,7 +115,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedSourceRecord("OUTER_TYPE", "INNER_TYPE"), HBaseResultProcessor().process(result))
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE"), actualResult())
     }
 
     @Test
@@ -131,7 +131,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedSourceRecord("OUTER_TYPE", "INNER_TYPE"), HBaseResultProcessor().process(result))
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE"), actualResult())
     }
 
     @Test
@@ -145,7 +145,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedSourceRecord("TYPE_NOT_SET","TYPE_NOT_SET"), HBaseResultProcessor().process(result))
+        assertResult(expectedResult("TYPE_NOT_SET","TYPE_NOT_SET"), actualResult())
     }
 
     @Test(expected = MissingFieldException::class)
@@ -161,14 +161,17 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        HBaseResultProcessor().process(result)
+        actualResult()
     }
+
 
     @MockBean
     private lateinit var amazonDynamoDb: AmazonDynamoDB
 
     @MockBean
     private lateinit var amazonSQS: AmazonSQS
+
+    private fun actualResult() = HBaseResultProcessor().process(result)
 
     private fun assertResult(expected: SourceRecord, actual: SourceRecord?) {
         assertEquals(expected.dbObject, actual?.dbObject)
@@ -180,7 +183,7 @@ class HBaseResultProcessorTest {
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
     }
 
-    private fun expectedSourceRecord(outerType: String, innerType: String) =
+    private fun expectedResult(outerType: String, innerType: String) =
             SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
                 database, collection, outerType, innerType)
 
