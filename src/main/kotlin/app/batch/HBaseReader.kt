@@ -1,7 +1,10 @@
 package app.batch
 
+import app.exceptions.ScanRetriesExhaustedException
 import app.utils.TextUtils
+import app.utils.logging.logError
 import app.utils.logging.logInfo
+import app.utils.logging.logWarn
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.slf4j.Logger
@@ -19,8 +22,46 @@ import java.time.ZonedDateTime
 @StepScope
 class HBaseReader(private val connection: Connection, private val textUtils: TextUtils) : ItemReader<Result> {
 
-    private var start: Int = Int.MIN_VALUE
-    private var stop: Int = Int.MAX_VALUE
+    override fun read(): Result? =
+        try {
+            val result = scanner().next()
+            if (result != null) {
+                latestId = result.row
+            }
+            retryAttempts = 0
+            result
+        }
+        catch (e: Exception) {
+            reopenScannerAndRetry(e)
+        }
+
+    private fun reopenScannerAndRetry(e: Exception): Result? {
+        val lastKey = latestId ?: byteArrayOf(start.toByte())
+        return if (++retryAttempts < scanMaxRetries.toInt()) {
+            logWarn(logger, "Failed to get next record, reopening scanner",
+                    "exception", e.message ?: "",
+                    "attempt", "$retryAttempts",
+                    "max_attempts", scanMaxRetries,
+                    "latest_id", printableKey(lastKey))
+
+            scanner?.close()
+            Thread.sleep(scanRetrySleepMs.toLong())
+            scanner = newScanner(lastKey)
+            read()
+        }
+        else {
+            logError(logger, "Failed to get next record after max retries", e,
+                    "exception", e.message ?: "",
+                    "attempt", "$retryAttempts",
+                    "max_attempts", scanMaxRetries,
+                    "latest_id", printableKey(lastKey))
+            throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
+        }
+    }
+
+
+    private var latestId: ByteArray? = null
+    private var retryAttempts = 0
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
@@ -34,21 +75,15 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
         scanner().close()
     }
 
-    override fun read(): Result? = scanner().next()
-
-    fun resetScanner() {
-        scanner = null
-    }
-
     @Synchronized
     fun scanner(): ResultScanner {
         if (scanner == null) {
-            scanner = newScanner(start)
+            scanner = newScanner(byteArrayOf(start.toByte()))
         }
         return scanner!!
     }
 
-    private fun newScanner(start: Int): ResultScanner {
+    private fun newScanner(start: ByteArray): ResultScanner {
         val matcher = textUtils.topicNameTableMatcher(topicName)
         val namespace = matcher?.groupValues?.get(1)
         val tableName = matcher?.groupValues?.get(2)
@@ -71,7 +106,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
         return endDateTime.toInstant().toEpochMilli()
     }
 
-    private fun scan(startId: Int): Scan {
+    private fun scan(startId: ByteArray): Scan {
         val timeStart = getScanTimeRangeStartEpoch()
         val timeEnd = getScanTimeRangeEndEpoch()
 
@@ -82,9 +117,10 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
                 consistency = Consistency.TIMELINE
             }
 
-            withStartRow(byteArrayOf(startId.toByte()), true)
+            withStartRow(startId, false)
+
             if (stop != 0) {
-                withStopRow(byteArrayOf(stop.toByte()), true)
+                withStopRow(byteArrayOf(stop.toByte()), false)
             }
 
             cacheBlocks = scanCacheBlocks.toBoolean()
@@ -113,6 +149,17 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
         return scan
     }
 
+    fun printableKey(key: ByteArray) =
+            if (key.size > 4) {
+                val hash = key.slice(IntRange(0, 3))
+                val hex = hash.map { String.format("\\x%02X", it) }.joinToString("")
+                val renderable = key.slice(IntRange(4, key.size - 1)).map { it.toChar() }.joinToString("")
+                "${hex}${renderable}"
+            }
+            else {
+                String(key)
+            }
+
     private var scanner: ResultScanner? = null
 
     @Value("\${scan.time.range.start:}")
@@ -130,6 +177,12 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
     @Value("\${scan.max.result.size:-1}")
     private var scanMaxResultSize: String = "-1"
 
+    @Value("\${scan.max.retries:100}")
+    private var scanMaxRetries: String = "100"
+
+    @Value("\${scan.retry.sleep.ms:10000}")
+    private var scanRetrySleepMs: String = "10000"
+
     @Value("\${scan.cache.blocks:true}")
     private var scanCacheBlocks: String = "true"
 
@@ -138,6 +191,9 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
     @Value("\${allow.partial.results:true}")
     private var partialResultsAllowed: String = "true"
+
+    private var start: Int = Int.MIN_VALUE
+    private var stop: Int = Int.MAX_VALUE
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())

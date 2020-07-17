@@ -33,12 +33,11 @@ release {
     }
 }
 
-dependencies {
-    // See https://github.com/aws/aws-sdk-java-v2
-    // See https://github.com/awsdocs/aws-doc-sdk-examples/blob/master/java/example_code/s3/src/main/java/CopyObjectSingleOperation.java
-    //implementation("software.amazon.awssdk:aws-sdk-java:2.7.16")
+configurations.all {
+    exclude(group="org.slf4j", module="slf4j-log4j12")
+}
 
-    // sdk v1
+dependencies {
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.706")
     implementation("com.amazonaws:aws-java-sdk-core:1.11.706")
     implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.706")
