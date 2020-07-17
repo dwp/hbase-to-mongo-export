@@ -57,16 +57,13 @@ class HBaseResultProcessorTest {
         val hbaseResultProcessor = HBaseResultProcessor()
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "@type": "OUTER_TYPE",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core1",
+            |    "collection": "addressDeclaration1",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
-            |    "_timeBasedHash": "hashhhhhhhhhh",
             |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
@@ -76,9 +73,7 @@ class HBaseResultProcessorTest {
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    },
             |    "dbObject": "$dbObject"
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
@@ -86,7 +81,7 @@ class HBaseResultProcessorTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration","OUTER_TYPE", "INNER_TYPE")
+                "core1", "addressDeclaration1","OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseResultProcessor.process(result)
 
@@ -100,15 +95,12 @@ class HBaseResultProcessorTest {
         val hbaseResultProcessor = HBaseResultProcessor()
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core2",
+            |    "collection": "addressDeclaration2",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
-            |    "_timeBasedHash": "hashhhhhhhhhh",
             |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
@@ -118,16 +110,14 @@ class HBaseResultProcessorTest {
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    },
             |    "dbObject": "$dbObject"
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
+                "core2", "addressDeclaration2", "TYPE_NOT_SET", "INNER_TYPE")
 
         val actual = hbaseResultProcessor.process(result)
 
@@ -142,16 +132,13 @@ class HBaseResultProcessorTest {
 
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "@type": "",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core3",
+            |    "collection": "addressDeclaration3",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
-            |    "_timeBasedHash": "hashhhhhhhhhh",
             |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
@@ -161,16 +148,14 @@ class HBaseResultProcessorTest {
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    },
             |    "dbObject": "$dbObject"
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
+                "core3", "addressDeclaration3", "TYPE_NOT_SET", "INNER_TYPE")
         val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals(expected.toString(), actual.toString())
@@ -185,16 +170,13 @@ class HBaseResultProcessorTest {
         val lastModified = "2019-07-04T07:27:35.104+0000"
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "@type": "OUTER_TYPE",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core4",
+            |    "collection": "addressDeclaration4",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
-            |    "_timeBasedHash": "hashhhhhhhhhh",
             |    "@type": "INNER_TYPE",
             |    "_lastModifiedDateTime": {
             |       $dateKey: "$lastModified"
@@ -206,9 +188,7 @@ class HBaseResultProcessorTest {
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    },
             |    "dbObject": "$dbObject"
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
@@ -216,7 +196,7 @@ class HBaseResultProcessorTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
+                "core4", "addressDeclaration4", "OUTER_TYPE", "INNER_TYPE")
 
         val actual = hbaseResultProcessor.process(result)
 
@@ -231,16 +211,13 @@ class HBaseResultProcessorTest {
 
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "@type": "OUTER_TYPE",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core5",
+            |    "collection": "addressDeclaration5",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
-            |    "_timeBasedHash": "hashhhhhhhhhh",
             |    "@type": "INNER_TYPE",
             |    "encryption": {
             |      "encryptionKeyId": "$encryptionKeyId",
@@ -249,16 +226,14 @@ class HBaseResultProcessorTest {
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    },
             |    "dbObject": "$dbObject"
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
+                "core5", "addressDeclaration5", "OUTER_TYPE", "INNER_TYPE")
         val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
         assertEquals(expected.toString(), actual.toString())
@@ -271,11 +246,9 @@ class HBaseResultProcessorTest {
 
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core6",
+            |    "collection": "addressDeclaration6",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
@@ -287,9 +260,7 @@ class HBaseResultProcessorTest {
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    },
             |    "dbObject": "$dbObject"
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
@@ -297,7 +268,7 @@ class HBaseResultProcessorTest {
 
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val expected = SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
-                "core", "addressDeclaration",
+                "core6", "addressDeclaration6",
                 "TYPE_NOT_SET",
                 "TYPE_NOT_SET")
         val actual = hbaseResultProcessor.process(result)
@@ -312,16 +283,13 @@ class HBaseResultProcessorTest {
 
         val cellData = """
             |{
-            |  "traceId": "3b195725-98e1-4d56-bcb8-945a244c2d45",
-            |  "unitOfWorkId": "ed9e614c-cd28-4860-b77d-ab5962a5599e",
             |  "@type": "V4",
             |  "message": {
-            |    "db": "core",
-            |    "collection": "addressDeclaration",
+            |    "db": "core7",
+            |    "collection": "addressDeclaration7",
             |    "_id": {
             |      "declarationId": "b0269a34-2e37-4081-b67f-ae08d0e4d813"
             |    },
-            |    "_timeBasedHash": "hashhhhhhhhhh",
             |    "@type": "MONGO_INSERT",
             |    "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
             |    "encryption": {
@@ -330,9 +298,7 @@ class HBaseResultProcessorTest {
             |      "initialisationVector": "$initialisationVector",
             |      "keyEncryptionKeyId": "$keyEncryptionKeyId"
             |    }
-            |  },
-            |  "version": "core-4.master.9790",
-            |  "timestamp": "$timestamp"
+            |  }
             |}""".trimMargin()
 
         given(result.row).willReturn(rowId.toByteArray())
