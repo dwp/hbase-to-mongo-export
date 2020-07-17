@@ -151,7 +151,7 @@ class HBaseReaderTest {
             val argumentCaptor = argumentCaptor<Scan>()
             verify(table, times(5)).getScanner(argumentCaptor.capture())
             val firstArg = argumentCaptor.firstValue
-            assertEquals(byteArrayOf(0), firstArg.startRow)
+            assertArrayEquals(byteArrayOf(0), firstArg.startRow)
             val subsequentArgs = argumentCaptor.allValues.drop(1)
             assertEquals(4, subsequentArgs.size)
             subsequentArgs.forEach {
