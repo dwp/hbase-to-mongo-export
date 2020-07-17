@@ -173,8 +173,7 @@ class HBaseResultProcessorTest {
                 "core", "addressDeclaration", "TYPE_NOT_SET", "INNER_TYPE")
         val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
-                expected.toString(), actual.toString())
+        assertEquals(expected.toString(), actual.toString())
     }
 
     @Test
@@ -262,8 +261,7 @@ class HBaseResultProcessorTest {
                 "core", "addressDeclaration", "OUTER_TYPE", "INNER_TYPE")
         val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
-                expected.toString(), actual.toString())
+        assertEquals(expected.toString(), actual.toString())
     }
 
     @Test
@@ -304,8 +302,7 @@ class HBaseResultProcessorTest {
                 "TYPE_NOT_SET")
         val actual = hbaseResultProcessor.process(result)
         assertEquals(expected.dbObject, actual?.dbObject)
-        assertEquals("Expected the toStrings() to match as the bytearray ids make the hashcode vary when they should be the same",
-                expected.toString(), actual.toString())
+        assertEquals(expected.toString(), actual.toString())
     }
 
     @Test(expected = MissingFieldException::class)

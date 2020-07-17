@@ -17,6 +17,11 @@ import org.springframework.test.util.ReflectionTestUtils
 
 class HBaseReaderTest {
 
+    companion object {
+        const val tableName = "database:collection"
+        const val topicName = "db.database.collection"
+    }
+
     @Test
     fun onSuccessfulScanDoesNotRetry() {
         val result = mock<Result> {
@@ -31,7 +36,6 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn resultScanner
         }
 
-        val tableName = "database:collection"
         val textUtils = TextUtils()
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
@@ -40,7 +44,7 @@ class HBaseReaderTest {
         val hBaseReader = HBaseReader(connection, textUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
-        ReflectionTestUtils.setField(hBaseReader, "topicName", "db.database.collection")
+        ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
         val spy = spy(hBaseReader)
@@ -78,16 +82,14 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn failingScanner doReturn successfulScanner
         }
 
-        val tableName = "database:collection"
-        val textUtils = TextUtils()
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val hBaseReader = HBaseReader(connection, textUtils)
+        val hBaseReader = HBaseReader(connection, TextUtils())
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
-        ReflectionTestUtils.setField(hBaseReader, "topicName", "db.database.collection")
+        ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
 
@@ -128,16 +130,14 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn firstFailingScanner doReturn secondFailingScanner
         }
 
-        val tableName = "database:collection"
-        val textUtils = TextUtils()
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val hBaseReader = HBaseReader(connection, textUtils)
+        val hBaseReader = HBaseReader(connection, TextUtils())
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
-        ReflectionTestUtils.setField(hBaseReader, "topicName", "db.database.collection")
+        ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
         try {
@@ -151,6 +151,7 @@ class HBaseReaderTest {
             val argumentCaptor = argumentCaptor<Scan>()
             verify(table, times(5)).getScanner(argumentCaptor.capture())
             val firstArg = argumentCaptor.firstValue
+            assertEquals(byteArrayOf(0), firstArg.startRow)
             val subsequentArgs = argumentCaptor.allValues.drop(1)
             assertEquals(4, subsequentArgs.size)
             subsequentArgs.forEach {
