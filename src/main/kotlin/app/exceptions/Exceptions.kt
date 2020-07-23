@@ -17,5 +17,8 @@ class DataKeyServiceUnavailableException(message: String) : Exception(message)
 class BadDecryptedDataException(hbaseRowkey: String, db: String, collection: String, reason: String) :
         Exception("Exception in processing the decrypted record id '$hbaseRowkey' in db '$db' in collection '$collection' with the reason '$reason'")
 
-class ScanRetriesExhaustedException(lastId: String, retries: Int, throwable: Throwable):
+class ScanRetriesExhaustedException(lastId: String, retries: Int, throwable: Throwable) :
         Exception("Max scan retries attempted, attempts: '$retries', lastId: '$lastId'", throwable)
+
+class TopicIsBlockedException(topic_name: String):
+        Exception("Provided topic is blocked so cannot be processed: '$topic_name'")

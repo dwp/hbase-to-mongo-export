@@ -1,6 +1,8 @@
 package app.batch
 
 import app.exceptions.ScanRetriesExhaustedException
+import app.exceptions.TopicIsBlockedException
+import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import app.utils.logging.logError
 import app.utils.logging.logInfo
@@ -20,7 +22,7 @@ import java.time.ZonedDateTime
 
 @Component
 @StepScope
-class HBaseReader(private val connection: Connection, private val textUtils: TextUtils) : ItemReader<Result> {
+class HBaseReader(private val connection: Connection, private val textUtils: TextUtils, private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
 
     override fun read(): Result? =
         try {
@@ -30,6 +32,13 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             }
             retryAttempts = 0
             result
+        }
+        catch (e: TopicIsBlockedException) {
+            logWarn(logger, "Provided topic is blocked so cannot be processed",
+                    "exception", e.message ?: "",
+                    "topic_name", topicName
+            )
+            throw e
         }
         catch (e: Exception) {
             reopenScannerAndRetry(e)
@@ -84,6 +93,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
     }
 
     private fun newScanner(start: ByteArray): ResultScanner {
+        filterBlockedTopicsUtils.isTopicBlocked(topicName)
         val matcher = textUtils.topicNameTableMatcher(topicName)
         val namespace = matcher?.groupValues?.get(1)
         val tableName = matcher?.groupValues?.get(2)
