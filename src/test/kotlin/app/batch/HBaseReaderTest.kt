@@ -42,13 +42,13 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn resultScanner
         }
 
+        val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
+        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
         val textUtils = TextUtils()
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
-
-        val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
-        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
 
         val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
@@ -151,7 +151,6 @@ class HBaseReaderTest {
         val textUtils = TextUtils()
 
         val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
-        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
 
         val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
@@ -159,6 +158,8 @@ class HBaseReaderTest {
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
+        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
         try {
             val spy = spy(hBaseReader)
             while (true) {
@@ -187,10 +188,10 @@ class HBaseReaderTest {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val textUtils = TextUtils()
-
         val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
         ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
+        val textUtils = TextUtils()
 
         val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
