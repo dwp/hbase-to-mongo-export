@@ -1,7 +1,7 @@
 package app.batch
 
 import app.exceptions.ScanRetriesExhaustedException
-import app.exceptions.TopicIsBlockedException
+import app.exceptions.BlockedTopicException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import app.utils.logging.logError
@@ -33,7 +33,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             retryAttempts = 0
             result
         }
-        catch (e: TopicIsBlockedException) {
+        catch (e: BlockedTopicException) {
             logWarn(logger, "Provided topic is blocked so cannot be processed",
                     "exception", e.message ?: "",
                     "topic_name", topicName

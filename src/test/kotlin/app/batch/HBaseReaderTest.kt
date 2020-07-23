@@ -1,7 +1,7 @@
 package app.batch
 
 import app.exceptions.ScanRetriesExhaustedException
-import app.exceptions.TopicIsBlockedException
+import app.exceptions.BlockedTopicException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import com.nhaarman.mockitokotlin2.*
@@ -200,7 +200,7 @@ class HBaseReaderTest {
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
 
-        val exception = shouldThrow<TopicIsBlockedException> {
+        val exception = shouldThrow<BlockedTopicException> {
             val spy = spy(hBaseReader)
             while (true) {
                 spy.read()

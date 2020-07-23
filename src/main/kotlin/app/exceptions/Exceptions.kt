@@ -20,5 +20,5 @@ class BadDecryptedDataException(hbaseRowkey: String, db: String, collection: Str
 class ScanRetriesExhaustedException(lastId: String, retries: Int, throwable: Throwable) :
         Exception("Max scan retries attempted, attempts: '$retries', lastId: '$lastId'", throwable)
 
-class TopicIsBlockedException(topicName: String):
+class BlockedTopicException(topicName: String):
         Exception("Provided topic is blocked so cannot be processed: '$topicName'")
