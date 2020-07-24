@@ -20,8 +20,9 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             exportStatusService.setExportedStatus()
         }
         else {
-            logError(logger,"Not setting status or sending success indicator",
+            logError(logger,"Setting export failed status",
                     "job_exit_status", "${jobExecution.exitStatus}")
+            exportStatusService.setFailedStatus()
         }
     }
 
