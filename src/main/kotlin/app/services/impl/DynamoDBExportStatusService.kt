@@ -25,6 +25,24 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
                 "files_exported", "${result.attributes["FilesExported"]?.n}")
     }
 
+    @Retryable(value = [Exception::class],
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    override fun setExportedStatus() = setStatus("Exported")
+
+    @Retryable(value = [Exception::class],
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    override fun setFailedStatus() = setStatus("Export_Failed")
+
+
+    private fun setStatus(status: String) {
+        logger.info("request: ${setCollectionStatusRequest(status)}")
+        val result = dynamoDB.updateItem(setCollectionStatusRequest(status))
+        logInfo(logger, "Collection status set",
+                "collection_status", "${result.attributes["CollectionStatus"]}")
+    }
+
     private fun incrementFilesExportedRequest() =
             UpdateItemRequest().apply {
                 tableName = statusTableName
@@ -33,23 +51,13 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
                 expressionAttributeValues = mapOf(":x" to AttributeValue().apply { n = "1" })
                 returnValues = "ALL_NEW"
             }
-            
-    @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    override fun setExportedStatus() {
-        logger.info("request: ${setCollectionStatusRequest()}")
-        val result = dynamoDB.updateItem(setCollectionStatusRequest())
-        logInfo(logger, "Collection status set",
-                "collection_status", "${result.attributes["CollectionStatus"]}")
-    }
 
-    private fun setCollectionStatusRequest() =
+    private fun setCollectionStatusRequest(status: String) =
             UpdateItemRequest().apply {
                 tableName = statusTableName
                 key = primaryKey
                 updateExpression = "SET CollectionStatus = :x"
-                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = "Exported" })
+                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = status })
                 returnValues = "ALL_NEW"
             }
 
