@@ -1,5 +1,6 @@
 package app.configuration
 
+import app.batch.JobCompletionNotificationListener
 import app.domain.DecryptedRecord
 import app.domain.Record
 import app.domain.SourceRecord
@@ -29,9 +30,10 @@ import java.io.IOException
 class JobConfiguration : DefaultBatchConfigurer() {
 
     @Bean
-    fun importUserJob() =
+    fun importUserJob(jobCompletionNotificationListener: JobCompletionNotificationListener) =
             jobBuilderFactory.get("nightlyExportBatchJob")
                     .incrementer(RunIdIncrementer())
+                    .listener(jobCompletionNotificationListener)
                     .flow(step1())
                     .end()
                     .build()

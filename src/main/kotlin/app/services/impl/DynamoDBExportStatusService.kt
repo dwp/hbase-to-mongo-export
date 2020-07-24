@@ -33,6 +33,25 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
                 expressionAttributeValues = mapOf(":x" to AttributeValue().apply { n = "1" })
                 returnValues = "ALL_NEW"
             }
+            
+    @Retryable(value = [Exception::class],
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    override fun setExportedStatus() {
+        logger.info("request: ${setCollectionStatusRequest()}")
+        val result = dynamoDB.updateItem(setCollectionStatusRequest())
+        logInfo(logger, "Collection status set",
+                "collection_status", "${result.attributes["CollectionStatus"]}")
+    }
+
+    private fun setCollectionStatusRequest() =
+            UpdateItemRequest().apply {
+                tableName = statusTableName
+                key = primaryKey
+                updateExpression = "SET CollectionStatus = :x"
+                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = "Exported" })
+                returnValues = "ALL_NEW"
+            }
 
     private val primaryKey by lazy {
         val correlationIdAttributeValue = AttributeValue().apply { s = correlationId }
@@ -46,7 +65,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     @Value("\${topic.name}")
     private lateinit var topicName: String
 
-    private val correlationId by lazy { System.getProperty("correlation_id") }
+    private val correlationId by lazy { System.getProperty("correlation_id", "NOT_SET") }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DynamoDBExportStatusService::class.toString())
