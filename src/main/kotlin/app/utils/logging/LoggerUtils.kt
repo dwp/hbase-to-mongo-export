@@ -24,7 +24,7 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val UNSET_TEXT = "NOT_SET"
+private const val UNSET_TEXT = "NOT_SET"
 private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
 
 private var topic_name = System.getProperty("topic_name", UNSET_TEXT)
@@ -37,6 +37,7 @@ private var app_version = System.getProperty("app_version", UNSET_TEXT)
 private var component = System.getProperty("component", UNSET_TEXT)
 private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
 private var sqs_message_id = System.getProperty("sqs_message_id", UNSET_TEXT)
+private var blocked_topics = System.getProperty("blocked_topics", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
 class LogConfiguration {
@@ -48,7 +49,7 @@ class LogConfiguration {
 fun makeUtcDateFormat(): SimpleDateFormat {
     // 2001-07-04T12:08:56.235
     val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    df.setTimeZone(TimeZone.getTimeZone("UTC"))
+    df.timeZone = TimeZone.getTimeZone("UTC")
     return df
 }
 
@@ -62,7 +63,8 @@ fun makeLoggerStaticDataTuples(): String {
         "\"app_version\":\"$app_version\", " +
         "\"component\":\"$component\", " +
         "\"correlation_id\":\"$correlation_id\", " +
-        "\"sqs_message_id\":\"$sqs_message_id\""
+        "\"sqs_message_id\":\"$sqs_message_id\", " +
+        "\"blocked_topics\":\"$blocked_topics\""
 }
 
 fun resetLoggerStaticFieldsForTests() {
@@ -76,10 +78,11 @@ fun resetLoggerStaticFieldsForTests() {
     component = System.getProperty("component", UNSET_TEXT)
     correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
     sqs_message_id = System.getProperty("sqs_message_id", UNSET_TEXT)
+    blocked_topics = System.getProperty("blocked_topics", UNSET_TEXT)
     staticData = makeLoggerStaticDataTuples()
 }
 
-fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String, message_id: String) {
+fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String, app: String, version: String, comp: String, start_milliseconds: String, id: String, message_id: String, blocked: String) {
     topic_name = topic
     scan_start_row = "1"
     scan_stop_row = "2"
@@ -91,6 +94,7 @@ fun overrideLoggerStaticFieldsForTests(topic: String, host: String, env: String,
     LogConfiguration.start_time_milliseconds = start_milliseconds.toLong()
     correlation_id = id
     sqs_message_id = message_id
+    blocked_topics = blocked
     staticData = makeLoggerStaticDataTuples()
 }
 
@@ -191,7 +195,7 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
 }
 
 fun getDurationInMilliseconds(epochTime: Long): String {
-    var elapsedMilliseconds = epochTime - LogConfiguration.start_time_milliseconds
+    val elapsedMilliseconds = epochTime - LogConfiguration.start_time_milliseconds
     return elapsedMilliseconds.toString()
 }
 

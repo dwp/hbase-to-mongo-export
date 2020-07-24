@@ -24,7 +24,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
-
 @RunWith(SpringRunner::class)
 @ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
@@ -47,13 +46,14 @@ import org.springframework.test.context.junit4.SpringRunner
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
-    "trigger.snapshot.sender=false"
+    "trigger.snapshot.sender=false",
+    "blocked.topic=db.x.x"
 ])
 class LoggerUtilsTest {
 
     @Before
     fun setup() {
-        overrideLoggerStaticFieldsForTests("topic.name", "test-host", "test-env", "my-app", "v1", "tests", "9876543000", "test1", "test11")
+        overrideLoggerStaticFieldsForTests("topic.name", "test-host", "test-env", "my-app", "v1", "tests", "9876543000", "test1", "test11", "blocked.topic")
     }
 
     @After
@@ -225,8 +225,8 @@ class LoggerUtilsTest {
 
     @Test
     fun testMakeLoggerStaticDataTuples_WillCreatePartialJson_WhenCalled() {
-        overrideLoggerStaticFieldsForTests("the.topic","a-host", "b-env", "c-app", "d-version", "e-component", "9876543000", "test2", "test22")
-        assertEquals("\"topic_name\":\"the.topic\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"a-host\", \"environment\":\"b-env\", \"application\":\"c-app\", \"app_version\":\"d-version\", \"component\":\"e-component\", \"correlation_id\":\"test2\", \"sqs_message_id\":\"test22\"", makeLoggerStaticDataTuples())
+        overrideLoggerStaticFieldsForTests("the.topic", "a-host", "b-env", "c-app", "d-version", "e-component", "9876543000", "test2", "test22", "blocked.topic")
+        assertEquals("\"topic_name\":\"the.topic\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"a-host\", \"environment\":\"b-env\", \"application\":\"c-app\", \"app_version\":\"d-version\", \"component\":\"e-component\", \"correlation_id\":\"test2\", \"sqs_message_id\":\"test22\", \"blocked_topics\":\"blocked.topic\"", makeLoggerStaticDataTuples())
     }
 
     @Test
@@ -257,7 +257,7 @@ class LoggerUtilsTest {
     fun testLoggerLayoutAppender_WillReturnSkinnyJson_WhenCalledWithEmptyEvent() {
         val result = LoggerLayoutAppender().doLayout(mock())
         assertEquals(
-            "{ \"timestamp\":\"1970-01-01T00:00:00.000\", \"log_level\":\"null\", \"message\":\"null\", \"thread\":\"null\", \"logger\":\"null\", \"duration_in_milliseconds\":\"-9876543000\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n",
+            "{ \"timestamp\":\"1970-01-01T00:00:00.000\", \"log_level\":\"null\", \"message\":\"null\", \"thread\":\"null\", \"logger\":\"null\", \"duration_in_milliseconds\":\"-9876543000\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n",
             result)
     }
 
@@ -273,7 +273,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n",
             result)
     }
 
@@ -289,7 +289,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some | message | about | stuff with tabs\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some | message | about | stuff with tabs\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n",
             result)
     }
 
@@ -306,7 +306,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"key1\":\"value1\", \"key2\":\"value2\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"key1\":\"value1\", \"key2\":\"value2\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n",
             result)
     }
 
@@ -323,7 +323,7 @@ class LoggerUtilsTest {
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
             "The standard logger should not escape json characters that Spring or AWS-utils might send it, sorry",
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"message-/:'!@\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"message-/:'!@\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n",
             result)
     }
 
@@ -340,7 +340,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:99) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:75) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\" }\n"
+        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:99) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:75) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n"
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(

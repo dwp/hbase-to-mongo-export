@@ -53,7 +53,7 @@ class S3WriterIntegrationTest {
             """.trimMargin()
 
         val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
-        val list = summaries.map {
+        val list = summaries.map { it ->
             val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
             BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText().trim() }
         }
@@ -96,7 +96,7 @@ class S3WriterIntegrationTest {
                 .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials("access-key", "secret-key")))
                 .build()
 
-        for (i in 1 .. 7) {
+        for (i in 1..7) {
             val messageResult = sqs.receiveMessage("http://aws:4566/000000000000/integration-queue")
             assertNotNull(messageResult)
             val messages = messageResult?.messages
@@ -112,8 +112,6 @@ class S3WriterIntegrationTest {
             """.trimIndent()
 
             assertEquals(expectedMessageBody, messages?.get(0)?.body)
-
         }
     }
-
 }

@@ -1,8 +1,12 @@
 package app.batch
 
 import app.exceptions.ScanRetriesExhaustedException
+import app.exceptions.BlockedTopicException
+import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import com.nhaarman.mockitokotlin2.*
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import org.apache.hadoop.hbase.NotServingRegionException
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
@@ -20,6 +24,8 @@ class HBaseReaderTest {
     companion object {
         const val tableName = "database:collection"
         const val topicName = "db.database.collection"
+        const val blockedTopicName = "db.crypto.encryptedData.unencrypted"
+        const val blockedTopics = "db.crypto.encryptedData.unencrypted"
     }
 
     @Test
@@ -36,19 +42,22 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn resultScanner
         }
 
+        val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
+        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
         val textUtils = TextUtils()
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val hBaseReader = HBaseReader(connection, textUtils)
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
         val spy = spy(hBaseReader)
-        var actual = spy.read()
+        val actual = spy.read()
         verify(spy, times(1)).read()
         verify(connection, times(1)).getTable(TableName.valueOf(tableName))
         val argumentCaptor = argumentCaptor<Scan>()
@@ -86,7 +95,12 @@ class HBaseReaderTest {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val hBaseReader = HBaseReader(connection, TextUtils())
+        val textUtils = TextUtils()
+
+        val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
+        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
@@ -94,9 +108,9 @@ class HBaseReaderTest {
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
 
         val spy = spy(hBaseReader)
-        var actualFirstResult = spy.read()
-        var actualSecondResult = spy.read()
-        var actualThirdResult = spy.read()
+        val actualFirstResult = spy.read()
+        val actualSecondResult = spy.read()
+        val actualThirdResult = spy.read()
         val argumentCaptor = argumentCaptor<Scan>()
         verify(table, times(2)).getScanner(argumentCaptor.capture())
         val firstScan = argumentCaptor.firstValue
@@ -134,20 +148,25 @@ class HBaseReaderTest {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val hBaseReader = HBaseReader(connection, TextUtils())
+        val textUtils = TextUtils()
+
+        val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
+
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
+        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
         try {
             val spy = spy(hBaseReader)
             while (true) {
                 spy.read()
             }
             fail("Should have thrown exception")
-        }
-        finally {
+        } finally {
             val argumentCaptor = argumentCaptor<Scan>()
             verify(table, times(5)).getScanner(argumentCaptor.capture())
             val firstArg = argumentCaptor.firstValue
@@ -158,5 +177,35 @@ class HBaseReaderTest {
                 assertArrayEquals(byteArrayOf(3), it.startRow)
             }
         }
+    }
+
+    @Test
+    fun throwsFilterBlockedTopicException() {
+
+        val table = mock<Table>()
+
+        val connection = mock<Connection> {
+            on { getTable(TableName.valueOf(tableName)) } doReturn table
+        }
+
+        val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
+        ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
+
+        val textUtils = TextUtils()
+
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
+        ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
+        ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
+        ReflectionTestUtils.setField(hBaseReader, "topicName", blockedTopicName)
+        ReflectionTestUtils.setField(hBaseReader, "start", 0)
+        ReflectionTestUtils.setField(hBaseReader, "stop", 10)
+
+        val exception = shouldThrow<BlockedTopicException> {
+            val spy = spy(hBaseReader)
+            while (true) {
+                spy.read()
+            }
+        }
+        exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.encryptedData.unencrypted'"
     }
 }
