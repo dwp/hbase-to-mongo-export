@@ -146,7 +146,6 @@ class HBaseReaderTest {
             while (true) {
                 spy.read()
             }
-            fail("Should have thrown exception")
         }
         finally {
             val argumentCaptor = argumentCaptor<Scan>()

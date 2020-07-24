@@ -38,15 +38,10 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun setExportedStatus() {
-        try {
-            logger.info("request: ${setCollectionStatusRequest()}")
-            val result = dynamoDB.updateItem(setCollectionStatusRequest())
-            logInfo(logger, "Set collection status",
-                    "post_update_status", "${result.attributes["CollectionStatus"]}")
-        }
-        catch (e: Exception) {
-            e.printStackTrace(System.err)
-        }
+        logger.info("request: ${setCollectionStatusRequest()}")
+        val result = dynamoDB.updateItem(setCollectionStatusRequest())
+        logInfo(logger, "Collection status set",
+                "collection_status", "${result.attributes["CollectionStatus"]}")
     }
 
     private fun setCollectionStatusRequest() =

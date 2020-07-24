@@ -45,7 +45,7 @@ class DynamoDBExportStatusServiceTest {
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))
                 .willReturn(mock())
-        exportStatusService.setCollectionStatus("")
-        verify(exportStatusService, times(3)).setCollectionStatus("")
+        exportStatusService.setExportedStatus()
+        verify(exportStatusService, times(3)).setExportedStatus()
     }
 }
