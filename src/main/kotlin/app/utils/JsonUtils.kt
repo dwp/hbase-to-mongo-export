@@ -9,7 +9,7 @@ open class JsonUtils {
         val stringBuilder = StringBuilder(unsortedJson)
         val jsonObject = parser.parse(stringBuilder) as JsonObject
         val sortedEntries = jsonObject.toSortedMap(compareBy { it })
-        val jsonSorted: JsonObject = JsonObject(sortedEntries)
+        val jsonSorted = JsonObject(sortedEntries)
         return jsonSorted.toJsonString()
     }
 }
