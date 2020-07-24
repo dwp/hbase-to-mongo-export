@@ -65,7 +65,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     @Value("\${topic.name}")
     private lateinit var topicName: String
 
-    private val correlationId by lazy { System.getProperty("correlation_id", "UNSET") }
+    private val correlationId by lazy { System.getProperty("correlation_id", "NOT_SET") }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DynamoDBExportStatusService::class.toString())
