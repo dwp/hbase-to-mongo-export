@@ -113,16 +113,17 @@ class HBaseReaderTest {
 
     @Test(expected = ScanRetriesExhaustedException::class)
     fun onUnsuccessfulScanGivesUpAfterMaxRetries() {
+
         val firstResult = mock<Result> {
             on { row } doReturn byteArrayOf(3)
         }
 
-        val firstFailingScanner = mock<ResultScanner>() {
+        val firstFailingScanner = mock<ResultScanner> {
             on { next() } doReturn firstResult doThrow NotServingRegionException("Error")
         }
 
 
-        val secondFailingScanner = mock<ResultScanner>() {
+        val secondFailingScanner = mock<ResultScanner> {
             on { next() } doThrow NotServingRegionException("Error")
         }
 

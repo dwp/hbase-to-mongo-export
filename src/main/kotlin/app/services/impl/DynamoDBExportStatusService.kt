@@ -37,19 +37,24 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     @Retryable(value = [Exception::class],
             maxAttempts = maxAttempts,
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
-    override fun setCollectionStatus(status: String) {
-        val result = dynamoDB.updateItem(setCollectionStatusRequest(status))
-        logInfo(logger, "Set collection status",
-                "requested_status", status,
-                "post_update_status", "${result.attributes["CollectionStatus"]}")
+    override fun setExportedStatus() {
+        try {
+            logger.info("request: ${setCollectionStatusRequest()}")
+            val result = dynamoDB.updateItem(setCollectionStatusRequest())
+            logInfo(logger, "Set collection status",
+                    "post_update_status", "${result.attributes["CollectionStatus"]}")
+        }
+        catch (e: Exception) {
+            e.printStackTrace(System.err)
+        }
     }
 
-    private fun setCollectionStatusRequest(status: String) =
+    private fun setCollectionStatusRequest() =
             UpdateItemRequest().apply {
                 tableName = statusTableName
                 key = primaryKey
                 updateExpression = "SET CollectionStatus = :x"
-                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = status })
+                expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = "Exported" })
                 returnValues = "ALL_NEW"
             }
 
@@ -65,7 +70,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     @Value("\${topic.name}")
     private lateinit var topicName: String
 
-    private val correlationId by lazy { System.getProperty("correlation_id") }
+    private val correlationId by lazy { System.getProperty("correlation_id", "UNSET") }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DynamoDBExportStatusService::class.toString())

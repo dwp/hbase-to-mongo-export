@@ -11,7 +11,6 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 
-
 @Service
 class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : SnapshotSenderMessagingService {
 
@@ -29,10 +28,10 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
                 messageBody = message
+                delaySeconds = messageDelaySeconds.toInt()
             }
 
-    private fun message(prefix: String): String {
-        val message = """
+    private fun message(prefix: String)= """
             |{
             |   "shutdown_flag": "$shutdown",
             |   "correlation_id": "$correlationId",
@@ -42,8 +41,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             |   "s3_full_folder": "$prefix"
             |}
             """.trimMargin()
-        return message
-    }
 
     private val reprocess by lazy { reprocessFiles.toBoolean() }
     private val shutdown by lazy { shutdownOnCompletion.toBoolean() }
@@ -67,6 +64,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     @Value("\${trigger.snapshot.sender}")
     private lateinit var triggerSnapshotSender: String
 
+    @Value("\${message.delay.seconds:30}")
+    private lateinit var messageDelaySeconds: String
+
     companion object {
         val logger: Logger = LoggerFactory.getLogger(SnapshotSenderSQSMessagingService::class.toString())
         const val maxAttempts = 5
@@ -74,4 +74,3 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
         const val backoffMultiplier = 2.0
     }
 }
-
