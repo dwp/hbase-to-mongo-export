@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class FilterBlockedTopicsUtils {
 
     @Value("\${blocked.topics:NOT_SET}")
-    lateinit var blockedTopics: String
+    private var blockedTopics: String = "NOT_SET"
 
     @Throws(BlockedTopicException::class)
     fun isTopicBlocked(topic: String) {
