@@ -53,6 +53,7 @@ cat "${TOPICS_CSV_FILE}" | while read -r TOPIC_NAME
       --topic.name="${TOPIC_NAME}" \
       --encrypt.output=true \
       --compress.output=true \
+      --snapshot.type=full \
       --output.batch.size.max.bytes=2048 \
       --identity.keystore=../resources/certs/htme/keystore.jks \
       --identity.store.password=changeit \
