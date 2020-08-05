@@ -50,6 +50,7 @@ communicate over 2-way https. To generate these:
   | `identity.key.password`       | changeit                   | The client key password.
   | `trust.store.password`        | changeit                   | The trust store password.
   | `identity.store.alias`        | cid                        | The name of the cert in to present to DKS.
+  | `snapshot.type`               | full                       | Full or incremental for the type of snapshots being generated.
 
 * The available spring profiles are
 
