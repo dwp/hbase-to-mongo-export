@@ -107,7 +107,8 @@ class S3WriterIntegrationTest {
                "topic_name": "db.penalties-and-deductions.sanction",
                "export_date": "2020-07-06",
                "reprocess_files": "true",
-               "s3_full_folder": "test-exporter/db.penalties-and-deductions.sanction-045-050-00000${i}.txt.bz2.enc"
+               "s3_full_folder": "test-exporter/db.penalties-and-deductions.sanction-045-050-00000${i}.txt.bz2.enc",
+               "snapshot_type": "full"
             }
             """.trimIndent()
 
