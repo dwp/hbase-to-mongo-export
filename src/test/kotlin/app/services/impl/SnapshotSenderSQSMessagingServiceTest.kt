@@ -26,7 +26,8 @@ import org.springframework.test.util.ReflectionTestUtils
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
     "topic.name=db.database.collection",
-    "trigger.snapshot.sender=true"
+    "trigger.snapshot.sender=true",
+    "snapshot.type=incremental"
 ])
 class SnapshotSenderSQSMessagingServiceTest {
 
@@ -70,7 +71,8 @@ class SnapshotSenderSQSMessagingServiceTest {
             |   "topic_name": "db.database.collection",
             |   "export_date": "2020-06-05",
             |   "reprocess_files": "false",
-            |   "s3_full_folder": "db.collection"
+            |   "s3_full_folder": "db.collection",
+            |   "snapshot_type": "incremental"
             |}
             """.trimMargin()
         }

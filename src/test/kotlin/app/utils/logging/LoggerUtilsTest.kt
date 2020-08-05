@@ -47,7 +47,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
     "trigger.snapshot.sender=false",
-    "blocked.topic=db.x.x"
+    "blocked.topic=db.x.x",
+    "snapshot.type=full"
 ])
 class LoggerUtilsTest {
 
