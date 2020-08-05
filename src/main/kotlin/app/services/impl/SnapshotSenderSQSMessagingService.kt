@@ -39,7 +39,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             |   "export_date": "$exportDate",
             |   "reprocess_files": "$reprocess",
             |   "s3_full_folder": "$prefix",
-            |   "export_type": "$prefix",
             |   "snapshot_type": "$snapshotType"
             |}
             """.trimMargin()
