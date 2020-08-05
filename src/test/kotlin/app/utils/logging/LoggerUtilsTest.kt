@@ -47,7 +47,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
     "trigger.snapshot.sender=false",
-    "blocked.topic=db.x.x"
+    "blocked.topic=db.x.x",
+"snapshot.type=full"
 ])
 class LoggerUtilsTest {
 
@@ -202,15 +203,15 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
 
         val trace = "java.lang.RuntimeException: boom1 - /:'!@£\$%^&*()\n" +
-            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:99)\n" +
-            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:75)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:100)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:76)\n" +
             "\t... 58 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
         assertEquals(trace, throwableStr)
 
         val result = inlineStackTrace(throwableStr)
-        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:99) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:75) |  ... 58 common frames omitted | ", result)
+        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:100) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:76) |  ... 58 common frames omitted | ", result)
     }
 
     @Test
@@ -244,7 +245,7 @@ class LoggerUtilsTest {
 
         val result = throwableProxyEventToString(mockEvent)
 
-        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:99) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:75) |  ... 58 common frames omitted | \", ", result)
+        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:100) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:76) |  ... 58 common frames omitted | \", ", result)
     }
 
     @Test
@@ -340,7 +341,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:99) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:75) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n"
+        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:100) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:76) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"sqs_message_id\":\"test11\", \"blocked_topics\":\"blocked.topic\" }\n"
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
