@@ -63,7 +63,6 @@ class SnapshotSenderSQSMessagingServiceTest {
         snapshotSenderMessagingService.notifySnapshotSender("db.collection")
         val expected = SendMessageRequest().apply {
             queueUrl = "http://aws:4566"
-            delaySeconds = 30
             messageBody = """
             |{
             |   "shutdown_flag": "true",

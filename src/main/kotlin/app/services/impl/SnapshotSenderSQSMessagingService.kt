@@ -28,7 +28,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
                 messageBody = message
-                delaySeconds = messageDelaySeconds.toInt()
             }
 
     private fun message(prefix: String)= """
@@ -64,9 +63,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     @Value("\${trigger.snapshot.sender}")
     private lateinit var triggerSnapshotSender: String
-
-    @Value("\${message.delay.seconds:30}")
-    private lateinit var messageDelaySeconds: String
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
