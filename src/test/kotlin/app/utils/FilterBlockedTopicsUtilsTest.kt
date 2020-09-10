@@ -99,23 +99,6 @@ class FilterBlockedTopicsUtilsTest {
     }
 
     @Test
-    fun shouldThrowBlockedTopicExceptionWhenTopicIsInSingularBlockedListRegardlessOfCase() {
-
-        val topic = "blocked.topic"
-
-        val blockedTopic = "Blocked.Topic"
-
-        val util = FilterBlockedTopicsUtils()
-
-        ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
-
-        val exception = shouldThrow<BlockedTopicException> {
-            util.isTopicBlocked(topic)
-        }
-        exception.message shouldBe "Provided topic is blocked so cannot be processed: 'blocked.topic'"
-    }
-
-    @Test
     fun shouldThrowBlockedTopicExceptionWhenTopicIsInBlockedList() {
 
         val topic = "blocked.topic"
@@ -130,22 +113,5 @@ class FilterBlockedTopicsUtilsTest {
             util.isTopicBlocked(topic)
         }
         exception.message shouldBe "Provided topic is blocked so cannot be processed: 'blocked.topic'"
-    }
-
-    @Test
-    fun shouldThrowBlockedTopicExceptionWhenTopicIsInBlockedListRegardlessOfCase() {
-
-        val topic = "Blocked.Topic"
-
-        val blockedTopic = "another.blocked.topic,blocked.topic"
-
-        val util = FilterBlockedTopicsUtils()
-
-        ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
-
-        val exception = shouldThrow<BlockedTopicException> {
-            util.isTopicBlocked(topic)
-        }
-        exception.message shouldBe "Provided topic is blocked so cannot be processed: 'Blocked.Topic'"
     }
 }

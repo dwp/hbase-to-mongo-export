@@ -20,16 +20,7 @@ class FilterBlockedTopicsUtils {
             blockedTopicsList.add(blockedTopics)
         }
 
-        if (containsCaseInsensitive(topic, blockedTopicsList)
+        if (blockedTopicsList.contains(topic))
             throw BlockedTopicException(topic)
     }
-
-    fun containsCaseInsensitive(s: String, l: List<String>) : Boolean {
-        for (string in l){
-           if (string.toLowerCase() == s.toLowerCase()){
-               return true;
-            }
-        }
-       return false;
-     }
 }
