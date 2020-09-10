@@ -12,7 +12,24 @@ class FilterBlockedTopicsUtils {
 
     @Throws(BlockedTopicException::class)
     fun isTopicBlocked(topic: String) {
-        if (blockedTopics.contains(topic))
+        val blockedTopicsList: MutableList<String> = mutableListOf()
+        
+        if (blockedTopics.contains(',')) {
+            blockedTopicsList.addAll(blockedTopics.split(","))
+        } else {
+            blockedTopicsList.add(blockedTopics)
+        }
+
+        if (containsCaseInsensitive(topic, blockedTopicsList)
             throw BlockedTopicException(topic)
     }
+
+    fun containsCaseInsensitive(s: String, l: List<String>) : Boolean {
+        for (string in l){
+           if (string.toLowerCase() == s.toLowerCase()){
+               return true;
+            }
+        }
+       return false;
+     }
 }
