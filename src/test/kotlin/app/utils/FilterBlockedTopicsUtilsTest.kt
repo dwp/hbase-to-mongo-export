@@ -46,6 +46,78 @@ class FilterBlockedTopicsUtilsTest {
     }
 
     @Test
+    fun shouldNotThrowExceptionWhenTopicIsADifferentCaseToABlockedTopicForSingleBlockedTopic() {
+
+        val topic = "topic.string"
+
+        val blockedTopic = "Topic.string"
+
+        val util = FilterBlockedTopicsUtils()
+
+        ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
+
+        val exception = shouldNotThrow<BlockedTopicException> {
+            util.isTopicBlocked(topic)
+            success()
+        }
+        assert(exception.success().isSuccess())
+    }
+
+    @Test
+    fun shouldNotThrowExceptionWhenTopicIsADifferentCaseToABlockedTopicForMultipleBlockedTopics() {
+
+        val topic = "topic.String"
+
+        val blockedTopic = "topic.string,another.topic.string"
+
+        val util = FilterBlockedTopicsUtils()
+
+        ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
+
+        val exception = shouldNotThrow<BlockedTopicException> {
+            util.isTopicBlocked(topic)
+            success()
+        }
+        assert(exception.success().isSuccess())
+    }
+
+    @Test
+    fun shouldNotThrowExceptionWhenTopicIsASubstringOfABlockedTopicForSingleBlockedTopic() {
+
+        val topic = "topic.string"
+
+        val blockedTopic = "topic.string.full"
+
+        val util = FilterBlockedTopicsUtils()
+
+        ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
+
+        val exception = shouldNotThrow<BlockedTopicException> {
+            util.isTopicBlocked(topic)
+            success()
+        }
+        assert(exception.success().isSuccess())
+    }
+
+    @Test
+    fun shouldNotThrowExceptionWhenTopicIsASubstringOfABlockedTopicForMultipleBlockedTopic() {
+
+        val topic = "topic.string"
+
+        val blockedTopic = "blocked.topic,topic.string.full"
+
+        val util = FilterBlockedTopicsUtils()
+
+        ReflectionTestUtils.setField(util, "blockedTopics", blockedTopic)
+
+        val exception = shouldNotThrow<BlockedTopicException> {
+            util.isTopicBlocked(topic)
+            success()
+        }
+        assert(exception.success().isSuccess())
+    }
+
+    @Test
     fun shouldThrowBlockedTopicExceptionWhenTopicIsInSingularBlockedList() {
 
         val topic = "blocked.topic"

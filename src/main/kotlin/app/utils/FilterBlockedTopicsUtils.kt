@@ -12,7 +12,15 @@ class FilterBlockedTopicsUtils {
 
     @Throws(BlockedTopicException::class)
     fun isTopicBlocked(topic: String) {
-        if (blockedTopics.contains(topic))
+        val blockedTopicsList: MutableList<String> = mutableListOf()
+        
+        if (blockedTopics.contains(',')) {
+            blockedTopicsList.addAll(blockedTopics.split(","))
+        } else {
+            blockedTopicsList.add(blockedTopics)
+        }
+
+        if (blockedTopicsList.contains(topic))
             throw BlockedTopicException(topic)
     }
 }
