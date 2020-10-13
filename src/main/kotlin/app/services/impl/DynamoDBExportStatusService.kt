@@ -35,6 +35,10 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
             backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     override fun setFailedStatus() = setStatus("Export_Failed")
 
+    @Retryable(value = [Exception::class],
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+    override fun setTableUnavailableStatus() = setStatus("Table_Unavailable")
 
     private fun setStatus(status: String) {
         val result = dynamoDB.updateItem(setCollectionStatusRequest(status))

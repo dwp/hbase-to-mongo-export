@@ -8,6 +8,8 @@ import app.utils.logging.logError
 import app.utils.logging.logInfo
 import app.utils.logging.logWarn
 import org.apache.hadoop.hbase.TableName
+import org.apache.hadoop.hbase.TableNotEnabledException
+import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,6 +40,18 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
                     "exception", e.message ?: "",
                     "topic_name", topicName
             )
+            throw e
+        }
+        catch (e: TableNotFoundException) {
+            logError(logger, "Table does not exist for the provided topic",
+                    "exception", e.message ?: "",
+                    "topic_name", topicName)
+            throw e
+        }
+        catch (e: TableNotEnabledException) {
+            logError(logger, "Table is not enabled for the provided topic",
+                    "exception", e.message ?: "",
+                    "topic_name", topicName)
             throw e
         }
         catch (e: Exception) {

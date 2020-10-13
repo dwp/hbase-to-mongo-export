@@ -19,6 +19,11 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
             exportStatusService.setExportedStatus()
         }
+        else if (jobExecution.exitStatus.equals(ExitStatus.UNKNOWN)) {
+            logError(logger,"Setting table unavailable status",
+                    "job_exit_status", "${jobExecution.exitStatus}")
+            exportStatusService.setTableUnavailableStatus()
+        }
         else {
             logError(logger,"Setting export failed status",
                     "job_exit_status", "${jobExecution.exitStatus}")
