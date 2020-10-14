@@ -1,15 +1,13 @@
 package app.services.impl
 
 import app.services.SnapshotSenderMessagingService
-import app.utils.logging.logInfo
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.SendMessageRequest
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
 class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : SnapshotSenderMessagingService {
@@ -20,7 +18,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     override fun notifySnapshotSender(prefix: String) {
         if (triggerSnapshotSender.toBoolean()) {
             amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
-            logInfo(logger, "Sent message to snapshot sender queue", "prefix", prefix)
+            logger.info("Sent message to snapshot sender queue", "prefix" to prefix)
         }
     }
 
@@ -68,7 +66,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     private lateinit var messageDelaySeconds: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(SnapshotSenderSQSMessagingService::class.toString())
+        val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class.toString())
         const val maxAttempts = 5
         const val initialBackoffMillis = 1000L
         const val backoffMultiplier = 2.0

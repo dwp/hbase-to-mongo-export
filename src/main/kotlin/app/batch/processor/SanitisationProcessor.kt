@@ -3,11 +3,9 @@ package app.batch.processor
 import app.domain.DecryptedRecord
 import app.domain.Record
 import app.exceptions.DataKeyServiceUnavailableException
-import app.utils.logging.logDebug
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 // See https://projects.ucd.gpn.gov.uk/browse/DW-2374
 @Component
@@ -24,7 +22,8 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
             .replace("_archived", "_removed")
 
         val manifestRecord = item.manifestRecord
-        logDebug(logger, "Sanitized record", "manifest_record_id", manifestRecord.id, "manifest_record_timestamp", "${manifestRecord.timestamp}")
+        logger.debug("Sanitized record", "manifest_record_id" to manifestRecord.id,
+                "manifest_record_timestamp" to "${manifestRecord.timestamp}")
         return Record(replacedOutput, manifestRecord)
     }
 
@@ -35,13 +34,13 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
         if ((db == "penalties-and-deductions" && collection == "sanction")
             || (db == "core" && collection == "healthAndDisabilityDeclaration")
             || (db == "accepted-data" && collection == "healthAndDisabilityCircumstances")) {
-            logDebug(logger, "Sanitising output", "db_name", db, "collection_name", collection)
+            logger.debug("Sanitising output", "db_name" to db, "collection_name" to collection)
             return dbObject.toString().replace(replacementRegex, "")
         }
         return dbObject.toString()
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(SanitisationProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(SanitisationProcessor::class.toString())
     }
 }

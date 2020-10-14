@@ -1,16 +1,15 @@
 package app.batch.processor
 
-import app.batch.HBaseReader
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
-import app.utils.logging.logError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.client.Result
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.nio.charset.Charset
 
 @Component
@@ -42,8 +41,12 @@ class HBaseResultProcessor : ItemProcessor<Result, SourceRecord> {
 
     private fun validateMandatoryField(mandatoryFieldValue: String?, idBytes: ByteArray) {
         if (mandatoryFieldValue.isNullOrEmpty()) {
-            logError(HBaseReader.logger, "Missing dbObject field, skipping this record", "id_bytes", "$idBytes")
+            logger.error("Missing dbObject field, skipping this record", "id_bytes" to "$idBytes")
             throw MissingFieldException(idBytes, "dbObject")
         }
+    }
+
+    companion object {
+        private val logger = DataworksLogger.getLogger(HBaseResultProcessor::class.java.toString())
     }
 }
