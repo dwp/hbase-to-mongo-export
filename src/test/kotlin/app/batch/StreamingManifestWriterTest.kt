@@ -47,7 +47,9 @@ class StreamingManifestWriterTest {
         try {
             streamingManifestWriter.sendManifest(amazonS3, file(),"bucket", "prefix")
         }
-        catch (e: Exception) {}
+        catch (e: Exception) {
+            // do nothing
+        }
         verify(amazonS3, times(10)).putObject(any())
     }
 
@@ -59,7 +61,10 @@ class StreamingManifestWriterTest {
         try {
             streamingManifestWriter.sendManifest(amazonS3, file(),"bucket", "prefix")
         }
-        catch (e: Exception) {}
+        catch (e: Exception) {
+            // do nothing
+        }
+
         verify(amazonS3, times(2)).putObject(any())
     }
 
