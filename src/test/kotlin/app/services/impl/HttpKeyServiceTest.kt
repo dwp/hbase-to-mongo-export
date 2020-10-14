@@ -54,7 +54,8 @@ import java.io.ByteArrayInputStream
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
-    "trigger.snapshot.sender=false"
+    "trigger.snapshot.sender=false",
+    "snapshot.type=full"
 ])
 class HttpKeyServiceTest {
 

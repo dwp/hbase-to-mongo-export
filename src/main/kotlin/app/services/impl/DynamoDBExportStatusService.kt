@@ -35,7 +35,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
 
 
     private fun setStatus(status: String) {
-        logger.info("request: ${setCollectionStatusRequest(status)}")
         val result = dynamoDB.updateItem(setCollectionStatusRequest(status))
         logger.info("Collection status set",
                 "collection_status" to "${result.attributes["CollectionStatus"]}")

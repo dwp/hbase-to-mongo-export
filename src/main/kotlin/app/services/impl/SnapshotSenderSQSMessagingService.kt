@@ -36,7 +36,8 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             |   "topic_name": "$topicName",
             |   "export_date": "$exportDate",
             |   "reprocess_files": "$reprocess",
-            |   "s3_full_folder": "$prefix"
+            |   "s3_full_folder": "$prefix",
+            |   "snapshot_type": "$snapshotType"
             |}
             """.trimMargin()
 
@@ -64,6 +65,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     @Value("\${message.delay.seconds:30}")
     private lateinit var messageDelaySeconds: String
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class.toString())
