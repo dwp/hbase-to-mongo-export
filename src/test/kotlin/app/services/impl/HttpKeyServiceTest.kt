@@ -5,8 +5,6 @@ import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.utils.UUIDGenerator
-import app.utils.logging.overrideLoggerStaticFieldsForTests
-import app.utils.logging.resetLoggerStaticFieldsForTests
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.sqs.AmazonSQS
 import com.google.gson.Gson
@@ -83,15 +81,8 @@ class HttpKeyServiceTest {
         this.keyService.clearCache()
         reset(this.httpClientProvider)
         reset(this.uuidGenerator)
-        overrideLoggerStaticFieldsForTests(
-                "topic.name", "test-host", "test-env", "my-app",
-                "v1", "tests", "9876543000", "correlation-1", "sqs-message-1", "blocked.topic")
     }
 
-    @After
-    fun tearDown() {
-        resetLoggerStaticFieldsForTests()
-    }
 
     @Test
     fun testBatchDataKey_WillCallClientOnce_AndReturnKey() {

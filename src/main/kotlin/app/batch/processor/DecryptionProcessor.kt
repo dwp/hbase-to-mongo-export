@@ -7,12 +7,9 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
 import app.services.CipherService
 import app.services.KeyService
-import app.utils.logging.logDebug
-import app.utils.logging.logError
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
@@ -22,7 +19,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
         try {
-            logDebug(logger, "Processing next item", "item", "$item")
+            logger.debug("Processing next item", "item" to "$item")
             val decryptedKey = keyService.decryptKey(
                 item.encryption.keyEncryptionKeyId,
                 item.encryption.encryptedEncryptionKey)
@@ -35,7 +32,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
         } catch (e: DataKeyServiceUnavailableException) {
             throw e
         } catch (e: Exception) {
-            logError(logger, "Rejecting invalid item", e, "item", "$item")
+            logger.error("Rejecting invalid item", e, "item" to "$item")
             throw DecryptionFailureException(
                 "database-unknown",
                 "collection-unknown",
@@ -46,7 +43,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(DecryptionProcessor::class.toString())
     }
 }
 

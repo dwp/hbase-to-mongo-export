@@ -4,16 +4,13 @@ import app.domain.ManifestRecord
 import app.domain.Record
 import app.services.CipherService
 import app.services.KeyService
-import app.utils.logging.logError
-import app.utils.logging.logInfo
 import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -43,7 +40,7 @@ abstract class Writer(private val keyService: KeyService,
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes) {
                 writeOutput()
                 val ids = currentBatchManifest.map { it.id }.joinToString { "," }
-                logInfo(logger, "Current batch manifest", "manifest_ids", ids)
+                logger.info("Current batch manifest", "manifest_ids" to ids)
             }
             currentBatch.append(item)
             currentBatchManifest.add(it.manifestRecord)
@@ -55,12 +52,12 @@ abstract class Writer(private val keyService: KeyService,
         if (batchSizeBytes > 0) {
 
             val fileName = outputName(++currentOutputFileNumber)
-            logInfo(logger, "Processing file", "file_name", fileName, "batch_size_bytes", "$batchSizeBytes")
+            logger.info("Processing file", "file_name" to fileName, "batch_size_bytes" to "$batchSizeBytes")
 
             try {
                 if (encryptOutput) {
                     val dataKeyResult = keyService.batchDataKey()
-                    logInfo(logger, "Getting batch data key", "data_key_result", "$dataKeyResult")
+                    logger.info("Getting batch data key", "data_key_result" to "$dataKeyResult")
                     val byteArrayOutputStream = ByteArrayOutputStream()
 
                     bufferedOutputStream(byteArrayOutputStream).use {
@@ -90,7 +87,7 @@ abstract class Writer(private val keyService: KeyService,
                 this.batchSizeBytes = 0
                 this.currentBatchManifest = mutableListOf()
             } catch (e: Exception) {
-                logError(logger, "Exception while writing snapshot file to s3", e, "file_name", fileName)
+                logger.error("Exception while writing snapshot file to s3", e, "file_name" to fileName)
                 e.printStackTrace()
             }
         }
@@ -129,6 +126,6 @@ abstract class Writer(private val keyService: KeyService,
     protected var currentOutputFileNumber = 0
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(Writer::class.toString())
+        val logger = DataworksLogger.getLogger(Writer::class.toString())
     }
 }
