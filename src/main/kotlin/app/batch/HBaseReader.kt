@@ -26,6 +26,7 @@ import java.time.ZonedDateTime
 @StepScope
 class HBaseReader(private val connection: Connection, private val textUtils: TextUtils, private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
 
+    @Throws(TableNotEnabledException::class, TableNotEnabledException::class)
     override fun read(): Result? =
         try {
             val result = scanner().next()
