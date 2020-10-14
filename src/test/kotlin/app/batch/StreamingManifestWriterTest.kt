@@ -11,12 +11,18 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.retry.annotation.EnableRetry
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [StreamingManifestWriter::class])
 @EnableRetry
+@TestPropertySource(properties = [
+    "manifest.retry.maxAttempts=10",
+    "manifest.retry.delay=1",
+    "manifest.retry.multiplier=1"
+])
 class StreamingManifestWriterTest {
 
     @Autowired
@@ -27,27 +33,22 @@ class StreamingManifestWriterTest {
         val amazonS3 = mock<AmazonS3> {
             on { putObject(any()) }  doReturn PutObjectResult()
         }
-
-        val file = File("src/test/kotlin/app/batch/StreamingManifestWriterTest.kt")
-
-        streamingManifestWriter.sendManifest(amazonS3, file,"bucket", "prefix")
+        streamingManifestWriter.sendManifest(amazonS3, file(),"bucket", "prefix")
         verify(amazonS3, times(1)).putObject(any())
         verifyNoMoreInteractions(amazonS3)
     }
 
     @Test
-    fun writeManifestDoesGiveUpOnRepeatedFailure() {
+    fun writeManifestGivesUpAfterMaxAttempts() {
         val amazonS3 = mock<AmazonS3> {
             on { putObject(any()) } doThrow SdkClientException("Error")
         }
 
-        val file = File("src/test/kotlin/app/batch/StreamingManifestWriterTest.kt")
-
         try {
-            streamingManifestWriter.sendManifest(amazonS3, file,"bucket", "prefix")
+            streamingManifestWriter.sendManifest(amazonS3, file(),"bucket", "prefix")
         }
         catch (e: Exception) {}
-        verify(amazonS3, times(5)).putObject(any())
+        verify(amazonS3, times(10)).putObject(any())
     }
 
     @Test
@@ -55,13 +56,12 @@ class StreamingManifestWriterTest {
         val amazonS3 = mock<AmazonS3> {
             on { putObject(any()) } doThrow SdkClientException("Error") doReturn PutObjectResult()
         }
-
-        val file = File("src/test/kotlin/app/batch/StreamingManifestWriterTest.kt")
-
         try {
-            streamingManifestWriter.sendManifest(amazonS3, file,"bucket", "prefix")
+            streamingManifestWriter.sendManifest(amazonS3, file(),"bucket", "prefix")
         }
         catch (e: Exception) {}
         verify(amazonS3, times(2)).putObject(any())
     }
+
+    private fun file() = File("src/test/kotlin/app/batch/StreamingManifestWriterTest.kt")
 }

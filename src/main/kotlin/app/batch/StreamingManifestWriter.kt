@@ -16,8 +16,9 @@ import java.io.FileInputStream
 class StreamingManifestWriter {
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${manifest.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${manifest.retry.delay:1000}",
+                              multiplierExpression = "\${manifest.retry.multiplier:2}"))
     fun sendManifest(s3: AmazonS3, manifestFile: File, manifestBucket: String, manifestPrefix: String) {
         val manifestSize = manifestFile.length()
         val manifestFileName = manifestFile.name
@@ -49,10 +50,8 @@ class StreamingManifestWriter {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
-        const val maxAttempts = 5
     }
+
 
     private var totalManifestFiles = 0
     private var totalManifestRecords : Long = 0
