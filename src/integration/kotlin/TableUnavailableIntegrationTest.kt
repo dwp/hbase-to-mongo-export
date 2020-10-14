@@ -22,14 +22,26 @@ class TableUnavailableIntegrationTest {
     @Test
     fun dynamoDBShouldHaveTableUnavailableRecord() {
 
-        val key = mutableMapOf("CorrelationId" to AttributeValue().withS(partitionKey))
-        val itemRequest = GetItemRequest().withTableName(tableName).withKey(key)
-        val item = amazonDynamoDb.getItem(itemRequest)
+        val correlationIdAttributeValue = AttributeValue().apply {
+            s = "integration_test_correlation_id"
+        }
+        val collectionNameAttributeValue = AttributeValue().apply {
+            s = "db.penalties-and-deductions.sanction"
+        }
+        val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
+                "CollectionName" to collectionNameAttributeValue)
 
-        val collectionStatus = item.item["CollectionStatus"]
+        val getItemRequest = GetItemRequest().apply {
+            tableName = "UCExportToCrownStatus"
+            key = primaryKey
+        }
+        val result = amazonDynamoDb.getItem(getItemRequest)
+        val item = result.item
+        val status = item["CollectionStatus"]
+
         val expectedCollectionStatus = "Table_Unavailable"
 
-        assertThat(collectionStatus).isEqualTo(expectedCollectionStatus)
+        assertThat(status).isEqualTo(expectedCollectionStatus)
     }
 
     companion object {
