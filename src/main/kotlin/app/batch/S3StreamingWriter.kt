@@ -7,6 +7,7 @@ import app.services.CipherService
 import app.services.ExportStatusService
 import app.services.KeyService
 import app.services.SnapshotSenderMessagingService
+import app.utils.logging.logError
 import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
@@ -118,9 +119,12 @@ class S3StreamingWriter(private val cipherService: CipherService,
             totalBytes += batchSizeBytes
             totalRecords += recordsInBatch
 
-            if (streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)) {
+            try {
+                streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
                 totalManifestFiles++
                 totalManifestRecords += currentOutputStream!!.manifestFile.length()
+            } catch (e: Exception) {
+                logError(logger, "Failed to write manifest", e, "manifest_file", "${currentOutputStream!!.manifestFile}")
             }
         }
 
