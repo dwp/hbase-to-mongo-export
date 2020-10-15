@@ -86,6 +86,18 @@ services:
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
       --snapshot.type=full
+      --dynamodb.retry.delay=1
+      --dynamodb.retry.maxAttempts=10
+      --dynamodb.retry.multiplier=2
+      --keyservice.retry.delay=1
+      --keyservice.retry.maxAttempts=10
+      --keyservice.retry.multiplier=2
+      --manifest.retry.delay=1
+      --manifest.retry.maxAttempts=10
+      --manifest.retry.multiplier=2
+      --sqs.retry.delay=1
+      --sqs.retry.maxAttempts=10
+      --sqs.retry.multiplier=2
     environment:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
@@ -133,6 +145,18 @@ services:
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
       --snapshot.type=full
+      --dynamodb.retry.delay=1
+      --dynamodb.retry.maxAttempts=10
+      --dynamodb.retry.multiplier=2
+      --keyservice.retry.delay=1
+      --keyservice.retry.maxAttempts=10
+      --keyservice.retry.multiplier=2
+      --manifest.retry.delay=1
+      --manifest.retry.maxAttempts=10
+      --manifest.retry.multiplier=2
+      --sqs.retry.delay=1
+      --sqs.retry.maxAttempts=10
+      --sqs.retry.multiplier=2
     environment:
     - TOPIC_NAME=db.penalties-and-deductions.sanction
     - ENVIRONMENT=local-docker
@@ -188,6 +212,18 @@ services:
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
       --snapshot.type=full
+      --dynamodb.retry.delay=1
+      --dynamodb.retry.maxAttempts=10
+      --dynamodb.retry.multiplier=2
+      --keyservice.retry.delay=1
+      --keyservice.retry.maxAttempts=10
+      --keyservice.retry.multiplier=2
+      --manifest.retry.delay=1
+      --manifest.retry.maxAttempts=10
+      --manifest.retry.multiplier=2
+      --sqs.retry.delay=1
+      --sqs.retry.maxAttempts=10
+      --sqs.retry.multiplier=2
     environment:
      - APPLICATION=hbase_to_mongo_export
      - COMPONENT=jar_file

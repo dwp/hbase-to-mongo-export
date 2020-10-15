@@ -3,12 +3,10 @@ package app.batch.legacy
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
-import app.utils.logging.logInfo
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -20,7 +18,7 @@ class FileSystemWriter(keyService: KeyService,
     }
 
     override fun writeToTarget(filePath: String, fileBytes: ByteArray, iv: String, cipherText: String, dataKeyEncryptionKeyId: String) {
-        logInfo(logger, "Writing to file", "file_name", filePath)
+        logger.info("Writing to file", "file_name" to filePath)
         Files.write(Paths.get(filePath), fileBytes)
     }
 
@@ -32,6 +30,6 @@ class FileSystemWriter(keyService: KeyService,
     private lateinit var outputFile: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(FileSystemWriter::class.toString())
+        val logger = DataworksLogger.getLogger(FileSystemWriter::class.toString())
     }
 }

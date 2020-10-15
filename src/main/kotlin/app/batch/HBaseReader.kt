@@ -1,18 +1,13 @@
 package app.batch
 
-import app.exceptions.ScanRetriesExhaustedException
 import app.exceptions.BlockedTopicException
+import app.exceptions.ScanRetriesExhaustedException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
-import app.utils.logging.logError
-import app.utils.logging.logInfo
-import app.utils.logging.logWarn
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.core.annotation.BeforeStep
@@ -20,6 +15,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
 
 @Component
@@ -37,22 +33,21 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             result
         }
         catch (e: BlockedTopicException) {
-            logWarn(logger, "Provided topic is blocked so cannot be processed",
-                    "exception", e.message ?: "",
-                    "topic_name", topicName
-            )
+            logger.error("Provided topic is blocked so cannot be processed",
+                    "exception" to (e.message ?: ""),
+                    "topic_name" to topicName)
             throw e
         }
         catch (e: TableNotFoundException) {
-            logError(logger, "Table does not exist for the provided topic",
-                    "exception", e.message ?: "",
-                    "topic_name", topicName)
+            logger.error("Table does not exist for the provided topic",
+                    "exception" to (e.message ?: ""),
+                    "topic_name" to topicName)
             throw e
         }
         catch (e: TableNotEnabledException) {
-            logError(logger, "Table is not enabled for the provided topic",
-                    "exception", e.message ?: "",
-                    "topic_name", topicName)
+            logger.error("Table is not enabled for the provided topic",
+                    "exception" to (e.message ?: ""),
+                    "topic_name" to topicName)
             throw e
         }
         catch (e: Exception) {
@@ -62,11 +57,11 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
     private fun reopenScannerAndRetry(e: Exception): Result? {
         val lastKey = latestId ?: byteArrayOf(start.toByte())
         return if (++retryAttempts < scanMaxRetries.toInt()) {
-            logWarn(logger, "Failed to get next record, reopening scanner",
-                    "exception", e.message ?: "",
-                    "attempt", "$retryAttempts",
-                    "max_attempts", scanMaxRetries,
-                    "latest_id", printableKey(lastKey))
+            logger.warn("Failed to get next record, reopening scanner",
+                    "exception" to (e.message ?: ""),
+                    "attempt" to "$retryAttempts",
+                    "max_attempts" to scanMaxRetries,
+                    "latest_id" to printableKey(lastKey))
 
             scanner?.close()
             Thread.sleep(scanRetrySleepMs.toLong())
@@ -74,11 +69,11 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             read()
         }
         else {
-            logError(logger, "Failed to get next record after max retries", e,
-                    "exception", e.message ?: "",
-                    "attempt", "$retryAttempts",
-                    "max_attempts", scanMaxRetries,
-                    "latest_id", printableKey(lastKey))
+            logger.error("Failed to get next record after max retries", e,
+                    "exception" to (e.message ?: ""),
+                    "attempt" to "$retryAttempts",
+                    "max_attempts" to scanMaxRetries,
+                    "latest_id" to printableKey(lastKey))
             throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
         }
     }
@@ -95,7 +90,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
     @AfterStep
     fun afterStep() {
-        logInfo(logger, "Closing scanner", "start", "$start", "stop", "$stop")
+        logger.info("Closing scanner", "start" to "$start", "stop" to "$stop")
         scanner().close()
     }
 
@@ -161,15 +156,15 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
         }
 
-        logInfo(logger, "Scan caching config",
-                "scan_caching", "${scan.caching}",
-                "scan.maxResultSize", "${scan.maxResultSize}",
-                "cache_blocks", "${scan.cacheBlocks}",
-                "start", "$start",
-                "stop", "$stop",
-                "scan_time_range_start", timeStart.toString(),
-                "scan_time_range_end", timeEnd.toString(),
-                "use_timeline_consistency", useTimelineConsistency)
+        logger.info("Scan caching config",
+                "scan_caching" to "${scan.caching}",
+                "scan.maxResultSize" to "${scan.maxResultSize}",
+                "cache_blocks" to "${scan.cacheBlocks}",
+                "start" to "$start",
+                "stop" to "$stop",
+                "scan_time_range_start" to timeStart.toString(),
+                "scan_time_range_end" to timeEnd.toString(),
+                "use_timeline_consistency" to useTimelineConsistency)
 
         return scan
     }
@@ -221,6 +216,6 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
     private var stop: Int = Int.MAX_VALUE
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseReader::class.toString())
+        val logger = DataworksLogger.getLogger(HBaseReader::class.toString())
     }
 }

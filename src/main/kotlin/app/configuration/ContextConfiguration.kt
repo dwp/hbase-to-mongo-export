@@ -1,6 +1,5 @@
 package app.configuration
 
-import app.utils.logging.logInfo
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorOutputStream
 import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream
@@ -9,12 +8,11 @@ import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
 import org.apache.http.impl.client.HttpClients
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -95,7 +93,7 @@ class ContextConfiguration {
             val path = Paths.get(dataReadyFlagLocation)
             val maxAttempts = 100
             while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < maxAttempts) {
-                logInfo(logger, "Waiting for data ready flag to exist", "file_path", "$path", "attempt_no", "$attempts", "max_attempts", "$maxAttempts")
+                logger.info("Waiting for data ready flag to exist", "file_path" to "$path", "attempt_no" to "$attempts", "max_attempts" to "$maxAttempts")
                 Thread.sleep(1000)
             }
         }
@@ -108,21 +106,21 @@ class ContextConfiguration {
             setInt(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, hbaseClientTimeoutMs.toInt())
         }
 
-        logInfo(logger, "Timeout configuration",
-                "scanner", configuration.get(HConstants.HBASE_CLIENT_SCANNER_TIMEOUT_PERIOD),
-                "rpc", configuration.get(HConstants.HBASE_RPC_TIMEOUT_KEY),
-                "client", configuration.get(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT))
+        logger.info("Timeout configuration",
+                "scanner" to configuration.get(HConstants.HBASE_CLIENT_SCANNER_TIMEOUT_PERIOD),
+                "rpc" to configuration.get(HConstants.HBASE_RPC_TIMEOUT_KEY),
+                "client" to configuration.get(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT))
 
         val connection = ConnectionFactory.createConnection(configuration)
         addShutdownHook(connection)
-        logInfo(logger, "Got connection to hbase.")
+        logger.info("Got connection to hbase.")
         return connection
     }
 
     private fun addShutdownHook(connection: Connection) {
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
-                logInfo(logger, "Closing hbase connection", "connection", "$connection")
+                logger.info("Closing hbase connection", "connection" to "$connection")
                 connection.close()
             }
         })
@@ -144,6 +142,6 @@ class ContextConfiguration {
     private lateinit var dataReadyFlagLocation: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(ContextConfiguration::class.toString())
+        val logger = DataworksLogger.getLogger(ContextConfiguration::class.toString())
     }
 }

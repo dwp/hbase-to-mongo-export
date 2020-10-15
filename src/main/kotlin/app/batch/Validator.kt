@@ -6,15 +6,12 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.utils.DateWrapper
 import app.utils.JsonUtils
-import app.utils.logging.logDebug
-import app.utils.logging.logError
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -52,8 +49,8 @@ class Validator {
             }
         }
         catch (e: Exception) {
-            logError(logger, "Error decrypting record", e, "exceptionMessage", e.message
-                    ?: "No message", "is_blank", "${StringUtils.isBlank(decrypted)}", "hbase_row_id", printableKey(item.hbaseRowId), "db_name", db, "collection_name", collection)
+            logger.error("Error decrypting record", e, "exceptionMessage" to (e.message ?: "No message"),
+                    "is_blank" to "${StringUtils.isBlank(decrypted)}", "hbase_row_id" to printableKey(item.hbaseRowId), "db_name" to db, "collection_name" to collection)
             throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")
         }
         return null
@@ -172,7 +169,7 @@ class Validator {
                 val df = SimpleDateFormat(it)
                 return df.parse(timestampAsString)
             } catch (e: Exception) {
-                logDebug(logger, "timestampAsString did not match valid formats", "date_time_string", timestampAsString, "failed_format", it)
+                logger.debug("timestampAsString did not match valid formats", "date_time_string" to timestampAsString, "failed_format" to it)
             }
         }
         throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats", 0)
@@ -184,15 +181,15 @@ class Validator {
             return parsedDateTime.time
         }
         catch (ex: ParseException) {
-            logDebug(logger, "Timestamp for manifest could not be parsed, so falling back to last modified date time", 
-                "manifest_date_time", timestampAsString, "last_modified_date_time", fallbackDate)
+            logger.debug("Timestamp for manifest could not be parsed, so falling back to last modified date time", 
+                "manifest_date_time" to timestampAsString, "last_modified_date_time" to fallbackDate)
             val parsedDateTime = getValidParsedDateTime(fallbackDate)
             return parsedDateTime.time
         }
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(Validator::class.toString())
+        val logger = DataworksLogger.getLogger(Validator::class.toString())
 
         const val MONGO_INSERT_TYPE = "MONGO_INSERT"
         const val MONGO_DELETE_TYPE = "MONGO_DELETE"

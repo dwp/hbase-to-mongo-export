@@ -6,22 +6,18 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.UUIDGenerator
-import app.utils.logging.logDebug
-import app.utils.logging.logError
-import app.utils.logging.logWarn
 import com.google.gson.Gson
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.URLEncoder
@@ -33,29 +29,25 @@ class HttpKeyService(
     private val uuidGenerator: UUIDGenerator) : KeyService {
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
-
-        // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
+        val logger = DataworksLogger.getLogger(HttpKeyService::class.toString())
     }
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttempts = maxAttempts,
-        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+                    multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class)
     override fun batchDataKey(): DataKeyResult {
         val dksUrl = "$dataKeyServiceUrl/datakey"
         val dksCorrelationId = uuidGenerator.randomUUID()
         val dksUrlWithCorrelationId = "$dksUrl?correlationId=$dksCorrelationId"
         try {
-            logDebug(logger, "Starting batchDataKey call to data key service", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId)
+            logger.debug("Starting batchDataKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId)
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet(dksUrlWithCorrelationId)).use { response ->
                     val statusCode = response.statusLine.statusCode
-                    logDebug(logger, "Finished batchDataKey call to data key service", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId, "status_code", "$statusCode")
+                    logger.debug("Finished batchDataKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
@@ -65,7 +57,7 @@ class HttpKeyService(
                         EntityUtils.consume(entity)
                         result
                     } else {
-                        logWarn(logger, "Getting batch data key - data key service returned bad status code", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId, "status_code", "$statusCode")
+                        logger.warn("Getting batch data key - data key service returned bad status code", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
                         throw DataKeyServiceUnavailableException("Getting batch data key - data key service returned bad status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'")
                     }
                 }
@@ -82,8 +74,9 @@ class HttpKeyService(
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttempts = maxAttempts,
-        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+                    multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
@@ -95,12 +88,12 @@ class HttpKeyService(
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
-                    logDebug(logger, "Starting decryptKey call to data key service", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId)
+                    logger.debug("Starting decryptKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId)
                     val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logDebug(logger, "Finished decryptKey call to data key service", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId, "status_code", "$statusCode")
+                        logger.debug("Finished decryptKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity
@@ -111,12 +104,12 @@ class HttpKeyService(
                                 dataKeyResult.plaintextDataKey
                             }
                             400 -> {
-                                logError(logger, "DataKeyDecryptionException from data key service", "encrypted_key", encryptedKey, "key_encryption_key_id", encryptionKeyId, "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId, "status_code", "$statusCode")
+                                logger.error("DataKeyDecryptionException from data key service", "encrypted_key" to encryptedKey, "key_encryption_key_id" to encryptionKeyId, "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
                                 throw DataKeyDecryptionException(
                                     "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'")
                             }
                             else -> {
-                                logError(logger, "DataKeyServiceUnavailableException from data key service", "encrypted_key", encryptedKey, "key_encryption_key_id", encryptionKeyId, "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId, "status_code", "$statusCode")
+                                logger.error("DataKeyServiceUnavailableException from data key service", "encrypted_key" to encryptedKey, "key_encryption_key_id" to encryptionKeyId, "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
                                 val ex = DataKeyServiceUnavailableException(
                                     "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'")
                                 throw ex

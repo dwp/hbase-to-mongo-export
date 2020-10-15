@@ -7,13 +7,10 @@ import app.services.CipherService
 import app.services.ExportStatusService
 import app.services.KeyService
 import app.services.SnapshotSenderMessagingService
-import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
@@ -23,6 +20,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.*
 import java.security.Key
 import java.security.SecureRandom
@@ -97,18 +95,18 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 contentLength = data.size.toLong()
             }
 
-            logInfo(logger, "Putting batch object into bucket",
-                "s3_location", objectKey, "records_in_batch", "$recordsInBatch", "batch_size_bytes", "$batchSizeBytes",
-                "data_size_bytes", "${data.size}", "export_bucket", exportBucket, "max_batch_output_size_bytes", "$maxBatchOutputSizeBytes",
-                "total_snapshot_files_already_written", "$totalBatches", "total_bytes_already_written", "$totalBytes",
-                "total_records_already_written", "$totalRecords")
+            logger.info("Putting batch object into bucket",
+                "s3_location" to objectKey, "records_in_batch" to "$recordsInBatch", "batch_size_bytes" to "$batchSizeBytes",
+                "data_size_bytes" to "${data.size}", "export_bucket" to exportBucket, "max_batch_output_size_bytes" to "$maxBatchOutputSizeBytes",
+                "total_snapshot_files_already_written" to "$totalBatches", "total_bytes_already_written" to "$totalBytes",
+                "total_records_already_written" to "$totalRecords")
 
             inputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
             }
 
-            logInfo(logger, "Put batch object into bucket")
+            logger.info("Put batch object into bucket")
 
             exportStatusService.incrementExportedCount(objectKey)
             snapshotSenderMessagingService.notifySnapshotSender(objectKey)
@@ -117,9 +115,12 @@ class S3StreamingWriter(private val cipherService: CipherService,
             totalBytes += batchSizeBytes
             totalRecords += recordsInBatch
 
-            if (streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)) {
+            try {
+                streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
                 totalManifestFiles++
                 totalManifestRecords += currentOutputStream!!.manifestFile.length()
+            } catch (e: Exception) {
+                logger.error("Failed to write manifest", e, "manifest_file" to "${currentOutputStream!!.manifestFile}")
             }
         }
 
@@ -187,6 +188,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private lateinit var manifestOutputDirectory: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(S3StreamingWriter::class.toString())
+        val logger = DataworksLogger.getLogger(S3StreamingWriter::class.toString())
     }
 }

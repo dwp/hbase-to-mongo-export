@@ -3,11 +3,10 @@ package app.services.impl
 import app.domain.EncryptionResult
 import app.services.CipherService
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.OutputStream
 import java.security.Key
 import java.security.SecureRandom
@@ -65,6 +64,6 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
     private lateinit var targetCipherAlgorithm: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(AESCipherService::class.toString())
+        val logger = DataworksLogger.getLogger(AESCipherService::class.toString())
     }
 }

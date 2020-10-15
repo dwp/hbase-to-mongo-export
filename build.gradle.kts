@@ -20,6 +20,7 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 repositories {
     mavenCentral()
     jcenter()
+    maven(url = "https://jitpack.io")
 }
 
 tasks.bootJar {
@@ -59,6 +60,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("org.apache.commons:commons-text:1.8")
     implementation("com.beust:klaxon:4.0.2")
+    implementation("com.github.dwp:dataworks-common-logging:0.0.5")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
