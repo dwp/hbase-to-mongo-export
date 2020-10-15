@@ -51,6 +51,18 @@ communicate over 2-way https. To generate these:
   | `trust.store.password`        | changeit                   | The trust store password.
   | `identity.store.alias`        | cid                        | The name of the cert in to present to DKS.
   | `snapshot.type`               | full                       | Full or incremental for the type of snapshots being generated.
+  | `dynamodb.retry.delay`        | 1000                       | Initial delay of the first dynamodb retry (ms) |
+  | `dynamodb.retry.maxAttempts`  |    5                       | The number of retries to attempt before giving up |
+  | `dynamodb.retry.multiplier`   |    2                       | The backoff multiplier (the retry delay is this multiple of the previous delay) |
+  | `keyservice.retry.delay`      | 1000                       | Initial delay of the first keyservice retry (ms) |
+  | `keyservice.retry.maxAttempts` |   5                       | The number of retries to attempt before giving up |
+  | `keyservice.retry.multiplier` |    2                       | The backoff multiplier (the retry delay is this multiple of the previous delay) |
+  | `manifest.retry.delay`        | 1000                       | Initial delay of the first manifest write retry (ms) |
+  | `manifest.retry.maxAttempts`  |    5                       | The number of retries to attempt before giving up |
+  | `manifest.retry.multiplier`   |    2                       | The backoff multiplier (the retry delay is this multiple of the previous delay) |
+  | `sqs.retry.delay`             | 1000                       | Initial delay of the first sqs retry (ms) | 
+  | `sqs.retry.maxAttempts`       |    5                       | The number of retries to attempt before giving up |
+  | `sqs.retry.multiplier`        |    2                       | The backoff multiplier (the retry delay is this multiple of the previous delay) |
 
 * The available spring profiles are
 
