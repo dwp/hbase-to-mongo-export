@@ -30,17 +30,13 @@ class HttpKeyService(
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpKeyService::class.toString())
-
-        // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttempts = maxAttempts,
-        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+                    multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class)
     override fun batchDataKey(): DataKeyResult {
         val dksUrl = "$dataKeyServiceUrl/datakey"
@@ -78,8 +74,9 @@ class HttpKeyService(
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttempts = maxAttempts,
-        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+                    multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()

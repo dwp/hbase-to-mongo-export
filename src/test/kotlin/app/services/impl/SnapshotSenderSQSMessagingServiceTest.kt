@@ -27,7 +27,10 @@ import org.springframework.test.util.ReflectionTestUtils
     "snapshot.sender.export.date=2020-06-05",
     "topic.name=db.database.collection",
     "trigger.snapshot.sender=true",
-    "snapshot.type=incremental"
+    "snapshot.type=incremental",
+    "sqs.retry.maxAttempts=10",
+    "sqs.retry.delay=1",
+    "sqs.retry.multiplier=1"
 ])
 class SnapshotSenderSQSMessagingServiceTest {
 
