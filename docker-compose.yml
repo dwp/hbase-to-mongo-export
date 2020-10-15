@@ -238,7 +238,7 @@ services:
       --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
       --spring.main.banner-mode=off
       --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
-      --topic.name=db.penalties-and-deductions.sanction
+      --topic.name=does.not.exist
       --trigger.snapshot.sender=true
       --trust.keystore=certs/truststore.jks
       --trust.store.password=changeit
@@ -249,7 +249,7 @@ services:
       - CORRELATION_ID=integration_test_correlation_id
       - ENVIRONMENT=local-docker
       - SQS_MESSAGE_ID=bbb-s3
-      - TOPIC_NAME=db.penalties-and-deductions.sanction
+      - TOPIC_NAME=does.not.exist
 
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest

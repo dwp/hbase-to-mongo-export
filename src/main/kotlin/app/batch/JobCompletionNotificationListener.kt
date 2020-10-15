@@ -36,7 +36,9 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     }
 
     private fun isATableUnavailableExceptions(allFailureExceptions: MutableList<Throwable>) : Boolean {
+        logInfo(logger, "Checking if table is unavailable exception", "failure_exceptions", allFailureExceptions.size.toString())
         allFailureExceptions.forEach {
+            logInfo(logger, "Checking current failure exception", "failure_exception", it.localizedMessage, "cause", it.cause.toString(), "cause_message", it.message ?: "")
             if (it.cause is TableNotFoundException || it.cause is TableNotEnabledException) {
                 return true
             }

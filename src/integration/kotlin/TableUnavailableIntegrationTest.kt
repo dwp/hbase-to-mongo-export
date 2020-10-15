@@ -2,8 +2,7 @@ import app.configuration.LocalStackConfiguration
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
-import com.amazonaws.services.s3.AmazonS3
-import org.assertj.core.api.Assertions.assertThat
+import io.kotlintest.shouldBe
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,9 +24,11 @@ class TableUnavailableIntegrationTest {
         val correlationIdAttributeValue = AttributeValue().apply {
             s = "integration_test_correlation_id"
         }
+
         val collectionNameAttributeValue = AttributeValue().apply {
-            s = "db.penalties-and-deductions.sanction"
+            s = "does.not.exist"
         }
+
         val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
                 "CollectionName" to collectionNameAttributeValue)
 
@@ -35,17 +36,13 @@ class TableUnavailableIntegrationTest {
             tableName = "UCExportToCrownStatus"
             key = primaryKey
         }
+
         val result = amazonDynamoDb.getItem(getItemRequest)
         val item = result.item
-        val status = item["CollectionStatus"]
+        val status = item["CollectionStatus"]?.s
 
         val expectedCollectionStatus = "Table_Unavailable"
 
-        assertThat(status).isEqualTo(expectedCollectionStatus)
-    }
-
-    companion object {
-        private const val tableName = "UCExportToCrownStatus"
-        private const val partitionKey = "table-does-not-exist"
+        status shouldBe expectedCollectionStatus
     }
 }

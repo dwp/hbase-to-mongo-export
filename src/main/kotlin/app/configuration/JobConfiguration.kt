@@ -7,6 +7,7 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.exceptions.DecryptionFailureException
 import app.exceptions.MissingFieldException
+import com.amazonaws.services.dynamodbv2.model.TableNotFoundException
 import org.apache.hadoop.hbase.client.Result
 import org.springframework.batch.core.configuration.annotation.*
 import org.springframework.batch.core.launch.support.RunIdIncrementer
@@ -55,6 +56,7 @@ class JobConfiguration : DefaultBatchConfigurer() {
                 .retryPolicy(SimpleRetryPolicy().apply {
                     maxAttempts = maxRetries.toInt()
                 })
+                .noSkip(TableNotFoundException::class.java)
                 .skip(MissingFieldException::class.java)
                 .skip(DecryptionFailureException::class.java)
                 .skip(BadDecryptedDataException::class.java)
