@@ -13,8 +13,9 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : SnapshotSenderMessagingService {
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
+                    multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun notifySnapshotSender(prefix: String) {
         if (triggerSnapshotSender.toBoolean()) {
             amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
@@ -71,8 +72,8 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     companion object {
         val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class.toString())
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
+//        const val maxAttempts = 5
+//        const val initialBackoffMillis = 1000L
+//        const val backoffMultiplier = 2.0
     }
 }

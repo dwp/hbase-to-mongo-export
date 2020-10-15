@@ -14,8 +14,9 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : ExportStatusService {
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+                    multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun incrementExportedCount(exportedFile: String) {
         val result = dynamoDB.updateItem(incrementFilesExportedRequest())
         logger.info("Incremented exported count",
@@ -24,13 +25,15 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     }
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+                    multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun setExportedStatus() = setStatus("Exported")
 
     @Retryable(value = [Exception::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+                    multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun setFailedStatus() = setStatus("Export_Failed")
 
 
@@ -74,8 +77,5 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2.0
     }
 }

@@ -55,7 +55,10 @@ import java.io.ByteArrayInputStream
     "snapshot.sender.shutdown.flag=true",
     "snapshot.sender.export.date=2020-06-05",
     "trigger.snapshot.sender=false",
-    "snapshot.type=full"
+    "snapshot.type=full",
+    "keyservice.retry.maxAttempts=5",
+    "keyservice.retry.delay=1",
+    "keyservice.retry.multiplier=1"
 ])
 class HttpKeyServiceTest {
 
