@@ -72,8 +72,5 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     companion object {
         val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class.toString())
-//        const val maxAttempts = 5
-//        const val initialBackoffMillis = 1000L
-//        const val backoffMultiplier = 2.0
     }
 }
