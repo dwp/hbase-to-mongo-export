@@ -7,27 +7,24 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
-import util.doesNotExistAttributeValue
-import util.getItemRequest
-import util.integrationTestCorrelationId
-import util.primaryKeyMap
+import util.*
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [LocalStackConfiguration::class])
 @ActiveProfiles("localstackConfiguration")
-class TableUnavailableIntegrationTest {
+class BlockedTopicIntegrationTest {
 
     @Autowired
     private lateinit var amazonDynamoDb: AmazonDynamoDB
 
     @Test
-    fun dynamoDBShouldHaveTableUnavailableRecord() {
+    fun dynamoDBShouldHaveBlockedTopicRecord() {
 
         val tableName = "UCExportToCrownStatus"
 
         val correlationIdAttributeValue = integrationTestCorrelationId()
 
-        val collectionNameAttributeValue = doesNotExistAttributeValue()
+        val collectionNameAttributeValue = blockedTopicAttributeValue()
 
         val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
 
@@ -37,7 +34,7 @@ class TableUnavailableIntegrationTest {
         val item = result.item
         val status = item["CollectionStatus"]?.s
 
-        val expectedCollectionStatus = "Table_Unavailable"
+        val expectedCollectionStatus = "Blocked_Topic"
 
         status shouldBe expectedCollectionStatus
     }
