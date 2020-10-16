@@ -130,7 +130,7 @@ Check the logs:
     make logs-s3-exporter
 ```
 Verify the data in the localstack dummy s3 container:
-* Browse to http:localhost:4572
+* Browse to http:localhost:4566
 
 ### Run the integration tests against local containerized setup.
 
@@ -183,7 +183,7 @@ Run the application from class file `HBaseToMongoExport` and add arguments to th
 --aws.region=eu-west-1
 --s3.bucket=9876543210
 --s3.folder=test/businessdata/mongo/ucdata
---s3.service.endpoint=http://localhost:4572
+--s3.service.endpoint=http://localhost:4566
 --s3.access.key=DummyKey
 --s3.secret.key=DummySecret
 ```

@@ -88,15 +88,15 @@ class ContextConfiguration {
     @Profile("realHbaseDataSource")
     fun localConnection(): Connection {
 
-        if (dataReadyFlagLocation.isNotBlank()) {
-            var attempts = 0
-            val path = Paths.get(dataReadyFlagLocation)
-            val maxAttempts = 100
-            while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < maxAttempts) {
-                logger.info("Waiting for data ready flag to exist", "file_path" to "$path", "attempt_no" to "$attempts", "max_attempts" to "$maxAttempts")
-                Thread.sleep(1000)
-            }
-        }
+//        if (dataReadyFlagLocation.isNotBlank()) {
+//            var attempts = 0
+//            val path = Paths.get(dataReadyFlagLocation)
+//            val maxAttempts = 100
+//            while (!Files.isDirectory(Paths.get(dataReadyFlagLocation)) && ++attempts < maxAttempts) {
+//                logger.info("Waiting for data ready flag to exist", "file_path" to "$path", "attempt_no" to "$attempts", "max_attempts" to "$maxAttempts")
+//                Thread.sleep(1000)
+//            }
+//        }
 
         val configuration = HBaseConfiguration.create().apply {
             set(HConstants.ZOOKEEPER_QUORUM, hbaseZookeeperQuorum)

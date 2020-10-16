@@ -11,7 +11,7 @@ data_key_service_url=http://dks-standalone-http:8080
 data_key_service_url_ssl=https://dks-standalone-https:8443
 local_hbase_url=local-hbase
 local_dks_url=https://local-dks-https:8443
-local_s3_service_endpoint=http://localhost:4572
+local_s3_service_endpoint=http://localhost:4566
 follow_flag=--follow
 
 default: help
@@ -111,13 +111,30 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate; \
-		docker-compose up hbase-to-mongo-export-table-unavailable; \
-		docker-compose up hbase-to-mongo-export-blocked-topic; \
-		docker-compose up hbase-to-mongo-export-file; \
-		docker-compose up hbase-to-mongo-export-directory; \
-		docker-compose up hbase-to-mongo-export-s3; \
 	}
 
+#              docker-compose up hbase-to-mongo-export-table-unavailable
+#              docker-compose up hbase-to-mongo-export-blocked-topic
+#              docker-compose up hbase-to-mongo-export-file
+#              docker-compose up hbase-to-mongo-export-s3
+#              docker-compose run hbase-to-mongo-export-itest
+
+export-table-unavailable:
+		docker-compose up hbase-to-mongo-export-table-unavailable
+
+export-blocked-topic:
+		docker-compose up hbase-to-mongo-export-blocked-topic
+
+export-to-file:
+		docker-compose up hbase-to-mongo-export-file
+
+export-to-directory:
+		docker-compose up hbase-to-mongo-export-directory
+
+export-to-s3:
+		docker-compose up hbase-to-mongo-export-s3
+
+exports: export-table-unavailable export-blocked-topic export-to-file export-to-directory export-to-s3
 
 .PHONY: restart
 restart: ## Restart hbase and other services

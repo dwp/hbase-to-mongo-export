@@ -1,5 +1,6 @@
 import app.configuration.LocalStackConfiguration
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import io.kotlintest.shouldBe
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,7 +23,7 @@ class BlockedTopicIntegrationTest {
 
         val tableName = "UCExportToCrownStatus"
 
-        val correlationIdAttributeValue = integrationTestCorrelationId()
+        val correlationIdAttributeValue = correlationId()
 
         val collectionNameAttributeValue = blockedTopicAttributeValue()
 
@@ -38,4 +39,9 @@ class BlockedTopicIntegrationTest {
 
         status shouldBe expectedCollectionStatus
     }
+
+    private fun correlationId() = AttributeValue().apply {
+        s = "blocked_topic"
+    }
+
 }
