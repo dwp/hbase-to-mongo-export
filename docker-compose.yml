@@ -199,7 +199,7 @@ services:
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
       --s3.secret.key=DummySecret
-      --s3.service.endpoint=http://s3-dummy:4572
+      --s3.service.endpoint=http://s3-dummy:4566
       --message.delay.seconds=0
       --snapshot.sender.export.date=2020-07-06
       --snapshot.sender.reprocess.files=true
@@ -266,7 +266,7 @@ services:
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
       --s3.secret.key=DummySecret
-      --s3.service.endpoint=http://s3-dummy:4572
+      --s3.service.endpoint=http://s3-dummy:4566
       --message.delay.seconds=0
       --snapshot.sender.export.date=2020-07-06
       --snapshot.sender.reprocess.files=true
@@ -282,7 +282,7 @@ services:
     environment:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
-      - CORRELATION_ID=integration_test_correlation_id
+      - CORRELATION_ID=table_unavailable
       - ENVIRONMENT=local-docker
       - SQS_MESSAGE_ID=bbb-s3
       - TOPIC_NAME=does.not.exist
@@ -323,7 +323,7 @@ services:
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.prefix.folder=${S3_PREFIX_FOLDER}
       --s3.secret.key=DummySecret
-      --s3.service.endpoint=http://s3-dummy:4572
+      --s3.service.endpoint=http://s3-dummy:4566
       --message.delay.seconds=0
       --snapshot.sender.export.date=2020-07-06
       --snapshot.sender.reprocess.files=true
@@ -352,7 +352,7 @@ services:
     environment:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
-      - CORRELATION_ID=integration_test_correlation_id
+      - CORRELATION_ID=blocked_topic
       - ENVIRONMENT=local-docker
       - SQS_MESSAGE_ID=bbb-s3
       - TOPIC_NAME=db.blocked.topic
@@ -386,7 +386,7 @@ services:
     container_name: dks-standalone-http
     command: >-
       --spring.main.banner-mode=off
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --server.environment_name=local
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
@@ -403,7 +403,7 @@ services:
     container_name: dks-standalone-https
     command: >-
       --spring.main.banner-mode=off
-      --s3.service.endpoint=http://aws:4572
+      --s3.service.endpoint=http://aws:4566
       --server.environment_name=local
     volumes:
       - shared-volume:/opt/hbase-to-mongo-export/data
