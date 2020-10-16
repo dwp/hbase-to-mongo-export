@@ -232,6 +232,61 @@ services:
      - SQS_MESSAGE_ID=bbb-s3
      - TOPIC_NAME=db.penalties-and-deductions.sanction
 
+  hbase-to-mongo-export-table-unavailable:
+    image: hbase-to-mongo-export
+    build:
+      context: .
+      args:
+        - HBASE_TO_MONGO_EXPORT_VERSION
+    container_name: hbase-to-mongo-export-table-unavailable
+    depends_on:
+      - hbase
+      - dks-standalone-https
+      - aws-init
+    volumes:
+      - shared-volume:/opt/hbase-to-mongo-export/data
+    command: >-
+      --aws.region=${AWS_DEFAULT_REGION}
+      --column.family=topic
+      --compress.output=true
+      --data.key.service.url=https://dks-standalone-https:8443
+      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
+      --data.table.name=table-does-not-exist
+      --encrypt.output=true
+      --hbase.zookeeper.quorum=hbase
+      --identity.key.password=changeit
+      --identity.keystore=certs/keystore.jks
+      --identity.store.alias=cid
+      --identity.store.password=changeit
+      --logging.level.root=INFO
+      --output.batch.size.max.bytes=2048
+      --s3.access.key=DummyKey
+      --s3.bucket=${S3_BUCKET}
+      --s3.manifest.bucket=manifestbucket
+      --s3.manifest.prefix.folder=test-manifest-exporter
+      --s3.prefix.folder=${S3_PREFIX_FOLDER}
+      --s3.secret.key=DummySecret
+      --s3.service.endpoint=http://s3-dummy:4572
+      --message.delay.seconds=0
+      --snapshot.sender.export.date=2020-07-06
+      --snapshot.sender.reprocess.files=true
+      --snapshot.sender.shutdown.flag=false
+      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
+      --spring.main.banner-mode=off
+      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
+      --topic.name=does.not.exist
+      --trigger.snapshot.sender=true
+      --trust.keystore=certs/truststore.jks
+      --trust.store.password=changeit
+      --snapshot.type=full
+    environment:
+      - APPLICATION=hbase_to_mongo_export
+      - COMPONENT=jar_file
+      - CORRELATION_ID=integration_test_correlation_id
+      - ENVIRONMENT=local-docker
+      - SQS_MESSAGE_ID=bbb-s3
+      - TOPIC_NAME=does.not.exist
+
   hbase-to-mongo-export-itest:
     image: hbase-to-mongo-export-itest
     build:

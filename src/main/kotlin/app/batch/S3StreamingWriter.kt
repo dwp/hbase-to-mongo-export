@@ -58,7 +58,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
         return stepExecution.exitStatus
     }
 
-
     init {
         Security.addProvider(BouncyCastleProvider())
     }

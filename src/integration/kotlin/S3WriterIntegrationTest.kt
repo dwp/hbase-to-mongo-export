@@ -55,7 +55,7 @@ class S3WriterIntegrationTest {
         val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
         val list = summaries.map { it ->
             val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
-            BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText().trim() }
+            BufferedReader(InputStreamReader(objectContent) as Reader).use { it.readText().trim() }
         }
         val joinedContent = list.joinToString("\n")
         assertEquals(expected, joinedContent)

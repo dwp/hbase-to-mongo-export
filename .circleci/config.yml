@@ -95,7 +95,7 @@
               rm settings.gradle.kts gradle.properties ; \
               cd -
               ./gradlew build
-              docker-compose build hbase hbase-populate hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
+              docker-compose build hbase hbase-populate hbase-to-mongo-export-table-unavailable hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
               docker-compose up -d hbase dks-standalone-http dks-standalone-https aws
               sleep 30
               docker exec -i hbase hbase shell \<<< "create_namespace 'claimant_advances'"
@@ -103,6 +103,7 @@
               docker exec -i hbase hbase shell \<<< "create_namespace 'quartz'"
               docker-compose up hbase-populate
               docker-compose up aws-init
+              docker-compose up hbase-to-mongo-export-table-unavailable
               docker-compose up hbase-to-mongo-export-file
               docker-compose up hbase-to-mongo-export-s3
               docker-compose run hbase-to-mongo-export-itest

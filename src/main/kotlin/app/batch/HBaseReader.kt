@@ -5,6 +5,8 @@ import app.exceptions.ScanRetriesExhaustedException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import org.apache.hadoop.hbase.TableName
+import org.apache.hadoop.hbase.TableNotEnabledException
+import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.*
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
@@ -20,6 +22,7 @@ import java.time.ZonedDateTime
 @StepScope
 class HBaseReader(private val connection: Connection, private val textUtils: TextUtils, private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
 
+    @Throws(TableNotFoundException::class, TableNotEnabledException::class)
     override fun read(): Result? =
         try {
             val result = scanner().next()
@@ -30,7 +33,19 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             result
         }
         catch (e: BlockedTopicException) {
-            logger.warn("Provided topic is blocked so cannot be processed",
+            logger.error("Provided topic is blocked so cannot be processed",
+                    "exception" to (e.message ?: ""),
+                    "topic_name" to topicName)
+            throw e
+        }
+        catch (e: TableNotFoundException) {
+            logger.error("Table does not exist for the provided topic",
+                    "exception" to (e.message ?: ""),
+                    "topic_name" to topicName)
+            throw e
+        }
+        catch (e: TableNotEnabledException) {
+            logger.error("Table is not enabled for the provided topic",
                     "exception" to (e.message ?: ""),
                     "topic_name" to topicName)
             throw e

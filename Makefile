@@ -83,7 +83,7 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		docker-compose build hbase hbase-populate aws aws-init; \
 		docker-compose build --no-cache dks-standalone-http dks-standalone-https; \
-		docker-compose build --no-cache hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build --no-cache hbase-to-mongo-export-table-unavailable hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
@@ -111,6 +111,7 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate; \
+		docker-compose up hbase-to-mongo-export-table-unavailable; \
 		docker-compose up hbase-to-mongo-export-file; \
 		docker-compose up hbase-to-mongo-export-directory; \
 		docker-compose up hbase-to-mongo-export-s3; \
@@ -203,6 +204,10 @@ logs-directory-exporter: ## Show the logs of the directory exporter. Update foll
 .PHONY: logs-s3-exporter
 logs-s3-exporter: ## Show the logs of the s3 exporter. Update follow_flag as required.
 	docker logs $(follow_flag) hbase-to-mongo-export-s3
+
+.PHONY: logs-table-unavailable
+logs-table-unavailable: ## Show the logs of the table unavailable container. Update follow_flag as required.
+	docker logs $(follow_flag) hbase-to-mongo-export-table-unavailable
 
 .PHONY: reset-all
 reset-all: destroy integration-all logs-directory-exporter ## Destroy all, rebuild and up all, and check the export logs
