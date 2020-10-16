@@ -42,6 +42,12 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
                     multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun setTableUnavailableStatus() = setStatus("Table_Unavailable")
 
+    @Retryable(value = [Exception::class],
+            maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+            backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+                    multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+    override fun setBlockedTopicStatus() = setStatus("Blocked_Topic")
+
     private fun setStatus(status: String) {
         val result = dynamoDB.updateItem(setCollectionStatusRequest(status))
         logger.info("Collection status set",

@@ -1,5 +1,6 @@
 package app.batch
 
+import app.exceptions.BlockedTopicException
 import app.services.ExportStatusService
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
@@ -23,6 +24,10 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                 logger.error("Setting table unavailable status",
                         "job_exit_status" to "${jobExecution.exitStatus}")
                 exportStatusService.setTableUnavailableStatus()
+            } else if (isABlockedTopicException(jobExecution.allFailureExceptions)) {
+                logger.error("Setting blocked topic status",
+                        "job_exit_status" to "${jobExecution.exitStatus}")
+                exportStatusService.setBlockedTopicStatus()
             } else {
                 logger.error("Setting export failed status",
                         "job_exit_status" to "${jobExecution.exitStatus}")
@@ -40,6 +45,21 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                     "cause" to it.cause.toString(),
                     "cause_message" to (it.message ?: ""))
             if (it.cause is TableNotFoundException || it.cause is TableNotEnabledException) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun isABlockedTopicException(allFailureExceptions: MutableList<Throwable>) : Boolean {
+        logger.info("Checking if blocked topic exception",
+                "failure_exceptions" to allFailureExceptions.size.toString())
+        allFailureExceptions.forEach {
+            logger.info("Checking current failure exception",
+                    "failure_exception" to it.localizedMessage,
+                    "cause" to it.cause.toString(),
+                    "cause_message" to (it.message ?: ""))
+            if (it.cause is BlockedTopicException) {
                 return true
             }
         }

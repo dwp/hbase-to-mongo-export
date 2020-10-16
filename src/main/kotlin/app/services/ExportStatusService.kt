@@ -5,4 +5,5 @@ interface ExportStatusService {
     fun setExportedStatus()
     fun setFailedStatus()
     fun setTableUnavailableStatus()
+    fun setBlockedTopicStatus()
 }
