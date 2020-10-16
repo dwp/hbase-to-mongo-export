@@ -18,7 +18,7 @@ fun doesNotExistAttributeValue() = AttributeValue().apply {
 fun primaryKeyMap(correlationIdAttributeValue: AttributeValue, collectionNameAttributeValue: AttributeValue) = mapOf("CorrelationId" to correlationIdAttributeValue,
         "CollectionName" to collectionNameAttributeValue)
 
-fun getItemRequest(primaryKey: Map<String, AttributeValue>) = GetItemRequest().apply {
-    tableName = "UCExportToCrownStatus"
+fun getItemRequest(table: String, primaryKey: Map<String, AttributeValue>) = GetItemRequest().apply {
+    tableName = table
     key = primaryKey
 }

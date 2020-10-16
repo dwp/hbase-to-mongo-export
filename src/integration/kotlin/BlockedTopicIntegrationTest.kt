@@ -20,13 +20,15 @@ class BlockedTopicIntegrationTest {
     @Test
     fun dynamoDBShouldHaveBlockedTopicRecord() {
 
+        val tableName = "UCExportToCrownStatus"
+
         val correlationIdAttributeValue = integrationTestCorrelationId()
 
         val collectionNameAttributeValue = blockedTopicAttributeValue()
 
         val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
 
-        val getItemRequest = getItemRequest(primaryKey)
+        val getItemRequest = getItemRequest(tableName, primaryKey)
 
         val result = amazonDynamoDb.getItem(getItemRequest)
         val item = result.item

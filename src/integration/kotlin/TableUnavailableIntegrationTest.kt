@@ -23,13 +23,15 @@ class TableUnavailableIntegrationTest {
     @Test
     fun dynamoDBShouldHaveTableUnavailableRecord() {
 
+        val tableName = "UCExportToCrownStatus"
+
         val correlationIdAttributeValue = integrationTestCorrelationId()
 
         val collectionNameAttributeValue = doesNotExistAttributeValue()
 
         val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
 
-        val getItemRequest = getItemRequest(primaryKey)
+        val getItemRequest = getItemRequest(tableName, primaryKey)
 
         val result = amazonDynamoDb.getItem(getItemRequest)
         val item = result.item
