@@ -1,7 +1,5 @@
 import app.configuration.LocalStackConfiguration
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import io.kotlintest.shouldBe
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -9,6 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
+import util.doesNotExistAttributeValue
+import util.getItemRequest
+import util.integrationTestCorrelationId
+import util.primaryKeyMap
 
 @RunWith(SpringRunner::class)
 @ContextConfiguration(classes = [LocalStackConfiguration::class])
@@ -21,21 +23,13 @@ class TableUnavailableIntegrationTest {
     @Test
     fun dynamoDBShouldHaveTableUnavailableRecord() {
 
-        val correlationIdAttributeValue = AttributeValue().apply {
-            s = "integration_test_correlation_id"
-        }
+        val correlationIdAttributeValue = integrationTestCorrelationId()
 
-        val collectionNameAttributeValue = AttributeValue().apply {
-            s = "does.not.exist"
-        }
+        val collectionNameAttributeValue = doesNotExistAttributeValue()
 
-        val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
-                "CollectionName" to collectionNameAttributeValue)
+        val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
 
-        val getItemRequest = GetItemRequest().apply {
-            tableName = "UCExportToCrownStatus"
-            key = primaryKey
-        }
+        val getItemRequest = getItemRequest(primaryKey)
 
         val result = amazonDynamoDb.getItem(getItemRequest)
         val item = result.item
