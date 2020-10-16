@@ -43,5 +43,4 @@ class BlockedTopicIntegrationTest {
     private fun correlationId() = AttributeValue().apply {
         s = "blocked_topic"
     }
-
 }

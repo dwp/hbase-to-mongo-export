@@ -43,7 +43,6 @@ class TableUnavailableIntegrationTest {
         status shouldBe expectedCollectionStatus
     }
 
-
     private fun correlationId() = AttributeValue().apply {
         s = "table_unavailable"
     }

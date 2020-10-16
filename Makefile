@@ -111,6 +111,14 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate; \
+<<<<<<< HEAD
+=======
+		docker-compose up hbase-to-mongo-export-table-unavailable; \
+		docker-compose up hbase-to-mongo-export-blocked-topic; \
+		docker-compose up hbase-to-mongo-export-file; \
+		docker-compose up hbase-to-mongo-export-directory; \
+		docker-compose up hbase-to-mongo-export-s3; \
+>>>>>>> origin/master
 	}
 
 #              docker-compose up hbase-to-mongo-export-table-unavailable

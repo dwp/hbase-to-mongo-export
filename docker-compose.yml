@@ -352,9 +352,9 @@ services:
     environment:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
-      - CORRELATION_ID=blocked_topic
+      - CORRELATION_ID=integration_test_correlation_id
       - ENVIRONMENT=local-docker
-      - SQS_MESSAGE_ID=blocked-topic
+      - SQS_MESSAGE_ID=bbb-s3
       - TOPIC_NAME=db.blocked.topic
 
   hbase-to-mongo-export-itest:
