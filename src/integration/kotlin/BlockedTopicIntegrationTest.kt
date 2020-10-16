@@ -2,6 +2,7 @@ import app.configuration.LocalStackConfiguration
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import io.kotlintest.shouldBe
+import io.kotlintest.shouldNotBe
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,6 +34,7 @@ class BlockedTopicIntegrationTest {
 
         val result = amazonDynamoDb.getItem(getItemRequest)
         val item = result.item
+        item shouldNotBe null
         val status = item["CollectionStatus"]?.s
 
         val expectedCollectionStatus = "Blocked_Topic"

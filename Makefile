@@ -88,8 +88,10 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 
 up: build-all up-all
 
-.PHONY: up-all
-up-all: ## Bring up hbase, population, and sample exporter services
+up-all: services exports
+
+.PHONY: services
+services: ## Bring up hbase, population, and sample exporter services
 	@{ \
 		export HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version); \
 		export AWS_DEFAULT_REGION=$(aws_default_region); \
@@ -111,21 +113,7 @@ up-all: ## Bring up hbase, population, and sample exporter services
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker-compose up hbase-populate; \
-<<<<<<< HEAD
-=======
-		docker-compose up hbase-to-mongo-export-table-unavailable; \
-		docker-compose up hbase-to-mongo-export-blocked-topic; \
-		docker-compose up hbase-to-mongo-export-file; \
-		docker-compose up hbase-to-mongo-export-directory; \
-		docker-compose up hbase-to-mongo-export-s3; \
->>>>>>> origin/master
 	}
-
-#              docker-compose up hbase-to-mongo-export-table-unavailable
-#              docker-compose up hbase-to-mongo-export-blocked-topic
-#              docker-compose up hbase-to-mongo-export-file
-#              docker-compose up hbase-to-mongo-export-s3
-#              docker-compose run hbase-to-mongo-export-itest
 
 export-table-unavailable:
 		docker-compose up hbase-to-mongo-export-table-unavailable

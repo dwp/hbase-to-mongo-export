@@ -282,7 +282,7 @@ services:
     environment:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
-      - CORRELATION_ID=integration_test_table_unavailable_correlation_id
+      - CORRELATION_ID=table_unavailable
       - ENVIRONMENT=local-docker
       - SQS_MESSAGE_ID=bbb-s3
       - TOPIC_NAME=does.not.exist
@@ -352,7 +352,7 @@ services:
     environment:
       - APPLICATION=hbase_to_mongo_export
       - COMPONENT=jar_file
-      - CORRELATION_ID=integration_test_blocked_correlation_id
+      - CORRELATION_ID=blocked_topic
       - ENVIRONMENT=local-docker
       - SQS_MESSAGE_ID=bbb-s3
       - TOPIC_NAME=db.blocked.topic
