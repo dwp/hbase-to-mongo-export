@@ -112,6 +112,7 @@ services: ## Bring up hbase, population, and sample exporter services
 		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
+		docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
 		docker-compose up hbase-populate; \
 	}
 

@@ -67,7 +67,7 @@ get_status_item() {
 }
 
 status_item_id() {
-  echo '{"CorrelationId":{"S":"integration_test_correlation_id"},"CollectionName":{"S":"db.penalties-and-deductions.sanction"}}'
+  echo '{"CorrelationId":{"S":"integration_test_correlation_id"},"CollectionName":{"S":"db.database.collection"}}'
 }
 
 ucc_ecc_table_name() {
