@@ -2,12 +2,11 @@ package app.utils
 
 import app.batch.HBaseReaderTest
 import app.exceptions.BlockedTopicException
-import arrow.core.success
-import io.kotlintest.matchers.beEmpty
-import io.kotlintest.matchers.types.beNull
-import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotThrow
-import io.kotlintest.shouldThrow
+import io.kotest.assertions.throwables.shouldNotThrow
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.test.TestResult.Companion.success
+import io.kotest.fp.success
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.springframework.test.util.ReflectionTestUtils
 

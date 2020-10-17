@@ -21,9 +21,8 @@ def main():
     encryption_key = content['plaintextDataKey']
     encrypted_key = content['ciphertextDataKey']
     master_key_id = content['dataKeyEncryptionKeyId']
-    tables = [x.decode('ascii') for x in connection.tables()]
-
     table_name = "database:collection"
+    tables = [x.decode('ascii') for x in connection.tables()]
 
     if table_name not in tables:
         connection.create_table(table_name, {'cf': dict(max_versions=1000000)})
@@ -31,6 +30,7 @@ def main():
 
     table = connection.table(table_name)
     batch = table.batch()
+    print("Creating batch.")
     for i in range(int(args.records)):
         wrapper = kafka_message(i)
         record = decrypted_db_object(i)
@@ -45,7 +45,11 @@ def main():
         hbase_id = checksum + message_id.encode("utf-8")
         obj = {'cf:record': json.dumps(wrapper)}
         batch.put(hbase_id, obj)
+    print("Sending batch.")
     batch.send()
+    connection.close()
+    print("Done.")
+
 
 def encrypt(key, plaintext):
     initialisation_vector = Random.new().read(AES.block_size)
@@ -86,34 +90,8 @@ def kafka_message(i: int):
 
 def decrypted_db_object(i: int):
     return {
-        "_id": {
-            "record_id": f"{i:05d}"
-        },
-        "type": "addressDeclaration",
-        "contractId": "RANDOM_GUID",
-        "addressNumber": {
-            "type": "AddressLine",
-            "cryptoId": "RANDOM_GUID"
-        },
-        "addressLine2": None,
-        "townCity": {
-            "type": "AddressLine",
-            "cryptoId": "RANDOM_GUID"
-        },
-        "postcode": "SM5 2LE",
-        "processId": "RANDOM_GUID",
-        "effectiveDate": {
-            "type": "SPECIFIC_EFFECTIVE_DATE",
-            "date": 20150320,
-            "knownDate": 20150320
-        },
-        "paymentEffectiveDate": {
-            "type": "SPECIFIC_EFFECTIVE_DATE",
-            "date": 20150320,
-            "knownDate": 20150320
-        },
+        "_id": {"record_id": f"{i:05d}"} if i % 2 == 0 else f"{i:05d}",
         "createdDateTime": "2015-03-20T12:23:25.183Z",
-        "_version": 2,
         "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
     }
 

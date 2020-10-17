@@ -83,7 +83,7 @@ build-images: build-jar build-base-images ## Build the hbase, population, and ex
 		export DATA_KEY_SERVICE_URL_SSL=$(data_key_service_url_ssl); \
 		docker-compose build hbase hbase-populate aws aws-init; \
 		docker-compose build --no-cache dks-standalone-http dks-standalone-https; \
-		docker-compose build --no-cache hbase-to-mongo-export-table-unavailable hbase-to-mongo-export-blocked-topic hbase-to-mongo-export-file hbase-to-mongo-export-directory hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
+		docker-compose build --no-cache hbase-to-mongo-export-table-unavailable hbase-to-mongo-export-blocked-topic hbase-to-mongo-export-s3 hbase-to-mongo-export-itest; \
 	}
 
 up: build-all up-all
@@ -109,11 +109,8 @@ services: ## Bring up hbase, population, and sample exporter services
 		done; \
 		docker-compose up aws-init; \
 		docker-compose up -d dks-standalone-http dks-standalone-https; \
-		docker exec -i hbase hbase shell <<< "create_namespace 'claimant_advances'"; \
-		docker exec -i hbase hbase shell <<< "create_namespace 'penalties_and_deductions'"; \
-		docker exec -i hbase hbase shell <<< "create_namespace 'quartz'"; \
 		docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
-		docker-compose up hbase-populate; \
+#		docker-compose up hbase-populate; \
 	}
 
 export-table-unavailable:
@@ -122,16 +119,10 @@ export-table-unavailable:
 export-blocked-topic:
 		docker-compose up hbase-to-mongo-export-blocked-topic
 
-export-to-file:
-		docker-compose up hbase-to-mongo-export-file
-
-export-to-directory:
-		docker-compose up hbase-to-mongo-export-directory
-
 export-to-s3:
 		docker-compose up hbase-to-mongo-export-s3
 
-exports: export-table-unavailable export-blocked-topic export-to-file export-to-directory export-to-s3
+exports: export-table-unavailable export-blocked-topic export-to-s3
 
 .PHONY: restart
 restart: ## Restart hbase and other services
