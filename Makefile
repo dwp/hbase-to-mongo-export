@@ -31,21 +31,6 @@ build-jar:
 	gradle build
 	cp build/libs/*.jar images/htme/hbase-to-mongo-export.jar
 
-#build-base-java:
-#	@{ \
-#		cd images/java; \
-#		docker build --tag dwp-centos-with-java-htme:latest . ; \
-#	}
-#
-#build-base-python:
-#	@{ \
-#		pushd images/python; \
-#		docker build --tag dwp-python-preinstall-htme:latest . ; \
-#	}
-
-#build-base-images: build-base-java build-base-python
-
-#build-images: build-jar build-base-images certificates
 build-images: build-jar certificates
 	docker-compose build
 
