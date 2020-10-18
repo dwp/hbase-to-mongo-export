@@ -1,6 +1,5 @@
 SHELL:=bash
 S3_READY_REGEX=^Ready\.$
-hbase_to_mongo_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
 
 default: help
 
@@ -25,9 +24,6 @@ git-hooks: ## Set up hooks in .git/hooks
 		done \
 	}
 
-echo-version: ## Echo the current version
-	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
-
 certificates:
 	./generate-certificates.sh
 
@@ -35,39 +31,31 @@ build-jar:
 	gradle build
 	cp build/libs/*.jar images/htme/hbase-to-mongo-export.jar
 
+#build-base-java:
+#	@{ \
+#		cd images/java; \
+#		docker build --tag dwp-centos-with-java-htme:latest . ; \
+#	}
+#
+#build-base-python:
+#	@{ \
+#		pushd images/python; \
+#		docker build --tag dwp-python-preinstall-htme:latest . ; \
+#	}
+
+#build-base-images: build-base-java build-base-python
+
+#build-images: build-jar build-base-images certificates
+build-images: build-jar certificates
+	docker-compose build
+
 build-all: build-jar build-images ## Build the jar file and then all docker images
-
-build-base-java:
-	@{ \
-		pushd resources; \
-		docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java . ; \
-	}
-
-build-base-python:
-	@{ \
-		pushd resources; \
-		docker build --tag dwp-python-preinstall-htme:latest --file Dockerfile_python_preinstall . ; \
-	}
-
-build-base-kotlin:
-	@{ \
-		pushd resources; \
-		cp ../settings.gradle.kts ../gradle.properties . ; \
-		docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_java_gradle_base . ; \
-		rm settings.gradle.kts gradle.properties ; \
-		popd; \
-	}
-
-build-base-images: build-base-java build-base-python build-base-java
 
 build-hbase-init:
 	docker-compose build --no-cache hbase-populate
 
 build-aws-init:
 	docker-compose build aws
-
-build-images: build-jar build-base-images certificates
-	docker-compose build
 
 service-hbase:
 	docker-compose up -d hbase
@@ -79,6 +67,8 @@ service-hbase:
 			done; \
 			echo HBase ready.; \
 	}
+	docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
+	docker-compose up hbase-init
 
 service-aws:
 	docker-compose up -d aws
@@ -88,6 +78,7 @@ service-aws:
 			sleep 2; \
 		done; \
 	}
+	docker-compose up aws-init
 
 service-dks-insecure:
 	docker-compose up -d dks-standalone-http
@@ -97,14 +88,7 @@ service-dks-secure:
 
 services-dks: service-dks-insecure service-dks-secure
 
-init-aws: service-aws
-	docker-compose up aws-init
-
-init-hbase: service-hbase service-dks-insecure
-	docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
-	docker-compose up hbase-init
-
-services: services-dks init-hbase init-aws
+services: services-dks service-hbase service-aws
 
 export-table-unavailable:
 	docker-compose up table-unavailable
@@ -119,3 +103,5 @@ exports: services export-table-unavailable export-blocked-topic export-s3
 
 integration-tests: exports
 	docker-compose up integration-tests
+
+all: build-images integration-tests

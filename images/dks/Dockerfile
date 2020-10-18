@@ -1,7 +1,9 @@
-FROM dwp-centos-with-java-htme:latest
+FROM openjdk:8-jre
 
 EXPOSE 8080
 EXPOSE 8443
+
+RUN apt-get update && apt-get install -y jq
 
 RUN mkdir -p /opt/data-key-service/data
 RUN mkdir -p /opt/data-key-service/logs

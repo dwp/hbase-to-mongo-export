@@ -1,4 +1,4 @@
-FROM dwp-centos-with-java-htme:latest
+FROM openjdk:8-jre
 
 RUN mkdir -p certs config
 COPY keystore.jks ./

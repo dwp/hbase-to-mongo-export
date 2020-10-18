@@ -14,8 +14,8 @@ main() {
 
     mv -v dks-truststore.jks images/dks
     mv -v dks-keystore.jks images/dks
-    mv -v truststore.jks images/htme
-    mv -v keystore.jks images/htme
+    cp -v truststore.jks images/htme
+    cp -v keystore.jks images/htme
 }
 
 make_keystore() {

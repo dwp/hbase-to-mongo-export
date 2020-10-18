@@ -1,183 +1,148 @@
-  # Java Gradle CircleCI 2.0 configuration file
-  #
-  # Check https://circleci.com/docs/2.0/language-java/ for more details
-  #
-  version: 2.1
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2.1
 
-  orbs:
-    snyk: snyk/snyk@0.0.8
+#orbs:
+#  snyk: snyk/snyk@0.0.8
 
-  jobs:
-    build:
-      docker:
-        # specify the version you desire here
-        - image: circleci/openjdk:8-jdk
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:8-jdk
 
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+    # Specify service dependencies here if necessary
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    # - image: circleci/postgres:9.4
 
-      working_directory: ~/repo
+    working_directory: ~/repo
 
-      environment:
-        # Customize the JVM maximum heap limit
-        JVM_OPTS: -Xmx3200m
-        TERM: dumb
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
 
-      steps:
-        - checkout
+    steps:
+      - checkout
 
-        # Download and cache dependencies
-        - restore_cache:
-            keys:
-              - v1-dependencies-{{ checksum "build.gradle.kts" }}
-              # fallback to using the latest cache if no exact match is found
-              - v1-dependencies-
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle.kts" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
-        - run:
-            name: run gradle
-            command: |
-              LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-              [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-              VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-              sed -i s/version=.*/version=$VERSION/ gradle.properties
-              gradle build
+      - run:
+          name: run gradle
+          command: |
+            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+            sed -i s/version=.*/version=$VERSION/ gradle.properties
+            gradle build
 
-        - save_cache:
-            paths:
-              - ~/.gradle
-            key: v1-dependencies-{{ checksum "build.gradle.kts" }}
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle.kts" }}
 
-        - run:
-            name: mkdir for artifact
-            command: |
-              mkdir artifacts
-              cp build/libs/hbase-to-mongo-export-*.jar ./artifacts/
+      - run:
+          name: mkdir for artifact
+          command: |
+            mkdir artifacts
+            cp build/libs/hbase-to-mongo-export-*.jar ./artifacts/
 
-        - persist_to_workspace:
-            root: artifacts
-            paths:
-              - hbase-to-mongo-export-*.jar
+      - persist_to_workspace:
+          root: artifacts
+          paths:
+            - hbase-to-mongo-export-*.jar
 
-    integration-test:
-      docker:
-        - image: circleci/python:3.7.3
-      steps:
-        - checkout
-        - setup_remote_docker:
-            docker_layer_caching: false
+  integration-test:
+    docker:
+      - image: circleci/python:3.7.3
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
 
-        - run:
-            name: "Run the integration test"
-            command: |
-              sudo pip3 install docker-compose
-              sudo apt-get update
-              sudo apt-get install openjdk-8-jdk
-
-              export HBASE_TO_MONGO_EXPORT_VERSION=$(cat ./gradle.properties | cut -f2 -d'=')
-              export DATA_KEY_SERVICE_URL=http://localhost:8090
-              export DATA_KEY_SERVICE_URL_SSL=https://localhost:8091
-
-              export S3_BUCKET=demobucket
-              export S3_PREFIX_FOLDER=test-exporter
-              export S3_MANIFEST_BUCKET=manifestbucket
-              export AWS_DEFAULT_REGION=dummy-region
-              export AWS_ACCESS_KEY_ID=dummy-key
-              export AWS_SECRET_ACCESS_KEY=dummy-secret
-
-              cd resources
-              ./generate-developer-certs.sh
-              docker build --tag dwp-centos-with-java-htme:latest --file Dockerfile_centos_java .
-              docker build --tag dwp-python-preinstall-htme:latest --file Dockerfile_python_preinstall .
-              cp ../settings.gradle.kts ../gradle.properties .
-              docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_java_gradle_base .
-              rm settings.gradle.kts gradle.properties ; \
-              cd -
-              ./gradlew build
-              docker-compose build hbase hbase-populate hbase-to-mongo-export-table-unavailable hbase-to-mongo-export-blocked-topic hbase-to-mongo-export-file hbase-to-mongo-export-itest dks-standalone-http dks-standalone-https
-              docker-compose up -d hbase dks-standalone-http dks-standalone-https aws
-              sleep 30
-              docker exec -i hbase hbase shell \<<< "create_namespace 'claimant_advances'"
-              docker exec -i hbase hbase shell \<<< "create_namespace 'penalties_and_deductions'"
-              docker exec -i hbase hbase shell \<<< "create_namespace 'quartz'"
-              docker-compose up hbase-populate
-              docker-compose up aws-init
-              docker-compose up hbase-to-mongo-export-table-unavailable
-              docker-compose up hbase-to-mongo-export-blocked-topic
-              docker-compose up hbase-to-mongo-export-file
-              docker-compose up hbase-to-mongo-export-s3
-              docker-compose run hbase-to-mongo-export-itest
-
-    snyk-pr:
-      docker:
-        - image: circleci/openjdk:8-jdk
-      steps:
-        - checkout
-        - snyk/scan:
-            organization: dwp-dataworks
-            severity-threshold: high
-            target-file: build.gradle.kts
-            project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
-
-    snyk-master:
-      docker:
-        - image: circleci/openjdk:8-jdk
-      steps:
-        - checkout
-        - snyk/scan:
-            organization: dwp-dataworks
-            severity-threshold: high
-            target-file: build.gradle.kts
-            project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
+      - run:
+          name: "Run the integration test"
+          command: |
+            sudo pip3 install docker-compose
+            make all
 
 
-    publish-github-release:
-      docker:
-        - image: cibuilds/github:0.10
-      steps:
-        - attach_workspace:
-            at: ./artifacts
-        - run:
-            name: "Publish Release on GitHub"
-            command: |
-              set -u
-              set -o pipefail
-              ls -l ./artifacts
-              LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-              [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-              VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-              ghr \
-                -t ${GITHUB_TOKEN} \
-                -u ${CIRCLE_PROJECT_USERNAME} \
-                -r ${CIRCLE_PROJECT_REPONAME} \
-                -c ${CIRCLE_SHA1} -delete \
-                ${VERSION} ./artifacts/
+#  snyk-pr:
+#    docker:
+#      - image: circleci/openjdk:8-jdk
+#    steps:
+#      - checkout
+#      - snyk/scan:
+#          organization: dwp-dataworks
+#          severity-threshold: high
+#          target-file: build.gradle.kts
+#          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
+#
+#  snyk-master:
+#    docker:
+#      - image: circleci/openjdk:8-jdk
+#    steps:
+#      - checkout
+#      - snyk/scan:
+#          organization: dwp-dataworks
+#          severity-threshold: high
+#          target-file: build.gradle.kts
+#          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
+
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            set -u
+            set -o pipefail
+            ls -l ./artifacts
+            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+            ghr \
+              -t ${GITHUB_TOKEN} \
+              -u ${CIRCLE_PROJECT_USERNAME} \
+              -r ${CIRCLE_PROJECT_REPONAME} \
+              -c ${CIRCLE_SHA1} -delete \
+              ${VERSION} ./artifacts/
 
 
-  workflows:
-    version: 2
-    build-and-deploy:
-      jobs:
-        - build
-        - integration-test:
-            requires:
-              - build
-        - snyk-pr:
-            requires:
-              - build
-            filters:
-              branches:
-                ignore: master
-        - snyk-master:
-            requires:
-              - build
-            filters:
-              branches:
-                only: master
-        - publish-github-release:
-            requires:
-              - integration-test
-            filters:
-              branches:
-                only: master
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - integration-test:
+          requires:
+            - build
+#      - snyk-pr:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              ignore: master
+#      - snyk-master:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: master
+#      - publish-github-release:
+#          requires:
+#            - integration-test
+#          filters:
+#            branches:
+#              only: master

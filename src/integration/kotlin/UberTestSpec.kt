@@ -29,16 +29,7 @@ class UberTestSpec: StringSpec() {
     init {
         "Writes the correct objects" {
             val actual = amazonS3.listObjects("demobucket").objectSummaries.map(S3ObjectSummary::getKey)
-            val expected = listOf(
-                    "test-exporter/db.database.collection-000-040-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-008-000-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-040-080-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-048-008-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-080-120-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-088-048-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-120-128-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-128-088-000001.txt.bz2.enc")
-            actual shouldContainExactly expected
+            actual shouldContainExactly expectedFiles()
         }
 
         "Writes the manifests" {
@@ -108,7 +99,7 @@ class UberTestSpec: StringSpec() {
             val filesExported = item["FilesExported"]
             val filesSent = item["FilesSent"]
             status?.s shouldBe "Exported"
-            filesExported?.n shouldBe "8"
+            filesExported?.n shouldBe "20"
             filesSent?.n shouldBe "0"
         }
 
@@ -116,17 +107,9 @@ class UberTestSpec: StringSpec() {
             val received = allMessages()
                 .map(Message::getBody)
                 .map {Gson().fromJson(it, JsonObject::class.java)}
-            received shouldHaveSize 8
+            received shouldHaveSize 20
             val pathValues = received.map { it.remove("s3_full_folder") }.map(JsonElement::getAsString).sorted()
-            val expected = listOf(
-                    "test-exporter/db.database.collection-000-040-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-008-000-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-040-080-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-048-008-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-080-120-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-088-048-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-120-128-000001.txt.bz2.enc",
-                    "test-exporter/db.database.collection-128-088-000001.txt.bz2.enc")
+            val expected = expectedFiles()
 
             pathValues shouldContainExactly expected
 
@@ -168,6 +151,31 @@ class UberTestSpec: StringSpec() {
             val expectedCollectionStatus = "Table_Unavailable"
             status shouldBe expectedCollectionStatus
         }
+    }
+
+    private fun expectedFiles(): List<String> {
+        val expected = listOf(
+                "test-exporter/db.database.collection-000-040-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-000-040-000002.txt.bz2.enc",
+                "test-exporter/db.database.collection-000-040-000003.txt.bz2.enc",
+                "test-exporter/db.database.collection-008-000-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-040-080-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-040-080-000002.txt.bz2.enc",
+                "test-exporter/db.database.collection-040-080-000003.txt.bz2.enc",
+                "test-exporter/db.database.collection-048-008-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-048-008-000002.txt.bz2.enc",
+                "test-exporter/db.database.collection-048-008-000003.txt.bz2.enc",
+                "test-exporter/db.database.collection-080-120-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-080-120-000002.txt.bz2.enc",
+                "test-exporter/db.database.collection-080-120-000003.txt.bz2.enc",
+                "test-exporter/db.database.collection-088-048-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-088-048-000002.txt.bz2.enc",
+                "test-exporter/db.database.collection-088-048-000003.txt.bz2.enc",
+                "test-exporter/db.database.collection-120-128-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-128-088-000001.txt.bz2.enc",
+                "test-exporter/db.database.collection-128-088-000002.txt.bz2.enc",
+                "test-exporter/db.database.collection-128-088-000003.txt.bz2.enc")
+        return expected
     }
 
 
