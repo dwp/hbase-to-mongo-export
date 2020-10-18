@@ -24,25 +24,25 @@ git-hooks: ## Set up hooks in .git/hooks
 		done \
 	}
 
-certificates:
+certificates: ## generate the mutual authentication certificates for communications with dks.
 	./generate-certificates.sh
 
-build-jar:
+build-jar: ## build the main jar
 	gradle build
 	cp build/libs/*.jar images/htme/hbase-to-mongo-export.jar
 
-build-images: build-jar certificates
+build-images: build-jar certificates ## build the images for local containerized running
 	docker-compose build
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
-build-hbase-init:
+build-hbase-init: ## build the image that populates hbase.
 	docker-compose build --no-cache hbase-populate
 
-build-aws-init:
+build-aws-init: ## build the image that prepares aws services.
 	docker-compose build aws
 
-service-hbase:
+service-hbase: ## bring up hbase, populate it.
 	docker-compose up -d hbase
 	@{ \
 			echo Waiting for hbase.; \
@@ -55,7 +55,7 @@ service-hbase:
 	docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
 	docker-compose up hbase-init
 
-service-aws:
+service-aws: ##bring up aws and prepare the services.
 	docker-compose up -d aws
 	@{ \
 		while ! docker logs aws 2> /dev/null | grep -q $(S3_READY_REGEX); do \
@@ -65,28 +65,28 @@ service-aws:
 	}
 	docker-compose up aws-init
 
-service-dks-insecure:
+service-dks-insecure: ## bring up dks on 8080
 	docker-compose up -d dks-standalone-http
 
-service-dks-secure:
+service-dks-secure: ## bring up secure dks on 8443
 	docker-compose up -d dks-standalone-https
 
-services-dks: service-dks-insecure service-dks-secure
+services-dks: service-dks-insecure service-dks-secure ## bring up the two dkses.
 
-services: services-dks service-hbase service-aws
+services: services-dks service-hbase service-aws ## bring up dks, hbase, aws.
 
-export-table-unavailable:
+export-table-unavailable: ## run htme with an unavailable table.
 	docker-compose up table-unavailable
 
-export-blocked-topic:
+export-blocked-topic: ## run htme with a blocked topic.
 	docker-compose up blocked-topic
 
-export-s3:
+export-s3: ## run htem aginast a valid pre-populated table.
 	docker-compose up export-s3
 
-exports: services export-table-unavailable export-blocked-topic export-s3
+exports: services export-table-unavailable export-blocked-topic export-s3 ## run all the exports.
 
-integration-tests: exports
+integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
 
-all: build-images integration-tests
+all: build-images integration-tests ## build the images and run the tests.
