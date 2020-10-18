@@ -1,4 +1,4 @@
-FROM dwp-python-preinstall-htme:latest
+FROM python:3-buster
 
 COPY environment.sh ./
 COPY run.sh ./
