@@ -5,17 +5,17 @@ main() {
     extract_public_certificate dks-keystore.jks dks-standalone-https.crt
     make_truststore dks-truststore.jks dks-standalone-https.crt
 
-    make_keystore htme-keystore.jks hbase-to-mongo-export
-    extract_public_certificate htme-keystore.jks hbase-to-mongo-export.crt
-    make_truststore htme-truststore.jks hbase-to-mongo-export.crt
+    make_keystore keystore.jks hbase-to-mongo-export
+    extract_public_certificate keystore.jks hbase-to-mongo-export.crt
+    make_truststore truststore.jks hbase-to-mongo-export.crt
 
     import_into_truststore dks-truststore.jks hbase-to-mongo-export.crt hbase-to-mongo-export
-    import_into_truststore htme-truststore.jks dks-standalone-https.crt dks
+    import_into_truststore truststore.jks dks-standalone-https.crt dks
 
-    cp -v dks-truststore.jks images/dks
-    cp -v dks-keystore.jks images/dks
-    cp -v htme-truststore.jks images/htme
-    cp -v htme-keystore.jks images/htme
+    mv -v dks-truststore.jks images/dks
+    mv -v dks-keystore.jks images/dks
+    mv -v truststore.jks images/htme
+    mv -v keystore.jks images/htme
 }
 
 make_keystore() {

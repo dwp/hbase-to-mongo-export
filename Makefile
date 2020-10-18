@@ -28,17 +28,12 @@ git-hooks: ## Set up hooks in .git/hooks
 echo-version: ## Echo the current version
 	@echo "HBASE_TO_MONGO_EXPORT_VERSION=$(hbase_to_mongo_version)"
 
-generate-developer-certs:  ## Generate temporary local certs and stores for the local developer containers to use
-	pushd resources && ./generate-developer-certs.sh && popd
+certificates:
+	./generate-certificates.sh
 
-build-jar: ## Build the hbase exporter jar file
+build-jar:
 	gradle build
-
-dist: ## Assemble distribution files in build/dist
-	gradle assembleDist
-
-add-containers-to-hosts: ## Update laptop hosts file with reference to containers
-	pushd resources && ./add-containers-to-hosts.sh && popd
+	cp build/libs/*.jar images/htme/hbase-to-mongo-export.jar
 
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
@@ -71,7 +66,7 @@ build-hbase-init:
 build-aws-init:
 	docker-compose build aws
 
-build-images: build-jar build-base-images
+build-images: build-jar build-base-images certificates
 	docker-compose build
 
 service-hbase:
@@ -112,15 +107,15 @@ init-hbase: service-hbase service-dks-insecure
 services: services-dks init-hbase init-aws
 
 export-table-unavailable:
-	docker-compose up hbase-to-mongo-export-table-unavailable
+	docker-compose up table-unavailable
 
 export-blocked-topic:
-	docker-compose up hbase-to-mongo-export-blocked-topic
+	docker-compose up blocked-topic
 
-export-to-s3:
-	docker-compose up hbase-to-mongo-export-s3
+export-s3:
+	docker-compose up export-s3
 
-exports: export-table-unavailable export-blocked-topic export-to-s3
+exports: services export-table-unavailable export-blocked-topic export-s3
 
-integration-tests:
-	docker-compose up hbase-to-mongo-export-itest
+integration-tests: exports
+	docker-compose up integration-tests

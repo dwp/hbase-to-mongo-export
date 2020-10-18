@@ -93,7 +93,7 @@ class UberTestSpec: StringSpec() {
         }
 
         "Export status updated correctly" {
-            val correlationIdAttributeValue = AttributeValue().apply { s = "integration_test_correlation_id" }
+            val correlationIdAttributeValue = AttributeValue().apply { s = "s3-export" }
             val collectionNameAttributeValue = AttributeValue().apply { s = "db.database.collection" }
             val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
                     "CollectionName" to collectionNameAttributeValue)
@@ -133,7 +133,7 @@ class UberTestSpec: StringSpec() {
             received.forEach {
                 it.toString() shouldBe """{
                     |"shutdown_flag":"false",
-                    |"correlation_id":"integration_test_correlation_id",
+                    |"correlation_id":"s3-export",
                     |"topic_name":"db.database.collection",
                     |"export_date":"2020-07-06",
                     |"reprocess_files":"true",
@@ -158,7 +158,7 @@ class UberTestSpec: StringSpec() {
 
         "dynamoDB has table unavailable record" {
             val tableName = "UCExportToCrownStatus"
-            val correlationIdAttributeValue = AttributeValue().apply {s = "table_unavailable"}
+            val correlationIdAttributeValue = AttributeValue().apply {s = "table-unavailable"}
             val collectionNameAttributeValue = AttributeValue().apply {s = "does.not.exist"}
             val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
             val getItemRequest = getItemRequest(tableName, primaryKey)

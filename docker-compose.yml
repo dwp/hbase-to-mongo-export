@@ -47,7 +47,7 @@ services:
       - aws-init
     environment:
       - SPRING_CONFIG_LOCATION=config/application-s3.properties
-      - CORRELATION_ID=integration_test_correlation_id
+      - CORRELATION_ID=s3-export
       - TOPIC_NAME=db.database.collection
 
   table-unavailable:
@@ -62,6 +62,7 @@ services:
     environment:
       - SPRING_CONFIG_LOCATION=config/application-table-unavailable.properties
       - ENVIRONMENT=local-docker
+      - CORRELATION_ID=table-unavailable
       - TOPIC_NAME=does.not.exist
 
   blocked-topic:
@@ -95,10 +96,6 @@ services:
     build:
       context: images/dks
     container_name: dks-standalone-http
-    command: >-
-      --spring.main.banner-mode=off
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
 
@@ -109,9 +106,5 @@ services:
     build:
       context: images/dks
     container_name: dks-standalone-https
-    command: >-
-      --spring.main.banner-mode=off
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
     environment:
       - SPRING_CONFIG_LOCATION=application_dks.properties

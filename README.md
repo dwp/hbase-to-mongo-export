@@ -78,8 +78,6 @@ communicate over 2-way https. To generate these:
   | `awsConfiguration`         | Yes                | AWS S3 Client to communicate to the real AWS S3 service
   | `localstackConfiguration`        | No                 | Dummy AWS S3 Client to communicate to the localstack S3 docker container
   | `outputToS3`           | Yes                | Output is chunked and written to configured S3 folder.
-  | `phoneyCipherService`  | No                 | Use a cipher service that does not do real encryption.
-  | `phoneyDataKeyService` | No                 | Use a dummy key service that does not require a configured DKS instance.
   | `realHbaseDataSource`  | Yes                | Not needed if using `unitTest`. Indicates a real hbase connection i.e. not a mock
   | `secureHttpClient`     | Yes                | Connects to DKS over TLS with mutual authorisation.
   | `strongRng`            | Yes                | Not needed if using `unitTest`. Create a strong random number generator.
