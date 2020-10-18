@@ -62,7 +62,7 @@ jobs:
 
   integration-test:
     docker:
-      - image: circleci/python:3.7.3
+      - image: circleci/openjdk:8-jdk
     steps:
       - checkout
       - setup_remote_docker:
@@ -125,9 +125,9 @@ workflows:
   build-and-deploy:
     jobs:
       - build
-      - integration-test:
-          requires:
-            - build
+      - integration-test
+#          requires:
+#            - build
 #      - snyk-pr:
 #          requires:
 #            - build
