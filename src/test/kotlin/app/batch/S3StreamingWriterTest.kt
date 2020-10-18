@@ -39,7 +39,7 @@ import java.security.SecureRandom
 @TestPropertySource(properties = [
     "output.batch.size.max.bytes=100000",
     "s3.bucket=exportbucket",
-    "s3.manifest.bucket=manifestbucket",
+    "s3.manifest.bucket=manifests",
     "s3.manifest.prefix.folder=manifestprefix",
     "s3.prefix.folder=prefix",
     "topic.name=db.database.collection",
@@ -183,7 +183,7 @@ class S3StreamingWriterTest {
                 .sendManifest(s3Captor.capture(), any(), bucketCaptor.capture(), prefixCaptor.capture())
 
         Assert.assertEquals(s3, s3Captor.firstValue)
-        Assert.assertEquals("manifestbucket", bucketCaptor.firstValue)
+        Assert.assertEquals("manifests", bucketCaptor.firstValue)
         Assert.assertEquals("manifestprefix", prefixCaptor.firstValue)
     }
 

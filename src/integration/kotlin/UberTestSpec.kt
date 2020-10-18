@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.Message
@@ -28,20 +29,30 @@ import javax.crypto.spec.SecretKeySpec
 class UberTestSpec: StringSpec() {
     init {
         "Writes the correct objects" {
-            val actual = amazonS3.listObjects("demobucket").objectSummaries.map(S3ObjectSummary::getKey)
-            actual shouldContainExactly expectedFiles()
+            s3BucketKeys("exports") shouldContainExactly expectedExports()
         }
 
         "Writes the manifests" {
-            val actual = amazonS3.listObjects("manifestbucket").objectSummaries.map(S3ObjectSummary::getKey)
+            s3BucketKeys("manifests") shouldContainExactly expectedManifests()
+        }
 
+        "Writes the correct manifest entries" {
+            val entries = s3BucketObjects("manifests")
+                    .map(S3Object::getObjectContent)
+                    .map { it.copyToByteArrayOutputStream() }.lines()
+
+            entries shouldHaveSize 10_000
+            val (modified, unmodified) = entries.partition {
+                val data = it.split(Regex("""\|"""))
+                data[0].contains("\$oid")
+            }
+
+            modified shouldHaveSize 5_000
+            unmodified shouldHaveSize 5_000
         }
 
         "Writes the correct records" {
-            val ids = amazonS3.listObjects("demobucket").objectSummaries
-                    .asSequence()
-                    .map(S3ObjectSummary::getKey)
-                    .map { amazonS3.getObject("demobucket", it) }
+            val ids = s3BucketObjects("exports")
                     .mapNotNull {
                         with(it.objectMetadata.userMetadata) {
                             get("datakeyencryptionkeyid")?.let { masterKeyId ->
@@ -55,23 +66,12 @@ class UberTestSpec: StringSpec() {
                     }
                     .map {
                         it.first.use { inputStream ->
-                            val outputStream = ByteArrayOutputStream()
-                            inputStream.copyTo(outputStream)
-                            Triple(outputStream.toByteArray(), it.second, it.third)
+                            Triple(inputStream.copyToByteArray(), it.second, it.third)
                         }
                     }
                     .map { decrypting(it.second, it.third, it.first) }
-                    .map {
-                        it.use { inputStream ->
-                            ByteArrayOutputStream().also { outputStream -> inputStream.copyTo(outputStream) }
-                        }
-                    }
-                    .map(ByteArrayOutputStream::toByteArray)
-                    .map(ByteArray::decodeToString)
-                    .toList()
-                    .flatMap { it.split("\n") }
-                    .asSequence()
-                    .filter(String::isNotBlank)
+                    .map { it.copyToByteArrayOutputStream() }
+                    .lines()
                     .map { Gson().fromJson(it, JsonObject::class.java) }
                     .map { it["_id"].asJsonObject }
                     .map { if (it["record_id"] != null) it["record_id"] else it["d_oid"] }
@@ -109,7 +109,7 @@ class UberTestSpec: StringSpec() {
                 .map {Gson().fromJson(it, JsonObject::class.java)}
             received shouldHaveSize 20
             val pathValues = received.map { it.remove("s3_full_folder") }.map(JsonElement::getAsString).sorted()
-            val expected = expectedFiles()
+            val expected = expectedExports()
 
             pathValues shouldContainExactly expected
 
@@ -153,31 +153,6 @@ class UberTestSpec: StringSpec() {
         }
     }
 
-    private fun expectedFiles(): List<String> {
-        val expected = listOf(
-                "test-exporter/db.database.collection-000-040-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-000-040-000002.txt.bz2.enc",
-                "test-exporter/db.database.collection-000-040-000003.txt.bz2.enc",
-                "test-exporter/db.database.collection-008-000-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-040-080-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-040-080-000002.txt.bz2.enc",
-                "test-exporter/db.database.collection-040-080-000003.txt.bz2.enc",
-                "test-exporter/db.database.collection-048-008-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-048-008-000002.txt.bz2.enc",
-                "test-exporter/db.database.collection-048-008-000003.txt.bz2.enc",
-                "test-exporter/db.database.collection-080-120-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-080-120-000002.txt.bz2.enc",
-                "test-exporter/db.database.collection-080-120-000003.txt.bz2.enc",
-                "test-exporter/db.database.collection-088-048-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-088-048-000002.txt.bz2.enc",
-                "test-exporter/db.database.collection-088-048-000003.txt.bz2.enc",
-                "test-exporter/db.database.collection-120-128-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-128-088-000001.txt.bz2.enc",
-                "test-exporter/db.database.collection-128-088-000002.txt.bz2.enc",
-                "test-exporter/db.database.collection-128-088-000003.txt.bz2.enc")
-        return expected
-    }
-
 
     companion object {
         private val applicationContext by lazy { AnnotationConfigApplicationContext(TestConfiguration::class.java) }
@@ -187,6 +162,66 @@ class UberTestSpec: StringSpec() {
         private val keyService by lazy { applicationContext.getBean(KeyService::class.java) }
         private val cipherService by lazy { applicationContext.getBean(CipherService::class.java)}
         private const val sqsQueueUrl = "http://aws:4566/000000000000/integration-queue"
+
+        fun InputStream.copyToByteArray() = this.copyToByteArrayOutputStream().toByteArray()
+
+        fun InputStream.copyToByteArrayOutputStream() =
+            use { inputStream -> ByteArrayOutputStream().also {inputStream.copyTo(it) } }
+
+        fun List<ByteArrayOutputStream>.lines() =
+                this.map(ByteArrayOutputStream::toByteArray)
+                        .map(ByteArray::decodeToString)
+                        .toList()
+                        .flatMap { it.split("\n") }
+                        .filter(String::isNotBlank)
+
+
+        private fun s3BucketObjects(bucket: String) = s3BucketKeys(bucket).map { amazonS3.getObject(bucket, it) }
+        private fun s3BucketKeys(bucket: String)= amazonS3.listObjects(bucket).objectSummaries.map(S3ObjectSummary::getKey)
+
+        private fun expectedExports(): List<String> =
+                listOf("output/db.database.collection-000-040-000001.txt.bz2.enc",
+                        "output/db.database.collection-000-040-000002.txt.bz2.enc",
+                        "output/db.database.collection-000-040-000003.txt.bz2.enc",
+                        "output/db.database.collection-008-000-000001.txt.bz2.enc",
+                        "output/db.database.collection-040-080-000001.txt.bz2.enc",
+                        "output/db.database.collection-040-080-000002.txt.bz2.enc",
+                        "output/db.database.collection-040-080-000003.txt.bz2.enc",
+                        "output/db.database.collection-048-008-000001.txt.bz2.enc",
+                        "output/db.database.collection-048-008-000002.txt.bz2.enc",
+                        "output/db.database.collection-048-008-000003.txt.bz2.enc",
+                        "output/db.database.collection-080-120-000001.txt.bz2.enc",
+                        "output/db.database.collection-080-120-000002.txt.bz2.enc",
+                        "output/db.database.collection-080-120-000003.txt.bz2.enc",
+                        "output/db.database.collection-088-048-000001.txt.bz2.enc",
+                        "output/db.database.collection-088-048-000002.txt.bz2.enc",
+                        "output/db.database.collection-088-048-000003.txt.bz2.enc",
+                        "output/db.database.collection-120-128-000001.txt.bz2.enc",
+                        "output/db.database.collection-128-088-000001.txt.bz2.enc",
+                        "output/db.database.collection-128-088-000002.txt.bz2.enc",
+                        "output/db.database.collection-128-088-000003.txt.bz2.enc")
+
+        private fun expectedManifests(): List<String> =
+                listOf("output/db.database.collection-000-040-000000.csv",
+                        "output/db.database.collection-000-040-000001.csv",
+                        "output/db.database.collection-000-040-000002.csv",
+                        "output/db.database.collection-008-000-000000.csv",
+                        "output/db.database.collection-040-080-000000.csv",
+                        "output/db.database.collection-040-080-000001.csv",
+                        "output/db.database.collection-040-080-000002.csv",
+                        "output/db.database.collection-048-008-000000.csv",
+                        "output/db.database.collection-048-008-000001.csv",
+                        "output/db.database.collection-048-008-000002.csv",
+                        "output/db.database.collection-080-120-000000.csv",
+                        "output/db.database.collection-080-120-000001.csv",
+                        "output/db.database.collection-080-120-000002.csv",
+                        "output/db.database.collection-088-048-000000.csv",
+                        "output/db.database.collection-088-048-000001.csv",
+                        "output/db.database.collection-088-048-000002.csv",
+                        "output/db.database.collection-120-128-000000.csv",
+                        "output/db.database.collection-128-088-000000.csv",
+                        "output/db.database.collection-128-088-000001.csv",
+                        "output/db.database.collection-128-088-000002.csv")
 
         private fun primaryKeyMap(correlationIdAttributeValue: AttributeValue, collectionNameAttributeValue: AttributeValue) =
                 mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)

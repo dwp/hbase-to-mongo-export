@@ -7,11 +7,11 @@ init() {
 
 
 create_export_bucket() {
-    make_bucket demobucket
+    make_bucket exports
 }
 
 create_manifest_bucket() {
-    make_bucket manifestbucket
+    make_bucket manifests
 }
 
 create_crl_bucket() {
