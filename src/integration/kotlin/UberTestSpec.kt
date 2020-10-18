@@ -39,7 +39,7 @@ class UberTestSpec: StringSpec() {
         "Writes the correct manifest entries" {
             val entries = s3BucketObjects("manifests")
                     .map(S3Object::getObjectContent)
-                    .map { it.copyToByteArrayOutputStream() }.lines()
+                    .map { it.copyToByteArrayOutputStream() }.lines().toList()
 
             entries shouldHaveSize 10_000
             val (modified, unmodified) = entries.partition {
@@ -163,22 +163,50 @@ class UberTestSpec: StringSpec() {
         private val cipherService by lazy { applicationContext.getBean(CipherService::class.java)}
         private const val sqsQueueUrl = "http://aws:4566/000000000000/integration-queue"
 
-        fun InputStream.copyToByteArray() = this.copyToByteArrayOutputStream().toByteArray()
+        fun InputStream.copyToByteArray(): ByteArray = this.copyToByteArrayOutputStream().toByteArray()
 
         fun InputStream.copyToByteArrayOutputStream() =
-            use { inputStream -> ByteArrayOutputStream().also {inputStream.copyTo(it) } }
+            use { inputStream -> ByteArrayOutputStream().also { inputStream.copyTo(it) } }
 
         fun List<ByteArrayOutputStream>.lines() =
                 this.map(ByteArrayOutputStream::toByteArray)
                         .map(ByteArray::decodeToString)
                         .toList()
                         .flatMap { it.split("\n") }
-                        .filter(String::isNotBlank)
+                        .filter(String::isNotBlank).asSequence()
 
 
         private fun s3BucketObjects(bucket: String) = s3BucketKeys(bucket).map { amazonS3.getObject(bucket, it) }
         private fun s3BucketKeys(bucket: String)= amazonS3.listObjects(bucket).objectSummaries.map(S3ObjectSummary::getKey)
 
+        private fun primaryKeyMap(correlationIdAttributeValue: AttributeValue, collectionNameAttributeValue: AttributeValue) =
+                mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
+
+        private fun decrypting(key: String, initializationVector: String, encrypted: ByteArray): InputStream =
+            SecretKeySpec(Base64.getDecoder().decode(key), "AES").let { keySpec ->
+                cipherService.decryptingCipher(keySpec, Base64.getDecoder().decode(initializationVector)).let { cipher ->
+                    CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2,
+                            CipherInputStream(ByteArrayInputStream(encrypted), cipher))
+                }
+            }
+
+        fun getItemRequest(table: String, primaryKey: Map<String, AttributeValue>) = GetItemRequest().apply {
+            tableName = table
+            key = primaryKey
+        }
+
+        private fun allMessages(accumulated: List<Message> = listOf()): List<Message> {
+            val messages = amazonSqs.receiveMessage(sqsQueueUrl).messages
+
+            if (messages == null || messages.isEmpty()) {
+                return accumulated
+            }
+            messages.forEach(::deleteMessage)
+            return allMessages(accumulated + messages)
+        }
+
+        private fun deleteMessage(it: Message) = amazonSqs.deleteMessage(sqsQueueUrl, it.receiptHandle)
+        
         private fun expectedExports(): List<String> =
                 listOf("output/db.database.collection-000-040-000001.txt.bz2.enc",
                         "output/db.database.collection-000-040-000002.txt.bz2.enc",
@@ -222,33 +250,5 @@ class UberTestSpec: StringSpec() {
                         "output/db.database.collection-128-088-000000.csv",
                         "output/db.database.collection-128-088-000001.csv",
                         "output/db.database.collection-128-088-000002.csv")
-
-        private fun primaryKeyMap(correlationIdAttributeValue: AttributeValue, collectionNameAttributeValue: AttributeValue) =
-                mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
-
-        private fun decrypting(key: String, initializationVector: String, encrypted: ByteArray): InputStream =
-            SecretKeySpec(Base64.getDecoder().decode(key), "AES").let { keySpec ->
-                cipherService.decryptingCipher(keySpec, Base64.getDecoder().decode(initializationVector)).let { cipher ->
-                    CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2,
-                            CipherInputStream(ByteArrayInputStream(encrypted), cipher))
-                }
-            }
-
-        fun getItemRequest(table: String, primaryKey: Map<String, AttributeValue>) = GetItemRequest().apply {
-            tableName = table
-            key = primaryKey
-        }
-
-        private fun allMessages(accumulated: List<Message> = listOf()): List<Message> {
-            val messages = amazonSqs.receiveMessage(sqsQueueUrl).messages
-
-            if (messages == null || messages.isEmpty()) {
-                return accumulated
-            }
-            messages.forEach(::deleteMessage)
-            return allMessages(accumulated + messages)
-        }
-
-        private fun deleteMessage(it: Message) = amazonSqs.deleteMessage(sqsQueueUrl, it.receiptHandle)
     }
 }
