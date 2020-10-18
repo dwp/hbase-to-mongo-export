@@ -1,4 +1,4 @@
-FROM python:3-buster
+FROM python:3.7.3-stretch
 
 RUN pip install awscli --trusted-host=pypi.org --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org
 
