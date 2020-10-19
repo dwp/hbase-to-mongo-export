@@ -90,3 +90,6 @@ integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
 
 all: build-images integration-tests ## build the images and run the tests.
+
+down:
+	docker-compose down
