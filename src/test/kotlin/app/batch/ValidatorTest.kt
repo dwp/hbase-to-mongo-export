@@ -6,8 +6,8 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
-import io.kotlintest.shouldBe
-import io.kotlintest.shouldThrow
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test

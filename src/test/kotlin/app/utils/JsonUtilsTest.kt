@@ -1,7 +1,7 @@
 package app.utils
 
+import io.kotest.matchers.shouldBe
 import org.junit.Test
-import io.kotlintest.shouldBe
 
 class JsonUtilsTest {
     @Test

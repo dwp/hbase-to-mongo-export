@@ -5,8 +5,8 @@ import app.exceptions.BlockedTopicException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import com.nhaarman.mockitokotlin2.*
-import io.kotlintest.shouldBe
-import io.kotlintest.shouldThrow
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import org.apache.hadoop.hbase.NotServingRegionException
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection

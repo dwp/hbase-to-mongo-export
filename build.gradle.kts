@@ -7,8 +7,8 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 plugins {
     id("org.springframework.boot") version "2.3.0.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.spring") version "1.3.72"
+    kotlin("jvm") version "1.4.10"
+    kotlin("plugin.spring") version "1.4.10"
     id ("net.researchgate.release") version "2.6.0"
     application
     groovy
@@ -65,7 +65,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
-    testImplementation("io.kotlintest", "kotlintest-runner-junit5", "3.3.2")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-property-jvm:4.2.0")
+
 }
 
 tasks.withType<KotlinCompile> {
@@ -102,4 +105,8 @@ tasks.register<Test>("integration") {
         exceptionFormat = TestExceptionFormat.FULL
         events = setOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.STANDARD_OUT)
     }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

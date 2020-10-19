@@ -14,8 +14,7 @@ services:
   aws:
     image: localstack/localstack:latest
     ports:
-      - '4563-4584:4563-4584'
-      - '8055:8080'
+      - '4566:4566'
     container_name: aws
     environment:
       - SERVICES=s3,dynamodb,sqs
@@ -23,373 +22,80 @@ services:
   aws-init:
     image: aws-init
     build:
-      context: resources/aws-init
+      context: images/aws
     container_name: aws-init
     depends_on:
       - aws
 
-  hbase-populate:
-    image: hbase-populate
+  hbase-init:
+    image: hbase-init
     build:
-      context: resources
-      dockerfile: Dockerfile_populate_hbase
-    container_name: hbase-populate
+      context: images/hbase
+    container_name: hbase-init
     depends_on:
       - hbase
       - dks-standalone-http
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --completed-flag /opt/hbase-to-mongo-export/data/ready
-      --data-key-service http://dks-standalone-http:8080/datakey
-      --dump-table-contents
-      --remove-output-file /opt/hbase-to-mongo-export/data/ucdata-file-output.txt
-      --test-configuration-file test-config.json
-      --zookeeper-quorum hbase
 
-  hbase-to-mongo-export-file:
+  export-s3:
     image: hbase-to-mongo-export
     build:
-      context: .
-      args:
-        - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export-file
+      context: images/htme
+    container_name: export-s3
     depends_on:
-      - hbase
-      - dks-standalone-https
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --column.family=topic
-      --compress.output=false
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=false
-      --file.output=/opt/hbase-to-mongo-export/data
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=certs/keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --logging.level.root=INFO
-      --output.batch.size.max.bytes=2048
-      --snapshot.sender.export.date=2020-07-06
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --message.delay.seconds=0
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --spring.main.banner-mode=off
-      --spring.profiles.active=aesCipherService,localstackConfiguration,httpDataKeyService,realHbaseDataSource,outputToFile,batchRun,strongRng,secureHttpClient,bz2Compressor
-      --topic.name=db.penalties-and-deductions.sanction
-      --trigger.snapshot.sender=false
-      --trust.keystore=certs/truststore.jks
-      --trust.store.password=changeit
-      --snapshot.type=full
-      --dynamodb.retry.delay=1
-      --dynamodb.retry.maxAttempts=10
-      --dynamodb.retry.multiplier=2
-      --keyservice.retry.delay=1
-      --keyservice.retry.maxAttempts=10
-      --keyservice.retry.multiplier=2
-      --manifest.retry.delay=1
-      --manifest.retry.maxAttempts=10
-      --manifest.retry.multiplier=2
-      --sqs.retry.delay=1
-      --sqs.retry.maxAttempts=10
-      --sqs.retry.multiplier=2
-    environment:
-      - APPLICATION=hbase_to_mongo_export
-      - COMPONENT=jar_file
-      - CORRELATION_ID=aaa-file
-      - ENVIRONMENT=local-docker
-      - SQS_MESSAGE_ID=bbb-file
-      - TOPIC_NAME=db.penalties-and-deductions.sanction
-
-  hbase-to-mongo-export-directory:
-    image: hbase-to-mongo-export
-    build:
-      context: .
-      args:
-        - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export-directory
-    depends_on:
-      - hbase
-      - dks-standalone-https
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
-      --data.table.name=ucfs-data
-      --directory.output=/opt/hbase-to-mongo-export/data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=certs/keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --logging.level.root=INFO
-      --output.batch.size.max.bytes=2048
-      --message.delay.seconds=0
-      --snapshot.sender.export.date=2020-07-06
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --spring.main.banner-mode=off
-      --spring.profiles.active=aesCipherService,localstackConfiguration,httpDataKeyService,realHbaseDataSource,outputToDirectory,batchRun,strongRng,secureHttpClient,bz2Compressor
-      --topic.name=db.penalties-and-deductions.sanction
-      --trigger.snapshot.sender=false
-      --trust.keystore=certs/truststore.jks
-      --trust.store.password=changeit
-      --snapshot.type=full
-      --dynamodb.retry.delay=1
-      --dynamodb.retry.maxAttempts=10
-      --dynamodb.retry.multiplier=2
-      --keyservice.retry.delay=1
-      --keyservice.retry.maxAttempts=10
-      --keyservice.retry.multiplier=2
-      --manifest.retry.delay=1
-      --manifest.retry.maxAttempts=10
-      --manifest.retry.multiplier=2
-      --sqs.retry.delay=1
-      --sqs.retry.maxAttempts=10
-      --sqs.retry.multiplier=2
-    environment:
-    - TOPIC_NAME=db.penalties-and-deductions.sanction
-    - ENVIRONMENT=local-docker
-    - APPLICATION=hbase_to_mongo_export
-    - COMPONENT=jar_file
-    - CORRELATION_ID=aaa-dir
-    - SQS_MESSAGE_ID=bbb-dir
-
-  hbase-to-mongo-export-s3:
-    image: hbase-to-mongo-export
-    build:
-      context: .
-      args:
-        - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export-s3
-    depends_on:
-      - hbase
+      - hbase-init
       - dks-standalone-https
       - aws-init
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --aws.region=${AWS_DEFAULT_REGION}
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=certs/keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --logging.level.root=INFO
-      --output.batch.size.max.bytes=2048
-      --s3.access.key=DummyKey
-      --s3.bucket=${S3_BUCKET}
-      --s3.manifest.bucket=manifestbucket
-      --s3.manifest.prefix.folder=test-manifest-exporter
-      --s3.prefix.folder=${S3_PREFIX_FOLDER}
-      --s3.secret.key=DummySecret
-      --s3.service.endpoint=http://s3-dummy:4566
-      --message.delay.seconds=0
-      --snapshot.sender.export.date=2020-07-06
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --spring.main.banner-mode=off
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
-      --topic.name=db.penalties-and-deductions.sanction
-      --trigger.snapshot.sender=true
-      --trust.keystore=certs/truststore.jks
-      --trust.store.password=changeit
-      --snapshot.type=full
-      --dynamodb.retry.delay=1
-      --dynamodb.retry.maxAttempts=10
-      --dynamodb.retry.multiplier=2
-      --keyservice.retry.delay=1
-      --keyservice.retry.maxAttempts=10
-      --keyservice.retry.multiplier=2
-      --manifest.retry.delay=1
-      --manifest.retry.maxAttempts=10
-      --manifest.retry.multiplier=2
-      --sqs.retry.delay=1
-      --sqs.retry.maxAttempts=10
-      --sqs.retry.multiplier=2
     environment:
-     - APPLICATION=hbase_to_mongo_export
-     - COMPONENT=jar_file
-     - CORRELATION_ID=integration_test_correlation_id
-     - ENVIRONMENT=local-docker
-     - SQS_MESSAGE_ID=bbb-s3
-     - TOPIC_NAME=db.penalties-and-deductions.sanction
+      - SPRING_CONFIG_LOCATION=config/application-s3.properties
+      - CORRELATION_ID=s3-export
+      - TOPIC_NAME=db.database.collection
 
-  hbase-to-mongo-export-table-unavailable:
+  table-unavailable:
     image: hbase-to-mongo-export
     build:
-      context: .
-      args:
-        - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export-table-unavailable
+      context: images/htme
+    container_name: table-unavailable
     depends_on:
-      - hbase
+      - hbase-init
       - dks-standalone-https
       - aws-init
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --aws.region=${AWS_DEFAULT_REGION}
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
-      --data.table.name=table-does-not-exist
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=certs/keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --logging.level.root=INFO
-      --output.batch.size.max.bytes=2048
-      --s3.access.key=DummyKey
-      --s3.bucket=${S3_BUCKET}
-      --s3.manifest.bucket=manifestbucket
-      --s3.manifest.prefix.folder=test-manifest-exporter
-      --s3.prefix.folder=${S3_PREFIX_FOLDER}
-      --s3.secret.key=DummySecret
-      --s3.service.endpoint=http://s3-dummy:4566
-      --message.delay.seconds=0
-      --snapshot.sender.export.date=2020-07-06
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --spring.main.banner-mode=off
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
-      --topic.name=does.not.exist
-      --trigger.snapshot.sender=true
-      --trust.keystore=certs/truststore.jks
-      --trust.store.password=changeit
-      --snapshot.type=full
     environment:
-      - APPLICATION=hbase_to_mongo_export
-      - COMPONENT=jar_file
-      - CORRELATION_ID=table_unavailable
+      - SPRING_CONFIG_LOCATION=config/application-table-unavailable.properties
       - ENVIRONMENT=local-docker
-      - SQS_MESSAGE_ID=bbb-s3
+      - CORRELATION_ID=table-unavailable
       - TOPIC_NAME=does.not.exist
 
-
-
-  hbase-to-mongo-export-blocked-topic:
+  blocked-topic:
     image: hbase-to-mongo-export
     build:
-      context: .
-      args:
-        - HBASE_TO_MONGO_EXPORT_VERSION
-    container_name: hbase-to-mongo-export-blocked-topic
+      context: images/htme
+    container_name: blocked-topic
     depends_on:
-      - hbase
+      - hbase-init
       - dks-standalone-https
       - aws-init
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-    command: >-
-      --aws.region=${AWS_DEFAULT_REGION}
-      --column.family=topic
-      --compress.output=true
-      --data.key.service.url=https://dks-standalone-https:8443
-      --data.ready.flag.location=/opt/hbase-to-mongo-export/data/ready
-      --data.table.name=ucfs-data
-      --encrypt.output=true
-      --hbase.zookeeper.quorum=hbase
-      --identity.key.password=changeit
-      --identity.keystore=certs/keystore.jks
-      --identity.store.alias=cid
-      --identity.store.password=changeit
-      --logging.level.root=INFO
-      --output.batch.size.max.bytes=2048
-      --s3.access.key=DummyKey
-      --s3.bucket=${S3_BUCKET}
-      --s3.manifest.bucket=manifestbucket
-      --s3.manifest.prefix.folder=test-manifest-exporter
-      --s3.prefix.folder=${S3_PREFIX_FOLDER}
-      --s3.secret.key=DummySecret
-      --s3.service.endpoint=http://s3-dummy:4566
-      --message.delay.seconds=0
-      --snapshot.sender.export.date=2020-07-06
-      --snapshot.sender.reprocess.files=true
-      --snapshot.sender.shutdown.flag=false
-      --snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/integration-queue
-      --spring.main.banner-mode=off
-      --spring.profiles.active=aesCipherService,httpDataKeyService,realHbaseDataSource,localstackConfiguration,outputToS3,batchRun,strongRng,secureHttpClient,bz2Compressor
-      --topic.name=db.blocked.topic
-      --trigger.snapshot.sender=true
-      --trust.keystore=certs/truststore.jks
-      --trust.store.password=changeit
-      --snapshot.type=full
-      --dynamodb.retry.delay=1
-      --dynamodb.retry.maxAttempts=10
-      --dynamodb.retry.multiplier=2
-      --keyservice.retry.delay=1
-      --keyservice.retry.maxAttempts=10
-      --keyservice.retry.multiplier=2
-      --manifest.retry.delay=1
-      --manifest.retry.maxAttempts=10
-      --manifest.retry.multiplier=2
-      --sqs.retry.delay=1
-      --sqs.retry.maxAttempts=10
-      --sqs.retry.multiplier=2
-      --blocked.topics=db.blocked.topic
     environment:
-      - APPLICATION=hbase_to_mongo_export
-      - COMPONENT=jar_file
+      - SPRING_CONFIG_LOCATION=config/application-blocked-topic.properties
       - CORRELATION_ID=blocked_topic
-      - ENVIRONMENT=local-docker
-      - SQS_MESSAGE_ID=bbb-s3
       - TOPIC_NAME=db.blocked.topic
 
-  hbase-to-mongo-export-itest:
-    image: hbase-to-mongo-export-itest
+  integration-tests:
+    image: integration-tests
     build:
       context: .
-      dockerfile: Dockerfile_itests
-    container_name: hbase-to-mongo-export-itests
+      dockerfile: images/tests/Dockerfile
+    container_name: integration-tests
     depends_on:
       - hbase
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
-      - ./resources/certs/htme:/opt/hbase-to-mongo-export/certs
     command: "gradle --rerun-tasks integration"
-    environment:
-      - FILE_NAME=/opt/hbase-to-mongo-export/data
-      - EXPECTED_TIMESTAMP=10
-      - EXPECTED_LINE_COUNT=8
-      - SPRING_PROFILES_ACTIVE=localstackConfiguration
-      - SPRING_CONFIG_LOCATION=application_integration.properties
 
   dks-standalone-http:
     image: dks-standalone-http
     ports:
       - 8090:8080
     build:
-      context: resources
-      dockerfile: Dockerfile_dks
+      context: images/dks
     container_name: dks-standalone-http
-    command: >-
-      --spring.main.banner-mode=off
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
 
@@ -398,17 +104,7 @@ services:
     ports:
       - 8091:8443
     build:
-      context: resources
-      dockerfile: Dockerfile_dks
+      context: images/dks
     container_name: dks-standalone-https
-    command: >-
-      --spring.main.banner-mode=off
-      --s3.service.endpoint=http://aws:4566
-      --server.environment_name=local
-    volumes:
-      - shared-volume:/opt/hbase-to-mongo-export/data
     environment:
       - SPRING_CONFIG_LOCATION=application_dks.properties
-
-volumes:
-  shared-volume:

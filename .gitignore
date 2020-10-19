@@ -33,7 +33,7 @@ out/
 
 ### local ###
 src/main/python/environment/
-resources/environment/
+archive/environment/
 __pycache__
 classes/
 data/
@@ -47,3 +47,4 @@ venv/
 *.csv
 env/
 tmp/
+*.jar
