@@ -89,7 +89,11 @@ exports: services export-table-unavailable export-blocked-topic export-s3 ## run
 integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
 
-all: build-images integration-tests ## build the images and run the tests.
+integration-all: destroy build-images integration-tests ## teardown for fresh start, build the images and run the tests.
 
-down:
+down: ## Bring down the containers
 	docker-compose down
+
+destroy: down ## Bring down the containers Docker container and services then delete all volumes
+	docker network prune -f
+	docker volume prune -f
