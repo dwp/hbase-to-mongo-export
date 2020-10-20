@@ -49,6 +49,10 @@ services:
       - SPRING_CONFIG_LOCATION=config/application-s3.properties
       - CORRELATION_ID=s3-export
       - TOPIC_NAME=db.database.collection
+      - APPLICATION=htme-export-s3
+      - APP_VERSION=test
+      - COMPONENT=jar-file
+      - ENVIRONMENT=local-docker
 
   table-unavailable:
     image: hbase-to-mongo-export
@@ -61,9 +65,12 @@ services:
       - aws-init
     environment:
       - SPRING_CONFIG_LOCATION=config/application-table-unavailable.properties
-      - ENVIRONMENT=local-docker
       - CORRELATION_ID=table-unavailable
       - TOPIC_NAME=does.not.exist
+      - APPLICATION=htme-table-unavailable
+      - APP_VERSION=test
+      - COMPONENT=jar-file
+      - ENVIRONMENT=local-docker
 
   blocked-topic:
     image: hbase-to-mongo-export
@@ -78,6 +85,10 @@ services:
       - SPRING_CONFIG_LOCATION=config/application-blocked-topic.properties
       - CORRELATION_ID=blocked_topic
       - TOPIC_NAME=db.blocked.topic
+      - APPLICATION=htme-blocked-topic
+      - APP_VERSION=test
+      - COMPONENT=jar-file
+      - ENVIRONMENT=local-docker
 
   integration-tests:
     image: integration-tests
