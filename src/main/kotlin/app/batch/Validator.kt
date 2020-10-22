@@ -6,6 +6,7 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.utils.DateWrapper
 import app.utils.JsonUtils
+import org.springframework.beans.factory.annotation.Value
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -175,7 +176,7 @@ class Validator {
         throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats", 0)
     }
 
-    fun timestampAsLong(createdDateTime: String, lastModifiedDateTime: String, snapshotTypeInUse): Long {
+    fun timestampAsLong(createdDateTime: String, lastModifiedDateTime: String, snapshotTypeInUse: String): Long {
         val (manifestDateTimePreferred, fallbackDateTime) =
             if (snapshotTypeInUse == "full") {
                 Pair(createdDateTime, lastModifiedDateTime)
