@@ -6,6 +6,7 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.utils.DateWrapper
 import app.utils.JsonUtils
+import org.springframework.beans.factory.annotation.Value
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -42,7 +43,7 @@ class Validator {
                 }
                 val newIdElement = dbObjectWithWrappedDates["_id"]
                 val dateForManifest = getDateTimeForManifest(type, dbObjectWithWrappedDates, lastModifiedDate)
-                val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate)
+                val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate, snapshotType)
                 val manifestRecord = ManifestRecord(elementAsString(newIdElement),
                         timeAsLong, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
@@ -175,18 +176,32 @@ class Validator {
         throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats", 0)
     }
 
-    fun timestampAsLong(timestampAsString: String, fallbackDate: String): Long {
+    fun timestampAsLong(createdDateTime: String, lastModifiedDateTime: String, snapshotTypeInUse: String): Long {
+        val (manifestDateTimePreferred, fallbackDateTime) =
+            if (snapshotTypeInUse == "full") {
+                Pair(createdDateTime, lastModifiedDateTime)
+            }
+            else {
+                Pair(lastModifiedDateTime, createdDateTime)
+            }
+
         try {
-            val parsedDateTime = getValidParsedDateTime(timestampAsString)
+            val parsedDateTime = getValidParsedDateTime(manifestDateTimePreferred)
             return parsedDateTime.time
         }
         catch (ex: ParseException) {
-            logger.debug("Timestamp for manifest could not be parsed, so falling back to last modified date time", 
-                "manifest_date_time" to timestampAsString, "last_modified_date_time" to fallbackDate)
-            val parsedDateTime = getValidParsedDateTime(fallbackDate)
+            logger.debug("Timestamp for manifest could not be parsed, so falling back to fallback", 
+                "preferred_date_time" to manifestDateTimePreferred, 
+                "last_modified_date_time" to fallbackDateTime,
+                "snapshot_type" to snapshotType)
+
+            val parsedDateTime = getValidParsedDateTime(fallbackDateTime)
             return parsedDateTime.time
         }
     }
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 
     companion object {
         val logger = DataworksLogger.getLogger(Validator::class.toString())
