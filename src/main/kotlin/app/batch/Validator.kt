@@ -191,7 +191,7 @@ class Validator {
         catch (ex: ParseException) {
             logger.debug("Timestamp for manifest could not be parsed, so falling back to fallback", 
                 "preferred_date_time" to manifestDateTimePreferred, 
-                "last_modified_date_time" to fallbackDateTime
+                "last_modified_date_time" to fallbackDateTime,
                 "snapshot_type" to snapshotType)
 
             val parsedDateTime = getValidParsedDateTime(fallbackDateTime)
