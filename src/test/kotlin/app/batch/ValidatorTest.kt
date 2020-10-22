@@ -690,20 +690,42 @@ class ValidatorTest {
     }
 
     @Test
-    fun Should_Return_Timestamp_Of_Valid_Date_When_Parseable() {
-        val validDate = "2019-12-14T15:01:02.000Z"
-        val fallbackDate = "2018-12-14T15:01:02.000Z"
+    fun Should_Return_Created_Timestamp_When_Valid_And_Snapshot_Type_Is_Full() {
+        val createdDateTime = "2018-12-14T15:01:02.000Z"
+        val lastModifiedDateTime = "2019-12-14T15:01:02.000Z"
+        val snapshotType = "full"
         val expected = 1576335662000L
-        val actual = validator.timestampAsLong(validDate, fallbackDate)
+        val actual = validator.timestampAsLong(createdDateTime, lastModifiedDateTime, snapshotType)
         assertEquals(expected, actual)
     }
 
     @Test
-    fun Should_Return_Timestamp_Of_Fallback_Date_When_Not_Parseable() {
-        val invalidDate = "2018-12-14T15:01:02"
-        val fallbackDate = "2019-12-14T15:01:02.000Z"
+    fun Should_Return_Last_Modified_Timestamp_When_Valid_And_Snapshot_Type_Is_Not_Full() {
+        val createdDateTime = "2019-12-14T15:01:02.000Z"
+        val lastModifiedDateTime = "2018-12-14T15:01:02.000Z"
+        val snapshotType = "not_full"
         val expected = 1576335662000L
-        val actual = validator.timestampAsLong(invalidDate, fallbackDate)
+        val actual = validator.timestampAsLong(createdDateTime, lastModifiedDateTime, snapshotType)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Return_Last_Modified_Timestamp_When_Created_Not_Valid_And_Snapshot_Type_Is_Full() {
+        val createdDateTime = "32201-9-12-14T15:01:02.000Z"
+        val lastModifiedDateTime = "2019-12-14T15:01:02.000Z"
+        val snapshotType = "full"
+        val expected = 1576335662000L
+        val actual = validator.timestampAsLong(createdDateTime, lastModifiedDateTime, snapshotType)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Return_Created_Timestamp_When_Last_Modified_Not_Valid_And_Snapshot_Type_Is_Not_Full() {
+        val createdDateTime = "2019-12-14T15:01:02.000Z"
+        val lastModifiedDateTime = "20d19-12-14T15:01ff02.000Z"
+        val snapshotType = "not_full"
+        val expected = 1576335662000L
+        val actual = validator.timestampAsLong(createdDateTime, lastModifiedDateTime, snapshotType)
         assertEquals(expected, actual)
     }
 
