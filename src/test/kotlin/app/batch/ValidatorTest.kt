@@ -691,8 +691,8 @@ class ValidatorTest {
 
     @Test
     fun Should_Return_Created_Timestamp_When_Valid_And_Snapshot_Type_Is_Full() {
-        val createdDateTime = "2018-12-14T15:01:02.000Z"
-        val lastModifiedDateTime = "2019-12-14T15:01:02.000Z"
+        val createdDateTime = "2019-12-14T15:01:02.000Z"
+        val lastModifiedDateTime = "2018-12-14T15:01:02.000Z"
         val snapshotType = "full"
         val expected = 1576335662000L
         val actual = validator.timestampAsLong(createdDateTime, lastModifiedDateTime, snapshotType)
@@ -701,8 +701,8 @@ class ValidatorTest {
 
     @Test
     fun Should_Return_Last_Modified_Timestamp_When_Valid_And_Snapshot_Type_Is_Not_Full() {
-        val createdDateTime = "2019-12-14T15:01:02.000Z"
-        val lastModifiedDateTime = "2018-12-14T15:01:02.000Z"
+        val createdDateTime = "2018-12-14T15:01:02.000Z"
+        val lastModifiedDateTime = "2019-12-14T15:01:02.000Z"
         val snapshotType = "not_full"
         val expected = 1576335662000L
         val actual = validator.timestampAsLong(createdDateTime, lastModifiedDateTime, snapshotType)
