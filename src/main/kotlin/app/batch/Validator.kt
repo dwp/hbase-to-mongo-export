@@ -21,6 +21,7 @@ class Validator {
     private final val validIncomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
     private final val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
+    val epoch = "1980-01-01T00:00:00.000Z"
     val validTimestamps = listOf(validIncomingFormat, validOutgoingFormat)
     val idNotFound = "_id field not found in the decrypted db object"
     private final val jsonUtils = JsonUtils()
@@ -41,8 +42,7 @@ class Validator {
                     replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
                 }
                 val newIdElement = dbObjectWithWrappedDates["_id"]
-                val dateForManifest = getDateTimeForManifest(type, dbObjectWithWrappedDates, lastModifiedDate)
-                val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate)
+                val timeAsLong = getLastModifiedDateTimeAsLong(lastModifiedDate)
                 val manifestRecord = ManifestRecord(elementAsString(newIdElement),
                         timeAsLong, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
@@ -67,12 +67,12 @@ class Validator {
     fun wrapDates(objectWithDatesIn: JsonObject): Pair<JsonObject, String> {
         val lastModifiedDateTimeAsString = retrieveLastModifiedDateTime(objectWithDatesIn)
         val dbObject = if (StringUtils.isNotBlank(lastModifiedDateTimeAsString)) {
-            val formattedLastModifiedDateTimeAsString = formatDateTimeToValidOutgoingFormat(lastModifiedDateTimeAsString)
-            replaceElementValueWithKeyValuePair(
-                    objectWithDatesIn,
-                    LAST_MODIFIED_DATE_TIME_FIELD,
-                    INNER_DATE_FIELD,
-                    formattedLastModifiedDateTimeAsString)
+        val formattedLastModifiedDateTimeAsString = formatDateTimeToValidOutgoingFormat(lastModifiedDateTimeAsString)
+        replaceElementValueWithKeyValuePair(
+                objectWithDatesIn,
+                LAST_MODIFIED_DATE_TIME_FIELD,
+                INNER_DATE_FIELD,
+                formattedLastModifiedDateTimeAsString)
         }
         else {
             objectWithDatesIn
@@ -100,7 +100,6 @@ class Validator {
     fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
 
     fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
-        val epoch = "1980-01-01T00:00:00.000Z"
         val lastModifiedDateTime = retrieveDateTimeElement(LAST_MODIFIED_DATE_TIME_FIELD, jsonObject)
         val createdDateTime = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
 
@@ -115,28 +114,6 @@ class Validator {
                 epoch
             }
         }
-    }
-
-    fun getDateTimeForManifest(type: String, jsonObject: JsonObject, fallbackDate: String): String {
-        if (type == MONGO_INSERT_TYPE) {
-            val createdDateTimeAsString = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
-            if (StringUtils.isNotBlank(createdDateTimeAsString)) {
-                return createdDateTimeAsString
-            }
-        }
-        
-        if (type == MONGO_DELETE_TYPE) {
-            val removedDateTimeAsString = retrieveDateTimeElement(REMOVED_DATE_TIME_FIELD, jsonObject)
-            if (StringUtils.isNotBlank(removedDateTimeAsString)) {
-                return removedDateTimeAsString
-            }
-            val archivedDateTimeAsString = retrieveDateTimeElement(ARCHIVED_DATE_TIME_FIELD, jsonObject)
-            if (StringUtils.isNotBlank(archivedDateTimeAsString)) {
-                return archivedDateTimeAsString
-            }
-        }
-
-        return fallbackDate
     }
 
     fun retrieveDateTimeElement(key: String, jsonObject: JsonObject): String {
@@ -175,15 +152,15 @@ class Validator {
         throw ParseException("Unparseable date found: '$timestampAsString', did not match any supported date formats", 0)
     }
 
-    fun timestampAsLong(timestampAsString: String, fallbackDate: String): Long {
+    fun getLastModifiedDateTimeAsLong(lastModifiedDateTime: String): Long {
         try {
-            val parsedDateTime = getValidParsedDateTime(timestampAsString)
+            val parsedDateTime = getValidParsedDateTime(lastModifiedDateTime)
             return parsedDateTime.time
         }
         catch (ex: ParseException) {
-            logger.debug("Timestamp for manifest could not be parsed, so falling back to last modified date time", 
-                "manifest_date_time" to timestampAsString, "last_modified_date_time" to fallbackDate)
-            val parsedDateTime = getValidParsedDateTime(fallbackDate)
+            logger.debug("Timestamp for manifest could not be parsed, so falling back to epoch", 
+                "last_modified_date_time" to lastModifiedDateTime, "epoch" to epoch)
+            val parsedDateTime = getValidParsedDateTime(epoch)
             return parsedDateTime.time
         }
     }
