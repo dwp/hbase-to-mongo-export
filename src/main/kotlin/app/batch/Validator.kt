@@ -36,16 +36,14 @@ class Validator {
         try {
             val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
             if (dbObject != null) {
-                val (dbObjectWithWrappedDates, lastModifiedDate) = wrapDates(dbObject)
+                val (dbObjectWithWrappedDates) = wrapDates(dbObject)
                 val idElement = retrieveId(dbObject)
                 if (idElement.isJsonPrimitive) {
                     replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
                 }
                 val newIdElement = dbObjectWithWrappedDates["_id"]
-                val dateForManifest = getDateTimeForManifest(type, dbObjectWithWrappedDates, lastModifiedDate)
-                val timeAsLong = timestampAsLong(dateForManifest, lastModifiedDate, snapshotType)
                 val manifestRecord = ManifestRecord(elementAsString(newIdElement),
-                        timeAsLong, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
+                        item.timestamp, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
                 return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
             }
         }

@@ -29,7 +29,7 @@ def main():
         print(f"Created table '{table_name}'.")
 
     table = connection.table(table_name)
-    batch = table.batch()
+    batch = table.batch(timestamp=1000)
     print("Creating batch.")
     for i in range(int(args.records)):
         wrapper = kafka_message(i)
