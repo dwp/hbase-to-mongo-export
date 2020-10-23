@@ -42,6 +42,11 @@ class UberTestSpec: StringSpec() {
                     .map { it.copyToByteArrayOutputStream() }.lines().toList()
 
             entries shouldHaveSize 10_000
+
+            entries.map {it.split(Regex("""\|""")) }.map {it[1]}.forEach {
+                it shouldBe "1000"
+            }
+
             val (modified, unmodified) = entries.partition {
                 val data = it.split(Regex("""\|"""))
                 data[0].contains("\$oid")

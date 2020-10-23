@@ -6,8 +6,12 @@ import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.sqs.AmazonSQS
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.reset
+import org.apache.hadoop.hbase.Cell
 import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.hbase.util.Bytes
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -182,10 +186,16 @@ class HBaseResultProcessorTest {
     private fun init(cellData: String) {
         given(result.row).willReturn(rowId.toByteArray())
         given(result.value()).willReturn(cellData.toByteArray(Charset.defaultCharset()))
+
+        val cell = mock<Cell> {
+            on { timestamp } doReturn 100L
+        }
+
+        given(result.getColumnLatestCell(Bytes.toBytes("cf"), Bytes.toBytes("record"))).willReturn(cell)
     }
 
     private fun expectedResult(outerType: String, innerType: String) =
-            SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject,
+            SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject, 100L,
                 database, collection, outerType, innerType)
 
     companion object {

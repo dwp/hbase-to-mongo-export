@@ -18,6 +18,7 @@ data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKe
 data class SourceRecord(val hbaseRowId: ByteArray,
                         val encryption: EncryptionBlock,
                         var dbObject: String,
+                        val timestamp: Long,
                         var db: String,
                         var collection: String,
                         val outerType: String,

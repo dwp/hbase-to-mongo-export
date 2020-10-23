@@ -8,6 +8,7 @@ import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.*
+import org.apache.hadoop.hbase.util.Bytes
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.core.annotation.BeforeStep

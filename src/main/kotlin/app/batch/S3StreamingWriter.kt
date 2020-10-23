@@ -71,8 +71,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
             currentOutputStream!!.write(item.toByteArray())
             batchSizeBytes += item.length
             recordsInBatch++
-            it.manifestRecord
-
             currentOutputStream!!.writeManifestRecord(it.manifestRecord)
         }
     }

@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.hbase.util.Bytes
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
@@ -34,10 +35,16 @@ class HBaseResultProcessor : ItemProcessor<Result, SourceRecord> {
         validateMandatoryField(db, idBytes)
         validateMandatoryField(collection, idBytes)
         val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-        return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, db!!, collection!!,
+        return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db!!, collection!!,
                 if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                 if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
     }
+
+    private fun timestamp(result: Result): Long =
+        result.getColumnLatestCell(columnFamily, columnQualifier).let {
+            it.timestamp
+        }
+
 
     private fun validateMandatoryField(mandatoryFieldValue: String?, idBytes: ByteArray) {
         if (mandatoryFieldValue.isNullOrEmpty()) {
@@ -48,5 +55,7 @@ class HBaseResultProcessor : ItemProcessor<Result, SourceRecord> {
 
     companion object {
         private val logger = DataworksLogger.getLogger(HBaseResultProcessor::class.java.toString())
+        private val columnFamily = Bytes.toBytes("cf")
+        private val columnQualifier = Bytes.toBytes("record")
     }
 }
