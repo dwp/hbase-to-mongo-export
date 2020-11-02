@@ -82,7 +82,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
     private var latestId: ByteArray? = null
     private var retryAttempts = 0
-    private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000"
+    private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000Z"
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
