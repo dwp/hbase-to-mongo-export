@@ -81,6 +81,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
     private var latestId: ByteArray? = null
     private var retryAttempts = 0
+    private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000"
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
@@ -118,7 +119,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             else 0
 
     fun getScanTimeRangeEndEpoch(): Long {
-        var endDateTime = ZonedDateTime.now()
+        var endDateTime = ZonedDateTime.parse(scanTimeRangeEndDefault)
         if (scanTimeRangeEnd.isNotBlank()) {
             endDateTime = ZonedDateTime.parse(scanTimeRangeEnd)
         }
