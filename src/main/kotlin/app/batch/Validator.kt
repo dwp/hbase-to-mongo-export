@@ -116,28 +116,6 @@ class Validator {
         }
     }
 
-    fun getDateTimeForManifest(type: String, jsonObject: JsonObject, fallbackDate: String): String {
-        if (type == MONGO_INSERT_TYPE) {
-            val createdDateTimeAsString = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
-            if (StringUtils.isNotBlank(createdDateTimeAsString)) {
-                return createdDateTimeAsString
-            }
-        }
-        
-        if (type == MONGO_DELETE_TYPE) {
-            val removedDateTimeAsString = retrieveDateTimeElement(REMOVED_DATE_TIME_FIELD, jsonObject)
-            if (StringUtils.isNotBlank(removedDateTimeAsString)) {
-                return removedDateTimeAsString
-            }
-            val archivedDateTimeAsString = retrieveDateTimeElement(ARCHIVED_DATE_TIME_FIELD, jsonObject)
-            if (StringUtils.isNotBlank(archivedDateTimeAsString)) {
-                return archivedDateTimeAsString
-            }
-        }
-
-        return fallbackDate
-    }
-
     fun retrieveDateTimeElement(key: String, jsonObject: JsonObject): String {
         val dateElement = jsonObject[key]
         if (dateElement != null && !dateElement.isJsonNull) {
@@ -203,9 +181,6 @@ class Validator {
 
     companion object {
         val logger = DataworksLogger.getLogger(Validator::class.toString())
-
-        const val MONGO_INSERT_TYPE = "MONGO_INSERT"
-        const val MONGO_DELETE_TYPE = "MONGO_DELETE"
 
         const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
         const val CREATED_DATE_TIME_FIELD = "createdDateTime"
