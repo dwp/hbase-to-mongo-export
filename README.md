@@ -16,7 +16,7 @@ export and dks containers require keystores and truststores so that they can
 communicate over 2-way https. To generate these:
 
 ```bash
-   make generate-developer-certs
+   make certificates
 ```
 
 ## Configuration
