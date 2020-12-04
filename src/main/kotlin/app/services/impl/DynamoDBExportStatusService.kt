@@ -51,7 +51,9 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     private fun setStatus(status: String) {
         val result = dynamoDB.updateItem(setCollectionStatusRequest(status))
         logger.info("Collection status set",
-                "collection_status" to "${result.attributes["CollectionStatus"]}")
+                "collection_status" to "${result.attributes["CollectionStatus"]}",
+                "files_exported" to "${result.attributes["FilesExported"]?.n}",
+                "files_sent" to "${result.attributes["FilesSent"]?.n}")
     }
 
     private fun incrementFilesExportedRequest() =
