@@ -67,8 +67,8 @@ dependencies {
     testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.1")
     testImplementation("io.kotest:kotest-property-jvm:4.2.0")
-
 }
 
 tasks.withType<KotlinCompile> {

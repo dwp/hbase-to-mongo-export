@@ -3,17 +3,17 @@ package app.batch.processor
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
+import app.utils.TextUtils
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.util.Bytes
 import org.springframework.batch.item.ItemProcessor
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import app.utils.TextUtils
 import java.nio.charset.Charset
-import org.springframework.beans.factory.annotation.Value
 
 @Component
 class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Result, SourceRecord> {
@@ -45,9 +45,7 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
     }
 
     private fun timestamp(result: Result): Long =
-        result.getColumnLatestCell(columnFamily, columnQualifier).let {
-            it.timestamp
-        }
+        result.getColumnLatestCell(columnFamily, columnQualifier).timestamp
 
     private fun getDatabaseAndCollection(messageInfo: JsonObject): Pair<String?, String?> {
         var db = messageInfo.getAsJsonPrimitive("db")?.asString

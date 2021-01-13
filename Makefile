@@ -40,7 +40,7 @@ build-hbase-init: ## build the image that populates hbase.
 	docker-compose build --no-cache hbase-populate
 
 build-aws-init: ## build the image that prepares aws services.
-	docker-compose build aws
+	docker-compose build aws-init
 
 service-hbase: ## bring up hbase, populate it.
 	docker-compose up -d hbase
