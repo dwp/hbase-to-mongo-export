@@ -8,7 +8,6 @@ import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.*
-import org.apache.hadoop.hbase.util.Bytes
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.AfterStep
 import org.springframework.batch.core.annotation.BeforeStep
@@ -174,7 +173,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
     fun printableKey(key: ByteArray) =
             if (key.size > 4) {
                 val hash = key.slice(IntRange(0, 3))
-                val hex = hash.map { String.format("\\x%02X", it) }.joinToString("")
+                val hex = hash.joinToString("") { String.format("\\x%02X", it) }
                 val renderable = key.slice(IntRange(4, key.size - 1)).map { it.toChar() }.joinToString("")
                 "${hex}${renderable}"
             }

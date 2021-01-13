@@ -20,18 +20,22 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             exportStatusService.setExportedStatus()
         }
         else {
-            if (isATableUnavailableExceptions(jobExecution.allFailureExceptions)) {
-                logger.error("Setting table unavailable status",
+            when {
+                isATableUnavailableExceptions(jobExecution.allFailureExceptions) -> {
+                    logger.error("Setting table unavailable status",
                         "job_exit_status" to "${jobExecution.exitStatus}")
-                exportStatusService.setTableUnavailableStatus()
-            } else if (isABlockedTopicException(jobExecution.allFailureExceptions)) {
-                logger.error("Setting blocked topic status",
+                    exportStatusService.setTableUnavailableStatus()
+                }
+                isABlockedTopicException(jobExecution.allFailureExceptions) -> {
+                    logger.error("Setting blocked topic status",
                         "job_exit_status" to "${jobExecution.exitStatus}")
-                exportStatusService.setBlockedTopicStatus()
-            } else {
-                logger.error("Setting export failed status",
+                    exportStatusService.setBlockedTopicStatus()
+                }
+                else -> {
+                    logger.error("Setting export failed status",
                         "job_exit_status" to "${jobExecution.exitStatus}")
-                exportStatusService.setFailedStatus()
+                    exportStatusService.setFailedStatus()
+                }
             }
         }
     }

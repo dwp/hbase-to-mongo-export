@@ -16,20 +16,20 @@ class HBasePartitioner: Partitioner {
         for (start in Byte.MIN_VALUE..0 step width) {
             val stop = if (start + width > 0) 0 else (start + width)
             if (start < stop) {
-                map.put("p$start-${stop}", ExecutionContext().apply {
+                map["p$start-${stop}"] = ExecutionContext().apply {
                     putInt("start", start)
                     putInt("stop", stop)
-                })
+                }
             }
         }
 
         for (start in 0..Byte.MAX_VALUE step width) {
             val stop: Byte = if (start + width > Byte.MAX_VALUE) Byte.MIN_VALUE else (start + width).toByte()
             if (start.toByte() != stop) {
-                map.put("p$start-${stop}", ExecutionContext().apply {
+                map["p$start-${stop}"] = ExecutionContext().apply {
                     putInt("start", start)
                     putInt("stop", stop.toInt())
-                })
+                }
             }
         }
 

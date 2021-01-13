@@ -4,9 +4,12 @@ import app.domain.EncryptionBlock
 import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
+import io.kotest.assertions.json.shouldMatchJson
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -319,7 +322,7 @@ class ValidatorTest {
     }
 
     @Test
-    fun Should_Log_Error_If_DbObject_Doesnt_Have_Id() {
+    fun toleratesAbsenceOfId() {
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId",
                         "initialisationVector",
@@ -331,10 +334,19 @@ class ValidatorTest {
         val sourceRecord = SourceRecord(generateFourByteChecksum("00002"), encryptionBlock,
                 "dbObject", 1000, "db", "collection",
                 "OUTER_TYPE", "INNER_TYPE")
-        val exception = shouldThrow<BadDecryptedDataException> {
-            validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
-        }
-        exception.message shouldBe "Exception in processing the decrypted record id '00002' in db 'db' in collection 'collection' with the reason '_id field not found in the decrypted db object'"
+        val decryptedRecord = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
+        decryptedRecord.shouldNotBeNull()
+        decryptedRecord.manifestRecord shouldBe
+                ManifestRecord("", 1000L, "db", "collection",
+                    "EXPORT","OUTER_TYPE", "INNER_TYPE", "")
+
+        decryptedRecord.dbObject.toString() shouldMatchJson """{
+            "_id1":{
+                "test_key_a":"test_value_a",
+                "test_key_b":"test_value_b"
+            },
+            "_lastModifiedDateTime":{"${'$'}date":"2018-12-14T15:01:02.000Z"}}                                                               
+        """.trimIndent()
     }
 
     @Test

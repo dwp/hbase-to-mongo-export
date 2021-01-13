@@ -6,11 +6,11 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.utils.DateWrapper
 import app.utils.JsonUtils
-import org.springframework.beans.factory.annotation.Value
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.text.ParseException
@@ -23,12 +23,11 @@ class Validator {
     private final val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
     val validTimestamps = listOf(validIncomingFormat, validOutgoingFormat)
-    val idNotFound = "_id field not found in the decrypted db object"
     private final val jsonUtils = JsonUtils()
     private val gson = GsonBuilder().serializeNulls().create()
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
-        val hbaseRowKey = Arrays.copyOfRange(item.hbaseRowId, 4, item.hbaseRowId.size)
+        val hbaseRowKey = item.hbaseRowId.copyOfRange(4, item.hbaseRowId.size)
         val hbaseRowId = String(hbaseRowKey)
         val db = item.db
         val collection = item.collection
@@ -37,14 +36,19 @@ class Validator {
             val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
             if (dbObject != null) {
                 val (dbObjectWithWrappedDates) = wrapDates(dbObject)
-                val idElement = retrieveId(dbObject)
-                if (idElement.isJsonPrimitive) {
-                    replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
-                }
-                val newIdElement = dbObjectWithWrappedDates["_id"]
-                val manifestRecord = ManifestRecord(elementAsString(newIdElement),
+                return retrieveId(dbObject)?.let { idElement ->
+                    if (idElement.isJsonPrimitive) {
+                        replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
+                    }
+                    val newIdElement = dbObjectWithWrappedDates["_id"]
+                    val manifestRecord = ManifestRecord(elementAsString(newIdElement),
                         item.timestamp, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
-                return DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
+                    DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
+                } ?: run {
+                    // FIXME: 13/01/2021 fetch'_id' from wrapper if no '_id' in 'dbObject'.
+                    val manifestRecord = ManifestRecord("", item.timestamp, db, collection, "EXPORT", item.outerType, type, "")
+                    DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
+                }
             }
         }
         catch (e: Exception) {
@@ -91,12 +95,12 @@ class Validator {
 
     fun printableKey(key: ByteArray): String {
         val hash = key.slice(IntRange(0, 3))
-        val hex = hash.map { String.format("\\x%02x", it) }.joinToString("")
+        val hex = hash.joinToString("") { String.format("\\x%02x", it) }
         val renderable = key.slice(IntRange(4, key.size - 1)).map{ it.toChar() }.joinToString("")
         return "${hex}${renderable}"
     }
 
-    fun retrieveId(jsonObject: JsonObject) = jsonObject["_id"] ?: throw Exception(idNotFound)
+    fun retrieveId(jsonObject: JsonObject): JsonElement? = jsonObject["_id"]
 
     fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
         val epoch = "1980-01-01T00:00:00.000Z"
@@ -161,18 +165,17 @@ class Validator {
                 Pair(lastModifiedDateTime, createdDateTime)
             }
 
-        try {
+        return try {
             val parsedDateTime = getValidParsedDateTime(manifestDateTimePreferred)
-            return parsedDateTime.time
-        }
-        catch (ex: ParseException) {
-            logger.debug("Timestamp for manifest could not be parsed, so falling back to fallback", 
-                "preferred_date_time" to manifestDateTimePreferred, 
+            parsedDateTime.time
+        } catch (ex: ParseException) {
+            logger.debug("Timestamp for manifest could not be parsed, so falling back to fallback",
+                "preferred_date_time" to manifestDateTimePreferred,
                 "last_modified_date_time" to fallbackDateTime,
                 "snapshot_type" to snapshotType)
 
             val parsedDateTime = getValidParsedDateTime(fallbackDateTime)
-            return parsedDateTime.time
+            parsedDateTime.time
         }
     }
 
@@ -184,8 +187,6 @@ class Validator {
 
         const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
         const val CREATED_DATE_TIME_FIELD = "createdDateTime"
-        const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
-        const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         const val INNER_DATE_FIELD = "\$date"
     }
 }
