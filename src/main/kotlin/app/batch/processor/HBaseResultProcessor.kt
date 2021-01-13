@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import app.utils.TextUtils
 import java.nio.charset.Charset
+import org.springframework.beans.factory.annotation.Value
 
 @Component
 class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Result, SourceRecord> {
@@ -35,8 +36,10 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
         validateMandatoryField(keyEncryptionKeyId, idBytes, "keyEncryptionKeyId")
         validateMandatoryField(initializationVector, idBytes, "initializationVector")
         validateMandatoryField(encryptedEncryptionKey, idBytes, "encryptedEncryptionKey")
+        validateMandatoryField(db, idBytes, "db")
+        validateMandatoryField(collection, idBytes, "collection")
         val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-        return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db, collection,
+        return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db!!, collection!!,
                 if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                 if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
     }
@@ -46,7 +49,7 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
             it.timestamp
         }
 
-    private fun getDatabaseAndCollection(messageInfo: JsonObject): Pair<String, String> {
+    private fun getDatabaseAndCollection(messageInfo: JsonObject): Pair<String?, String?> {
         var db = messageInfo.getAsJsonPrimitive("db")?.asString
         var collection = messageInfo.getAsJsonPrimitive("collection")?.asString
 

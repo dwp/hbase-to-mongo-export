@@ -24,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
+import app.utils.TextUtils
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
@@ -234,7 +235,9 @@ class HBaseResultProcessorTest {
     @MockBean
     private lateinit var amazonSQS: AmazonSQS
 
-    private fun actualResult() = HBaseResultProcessor().process(result)
+    private val textUtils = TextUtils()
+
+    private fun actualResult() = HBaseResultProcessor(textUtils).process(result)
 
     private fun assertResult(expected: SourceRecord, actual: SourceRecord?) {
         assertEquals(expected.dbObject, actual?.dbObject)
