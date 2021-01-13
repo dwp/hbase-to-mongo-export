@@ -25,6 +25,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.nio.charset.Charset
 import app.utils.TextUtils
+import org.springframework.test.util.ReflectionTestUtils
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
@@ -237,7 +238,11 @@ class HBaseResultProcessorTest {
 
     private val textUtils = TextUtils()
 
-    private fun actualResult() = HBaseResultProcessor(textUtils).process(result)
+    private fun actualResult(): SourceRecord? {
+        var processor = HBaseResultProcessor(textUtils)
+        ReflectionTestUtils.setField(processor, "topicName", "db.a.b")
+        return processor.process(result)
+    }
 
     private fun assertResult(expected: SourceRecord, actual: SourceRecord?) {
         assertEquals(expected.dbObject, actual?.dbObject)
