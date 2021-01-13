@@ -55,6 +55,7 @@ class HBaseResultProcessorTest {
 
     @Test
     fun testRead() {
+        val commonBlock = commonBlock("database", "collection")
         val cellData = """
             |{
             |  "@type": "OUTER_TYPE",
@@ -66,11 +67,63 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection"), actualResult())
+    }
+
+    @Test
+    fun testReadNoDb() {
+        val commonBlock = commonBlock("", "collection")
+        val cellData = """
+            |{
+            |  "@type": "OUTER_TYPE",
+            |  "message": {
+            |   $commonBlock,
+            |   "@type": "INNER_TYPE",
+            |   "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |   "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+        init(cellData)
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "a", "collection"), actualResult())
+    }
+
+    @Test
+    fun testReadNoCollection() {
+        val commonBlock = commonBlock("database", "")
+        val cellData = """
+            |{
+            |  "@type": "OUTER_TYPE",
+            |  "message": {
+            |   $commonBlock,
+            |   "@type": "INNER_TYPE",
+            |   "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |   "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+        init(cellData)
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "b"), actualResult())
+    }
+
+    @Test
+    fun testReadNoDbOrCollection() {
+        val commonBlock = commonBlock("", "")
+        val cellData = """
+            |{
+            |  "@type": "OUTER_TYPE",
+            |  "message": {
+            |   $commonBlock,
+            |   "@type": "INNER_TYPE",
+            |   "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000",
+            |   "dbObject": "$dbObject"
+            |  }
+            |}""".trimMargin()
+        init(cellData)
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "a", "b"), actualResult())
     }
 
     @Test
     fun testInnerTypeWhenNoOuterType() {
+        val commonBlock = commonBlock("database", "collection")
         val cellData = """
             |{
             |  "message": {
@@ -82,11 +135,12 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE"), actualResult())
+        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE", "database", "collection"), actualResult())
     }
 
     @Test
     fun testInnerTypeWhenEmptyOuterType() {
+        val commonBlock = commonBlock("database", "collection")
         val cellData = """
             |{
             |  "@type": "",
@@ -98,11 +152,12 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE"), actualResult())
+        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE", "database", "collection"), actualResult())
     }
 
     @Test
     fun testReadModifiedIsObject() {
+        val commonBlock = commonBlock("database", "collection")
         val dateKey = "\$date"
 
         val lastModified = "2019-07-04T07:27:35.104+0000"
@@ -120,11 +175,12 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection"), actualResult())
     }
 
     @Test
     fun testReadModifiedIsAbsent() {
+        val commonBlock = commonBlock("database", "collection")
         val cellData = """
             |{
             |  "@type": "OUTER_TYPE",
@@ -136,11 +192,12 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection"), actualResult())
     }
 
     @Test
     fun testReadNoType() {
+        val commonBlock = commonBlock("database", "collection")
         val cellData = """
             |{
             |  "message": {
@@ -150,11 +207,12 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("TYPE_NOT_SET","TYPE_NOT_SET"), actualResult())
+        assertResult(expectedResult("TYPE_NOT_SET","TYPE_NOT_SET", "database", "collection"), actualResult())
     }
 
     @Test(expected = MissingFieldException::class)
     fun testReject() {
+        val commonBlock = commonBlock("database", "collection")
         val cellData = """
             |{
             |  "@type": "V4",
@@ -194,9 +252,17 @@ class HBaseResultProcessorTest {
         given(result.getColumnLatestCell(Bytes.toBytes("cf"), Bytes.toBytes("record"))).willReturn(cell)
     }
 
-    private fun expectedResult(outerType: String, innerType: String) =
+    private fun expectedResult(outerType: String, innerType: String, database: String, collection: String) =
             SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject, 100L,
                 database, collection, outerType, innerType)
+
+    private fun commonBlock(database: String, collection: String): String {
+        val topicBlock = """
+            |    "db": "$database",
+            |    "collection": "$collection"
+        """.trimMargin()
+        return "$topicBlock, $idBlock, $encryptionBlock"
+    }
 
     companion object {
         const val rowId = "EXPECTED_ID"
@@ -205,13 +271,6 @@ class HBaseResultProcessorTest {
         const val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
         const val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
         const val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
-        const val database = "database"
-        const val collection = "collection"
-
-        val topicBlock = """
-            |    "db": "$database",
-            |    "collection": "$collection"
-        """.trimMargin()
 
         val idBlock = """
             |"_id": {
@@ -228,10 +287,8 @@ class HBaseResultProcessorTest {
             |}
         """.trimMargin()
 
-        val commonBlock = "$topicBlock, $idBlock, $encryptionBlock"
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val result: Result = Mockito.mock(Result::class.java)
     }
-
 }
 

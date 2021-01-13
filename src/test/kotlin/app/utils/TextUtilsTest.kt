@@ -7,36 +7,66 @@ class TextUtilsTest {
 
     @Test
     fun testAllCharactersOk() {
-        testValid("database","collection")
+        testValid("db.", "database","collection")
     }
 
     @Test
     fun testDigitsOk() {
-        testValid("database1","collection1")
+        testValid("db.", "database1","collection1")
     }
 
     @Test
     fun testHyphensOk() {
-        testValid("database-1","collection-1")
+        testValid("db.", "database-1","collection-1")
     }
 
     @Test
     fun testUnderscoresOk() {
-        testValid("database_1","collection_1")
+        testValid("db.", "database_1","collection_1")
+    }
+
+    @Test
+    fun testAllCharactersOkGivenNoPrefix() {
+        testValid("", "database","collection")
+    }
+
+    @Test
+    fun testDigitsOkGivenNoPrefix() {
+        testValid("", "database1","collection1")
+    }
+
+    @Test
+    fun testHyphensOkGivenNoPrefix() {
+        testValid("", "database-1","collection-1")
+    }
+
+    @Test
+    fun testUnderscoresOkGivenNoPrefix() {
+        testValid("", "database_1","collection_1")
     }
 
     @Test
     fun testNonAlphaNonDashNotOkInDatabase() {
-        testInvalid("database_1 ","collection_1")
+        testInvalid("test.", "database_1 ","collection_1")
     }
 
     @Test
     fun testNonAlphaNonDashNotOkInCollection() {
-        testInvalid("database_1 ","collection_1!")
+        testInvalid("db.", "database_1 ","collection_1!")
     }
 
-    private fun testValid(database: String, collection: String) {
-        val allChars = "ab.$database.$collection"
+    @Test
+    fun testNonAlphaNonDashNotOkInDatabaseGivenNoPrefix() {
+        testInvalid("", "database_1 ","collection_1")
+    }
+
+    @Test
+    fun testNonAlphaNonDashNotOkInCollectionGivenNoPrefix() {
+        testInvalid("", "database_1 ","collection_1!")
+    }
+
+    private fun testValid(prefix: String, database: String, collection: String) {
+        val allChars = "$prefix$database.$collection"
         val matcher = TextUtils().topicNameTableMatcher(allChars)
         assertNotNull(matcher)
         if (matcher != null) {
@@ -47,8 +77,8 @@ class TextUtilsTest {
         }
     }
 
-    private fun testInvalid(database: String, collection: String) {
-        val allChars = "ab.$database.$collection"
+    private fun testInvalid(prefix: String, database: String, collection: String) {
+        val allChars = "$prefix$database.$collection"
         val matcher = TextUtils().topicNameTableMatcher(allChars)
         assertNull(matcher)
     }
