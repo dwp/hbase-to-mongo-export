@@ -4,7 +4,6 @@ import app.domain.EncryptionBlock
 import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import io.kotest.assertions.json.shouldMatchJson
@@ -331,14 +330,14 @@ class ValidatorTest {
                    "_id1":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
                    "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000"
                 }"""
-        val sourceRecord = SourceRecord(generateFourByteChecksum("00002"), encryptionBlock,
+        val sourceRecord = SourceRecord("""1234{ "id": "12345" }""".toByteArray(), encryptionBlock,
                 "dbObject", 1000, "db", "collection",
                 "OUTER_TYPE", "INNER_TYPE")
         val decryptedRecord = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         decryptedRecord.shouldNotBeNull()
         decryptedRecord.manifestRecord shouldBe
-                ManifestRecord("", 1000L, "db", "collection",
-                    "EXPORT","OUTER_TYPE", "INNER_TYPE", "")
+                ManifestRecord("""{"${'$'}oid":"12345"}""", 1000L, "db", "collection",
+                    "EXPORT","OUTER_TYPE", "INNER_TYPE", "12345")
 
         decryptedRecord.dbObject.toString() shouldMatchJson """{
             "_id1":{
