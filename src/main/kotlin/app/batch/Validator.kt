@@ -5,6 +5,7 @@ import app.domain.ManifestRecord
 import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import app.utils.DateWrapper
+import app.utils.IdUtility
 import app.utils.JsonUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
@@ -45,8 +46,8 @@ class Validator {
                         item.timestamp, db, collection, "EXPORT", item.outerType, type, elementAsString(idElement))
                     DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
                 } ?: run {
-                    // FIXME: 13/01/2021 fetch'_id' from wrapper if no '_id' in 'dbObject'.
-                    val manifestRecord = ManifestRecord("", item.timestamp, db, collection, "EXPORT", item.outerType, type, "")
+                    val (original, altered) = IdUtility.reverseEngineerId(hbaseRowId)
+                    val manifestRecord = ManifestRecord(altered, item.timestamp, db, collection, "EXPORT", item.outerType, type, original)
                     DecryptedRecord(dbObjectWithWrappedDates, manifestRecord)
                 }
             }
