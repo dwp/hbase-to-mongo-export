@@ -23,6 +23,17 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
         }
     }
 
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
+            multiplierExpression = "\${sqs.retry.multiplier:2}"))
+    override fun notifySnapshotSenderNoFilesExported() {
+        if (triggerSnapshotSender.toBoolean()) {
+            amazonSQS.sendMessage(sendMessageRequest(noFilesExportedMessage()))
+            logger.info("Sent no files exported message to snapshot sender queue")
+        }
+    }
+
     private fun sendMessageRequest(message: String) =
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
@@ -39,6 +50,18 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             |   "reprocess_files": "$reprocess",
             |   "s3_full_folder": "$prefix",
             |   "snapshot_type": "$snapshotType"
+            |}
+            """.trimMargin()
+
+    private fun noFilesExportedMessage() = """
+            |{
+            |   "shutdown_flag": "$shutdown",
+            |   "correlation_id": "$correlationId",
+            |   "topic_name": "$topicName",
+            |   "export_date": "$exportDate",
+            |   "reprocess_files": "$reprocess",
+            |   "snapshot_type": "$snapshotType",
+            |   "files_exported": 0
             |}
             """.trimMargin()
 

@@ -3,6 +3,7 @@ package app.services.impl
 import app.services.ExportStatusService
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
@@ -13,6 +14,7 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Service
 class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : ExportStatusService {
 
+
     @Retryable(value = [Exception::class],
             maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
             backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
@@ -21,8 +23,23 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
         val result = dynamoDB.updateItem(incrementFilesExportedRequest())
         logger.info("Incremented exported count",
                 "file_exported" to exportedFile,
-                "files_exported" to "${result.attributes["FilesExported"]?.n}")
+                "files_exported" to "${result.attributes[EXPORTED_FILE_COUNT_ATTRIBUTE_NAME]?.n}")
     }
+
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+    override fun exportedFilesCount(): Int {
+        return dynamoDB.getItem(getExportedCountRequest()).item[EXPORTED_FILE_COUNT_ATTRIBUTE_NAME]?.n?.toInt() ?: -1
+    }
+
+    private fun getExportedCountRequest(): GetItemRequest =
+        GetItemRequest().apply {
+            tableName = statusTableName
+            key = primaryKey
+            setAttributesToGet(listOf(EXPORTED_FILE_COUNT_ATTRIBUTE_NAME))
+        }
 
     @Retryable(value = [Exception::class],
             maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
@@ -52,7 +69,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
         val result = dynamoDB.updateItem(setCollectionStatusRequest(status))
         logger.info("Collection status set",
                 "collection_status" to "${result.attributes["CollectionStatus"]}",
-                "files_exported" to "${result.attributes["FilesExported"]?.n}",
+                "files_exported" to "${result.attributes[EXPORTED_FILE_COUNT_ATTRIBUTE_NAME]?.n}",
                 "files_sent" to "${result.attributes["FilesSent"]?.n}")
     }
 
@@ -90,5 +107,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
+        private const val EXPORTED_FILE_COUNT_ATTRIBUTE_NAME = "FilesExported"
     }
 }

@@ -87,15 +87,17 @@ class DateWrapper {
     }
 
     private fun parsedDate(string: String) =
-            if (incomingRe.matches(string)) {
+        when {
+            incomingRe.matches(string) -> {
                 SimpleDateFormat(incomingFormat).parse(string)
             }
-            else if (outgoingRe.matches(string)) {
+            outgoingRe.matches(string) -> {
                 SimpleDateFormat(outgoingFormat).parse(string)
             }
-            else {
+            else -> {
                 null
             }
+        }
 
 
     private val incomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"

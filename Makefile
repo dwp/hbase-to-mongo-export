@@ -75,16 +75,8 @@ services-dks: service-dks-insecure service-dks-secure ## bring up the two dkses.
 
 services: services-dks service-hbase service-aws ## bring up dks, hbase, aws.
 
-export-table-unavailable: ## run htme with an unavailable table.
-	docker-compose up table-unavailable
-
-export-blocked-topic: ## run htme with a blocked topic.
-	docker-compose up blocked-topic
-
-export-s3: ## run htem aginast a valid pre-populated table.
-	docker-compose up export-s3
-
-exports: services export-table-unavailable export-blocked-topic export-s3 ## run all the exports.
+exports: services  ## run all the exports.
+	docker-compose up export-s3 blocked-topic table-unavailable export-nothing
 
 integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests

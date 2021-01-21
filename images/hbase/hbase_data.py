@@ -21,7 +21,7 @@ def main():
     encryption_key = content['plaintextDataKey']
     encrypted_key = content['ciphertextDataKey']
     master_key_id = content['dataKeyEncryptionKeyId']
-    table_name = "database:collection"
+    table_name = args.table
     tables = [x.decode('ascii') for x in connection.tables()]
 
     if table_name not in tables:
@@ -104,6 +104,8 @@ def command_line_args():
                         help='The zookeeper quorum host.')
     parser.add_argument('-r', '--records', default='10000',
                         help='The number of records to create.')
+    parser.add_argument('-t', '--table', default='database:collection',
+                        help='The table to write to.')
     return parser.parse_args()
 
 

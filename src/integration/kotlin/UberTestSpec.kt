@@ -1,3 +1,4 @@
+
 import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
@@ -12,9 +13,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import io.kotest.assertions.json.shouldMatchJson
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.apache.commons.compress.compressors.CompressorStreamFactory
@@ -112,22 +115,53 @@ class UberTestSpec: StringSpec() {
             val received = allMessages()
                 .map(Message::getBody)
                 .map {Gson().fromJson(it, JsonObject::class.java)}
-            received shouldHaveSize 20
-            val pathValues = received.map { it.remove("s3_full_folder") }.map(JsonElement::getAsString).sorted()
+            received shouldHaveSize 21
+            val pathValues = received.mapNotNull { it.remove("s3_full_folder") }.map(JsonElement::getAsString).sorted()
+
             val expected = expectedExports()
 
             pathValues shouldContainExactly expected
 
-            received.forEach {
-                it.toString() shouldBe """{
-                    |"shutdown_flag":"false",
-                    |"correlation_id":"s3-export",
-                    |"topic_name":"db.database.collection",
-                    |"export_date":"2020-07-06",
-                    |"reprocess_files":"true",
-                    |"snapshot_type":"full"
-                    |}""".trimMargin().replace(Regex("""\s"""), "")
+            val (noFilesExportedMessages, filesExportedMessages) = received.map(JsonObject::toString).partition {
+                it.contains("files_exported")
             }
+
+            filesExportedMessages shouldHaveSize 20
+            filesExportedMessages.forEach {
+                it shouldMatchJson """{
+                        "shutdown_flag":"false",
+                        "correlation_id":"s3-export",
+                        "topic_name":"db.database.collection",
+                        "export_date":"2020-07-06",
+                        "reprocess_files":"true",
+                        "snapshot_type":"full"
+                    }"""
+            }
+
+            noFilesExportedMessages shouldHaveSize 1
+            noFilesExportedMessages[0] shouldMatchJson """{
+                            "shutdown_flag":"false",
+                            "correlation_id":"empty-export",
+                            "topic_name":"db.database.empty",
+                            "export_date":"2020-07-06",
+                            "reprocess_files":"true",
+                            "snapshot_type":"full",
+                            "files_exported":0
+                        }"""
+
+        }
+
+        "dynamoDB should have no files record" {
+            val tableName = "UCExportToCrownStatus"
+            val correlationIdAttributeValue = AttributeValue().apply {s = "empty-export"}
+            val collectionNameAttributeValue = AttributeValue().apply {s = "db.database.empty"}
+            val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
+            val getItemRequest = getItemRequest(tableName, primaryKey)
+            val result = amazonDynamoDB.getItem(getItemRequest)
+            val item = result.item
+            item.shouldNotBeNull()
+            item["CollectionStatus"]?.s shouldBe "Exported"
+            item["FilesExported"]?.n shouldBe "0"
         }
 
         "dynamoDB should have blocked topic record" {
@@ -200,7 +234,7 @@ class UberTestSpec: StringSpec() {
             key = primaryKey
         }
 
-        private fun allMessages(accumulated: List<Message> = listOf()): List<Message> {
+        private tailrec fun allMessages(accumulated: List<Message> = listOf()): List<Message> {
             val messages = amazonSqs.receiveMessage(sqsQueueUrl).messages
 
             if (messages == null || messages.isEmpty()) {

@@ -58,6 +58,18 @@ class SnapshotSenderSQSMessagingServiceTest {
         verify(amazonSQS, times(3)).sendMessage(any())
     }
 
+    @Test
+    fun notifySnapshotSenderNoFilesSentRetries() {
+        val sendMessageResult = mock<SendMessageResult>()
+        given(amazonSQS.sendMessage(any()))
+                .willThrow(SdkClientException(""))
+                .willThrow(SdkClientException(""))
+                .willReturn(sendMessageResult)
+        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        verify(amazonSQS, times(3)).sendMessage(any())
+        verifyNoMoreInteractions(amazonSQS)
+    }
+
 
     @Test
     fun notifySnapshotSenderSendsCorrectMessageIfFlagTrue() {
@@ -83,11 +95,42 @@ class SnapshotSenderSQSMessagingServiceTest {
         verifyNoMoreInteractions(amazonSQS)
     }
 
+    @Test
+    fun notifySnapshotSenderNoFilesExportedSendsCorrectMessageIfFlagTrue() {
+        val sendMessageResult = mock<SendMessageResult>()
+        given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
+        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        val expected = SendMessageRequest().apply {
+            queueUrl = "http://aws:4566"
+            delaySeconds = 30
+            messageBody = """
+            |{
+            |   "shutdown_flag": "true",
+            |   "correlation_id": "correlation-id",
+            |   "topic_name": "db.database.collection",
+            |   "export_date": "2020-06-05",
+            |   "reprocess_files": "false",
+            |   "snapshot_type": "incremental",
+            |   "files_exported": 0
+            |}
+            """.trimMargin()
+        }
+
+        verify(amazonSQS, times(1)).sendMessage(expected)
+        verifyNoMoreInteractions(amazonSQS)
+    }
 
     @Test
     fun notifySnapshotSenderDoesNotSendMessageIfFlagFalse() {
         ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
         snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        verifyZeroInteractions(amazonSQS)
+    }
+
+    @Test
+    fun notifySnapshotSenderNoFilesExportedDoesNotSendMessageIfFlagFalse() {
+        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
+        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
         verifyZeroInteractions(amazonSQS)
     }
 }

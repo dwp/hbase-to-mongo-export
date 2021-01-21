@@ -26,56 +26,79 @@ create_uc_ecc_table() {
         aws_local dynamodb create-table \
                   --table-name $(ucc_ecc_table_name) \
                   --key-schema \
-                    AttributeName=CorrelationId,KeyType=HASH \
-                    AttributeName=CollectionName,KeyType=RANGE \
+                  AttributeName=CorrelationId,KeyType=HASH \
+                  AttributeName=CollectionName,KeyType=RANGE \
                   --attribute-definitions \
-                    AttributeName=CorrelationId,AttributeType=S \
-                    AttributeName=CollectionName,AttributeType=S \
+                  AttributeName=CorrelationId,AttributeType=S \
+                  AttributeName=CollectionName,AttributeType=S \
                   --billing-mode PAY_PER_REQUEST
     else
-      echo Table \'$(ucc_ecc_table_name)\' exists.
+        echo Table \'$(ucc_ecc_table_name)\' exists.
     fi
 
 }
 
 add_status_item() {
+    add_item $(status_item_id)
+}
+
+add_empty_status_item() {
+    add_item $(empty_status_item_id)
+}
+
+add_item() {
+    local id=${1:?Usage: $FUNCNAME id correlation-id}
+
     aws_local dynamodb delete-item \
-          --table-name $(ucc_ecc_table_name) \
-          --key $(status_item_id) \
-          --return-values "ALL_OLD"
+              --table-name $(ucc_ecc_table_name) \
+              --key $id \
+              --return-values "ALL_OLD"
 
     aws_local dynamodb update-item \
-          --table-name $(ucc_ecc_table_name) \
-          --key $(status_item_id) \
-          --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
-          --return-values "ALL_NEW" \
-          --expression-attribute-values '{":cs": {"S":"Exporting"}, ":fe": {"N":"0"}, ":fs": {"N":"0"}}'
+              --table-name $(ucc_ecc_table_name) \
+              --key $id \
+              --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
+              --return-values "ALL_NEW" \
+              --expression-attribute-values '{":cs": {"S":"Exporting"}, ":fe": {"N":"0"}, ":fs": {"N":"0"}}'
 }
 
 create_sqs_queue() {
-  aws_local sqs create-queue --queue-name integration-queue
+    aws_local sqs create-queue --queue-name integration-queue
 }
 
 read_sqs_queue() {
-  aws_local sqs receive-message --queue-url $(sqs_queue_url)
+    aws_local sqs receive-message --queue-url $(sqs_queue_url)
 }
 
 get_status_item() {
+    get_item $(status_item_id)
+}
+
+get_empty_status_item() {
+    get_item $(empty_status_item_id)
+}
+
+get_item() {
+    local id=${1:?Usage: $FUNCNAME id}
     aws_local dynamodb get-item \
-          --table-name $(ucc_ecc_table_name) \
-          --key $(status_item_id)
+              --table-name $(ucc_ecc_table_name) \
+              --key $id
 }
 
 status_item_id() {
-  echo '{"CorrelationId":{"S":"s3-export"},"CollectionName":{"S":"db.database.collection"}}'
+    echo '{"CorrelationId":{"S":"s3-export"},"CollectionName":{"S":"db.database.collection"}}'
+}
+
+empty_status_item_id() {
+    echo '{"CorrelationId":{"S":"empty-export"},"CollectionName":{"S":"db.database.empty"}}'
 }
 
 ucc_ecc_table_name() {
-  echo UCExportToCrownStatus
+    echo UCExportToCrownStatus
 }
 
 sqs_queue_url() {
-  aws_local sqs list-queues --query "QueueUrls[0]" | jq -r .
+    aws_local sqs list-queues --query "QueueUrls[0]" | jq -r .
 }
 
 make_bucket() {
@@ -92,5 +115,5 @@ make_bucket() {
 }
 
 aws_local() {
-  aws --endpoint-url http://aws:4566 --region=eu-west-2 "$@"
+    aws --endpoint-url http://aws:4566 --region=eu-west-2 "$@"
 }
