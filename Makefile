@@ -76,7 +76,7 @@ services-dks: service-dks-insecure service-dks-secure ## bring up the two dkses.
 services: services-dks service-hbase service-aws ## bring up dks, hbase, aws.
 
 exports: services  ## run all the exports.
-	docker-compose up export-s3 blocked-topic table-unavailabale export-nothing
+	docker-compose up export-s3 blocked-topic table-unavailable export-nothing
 
 integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
