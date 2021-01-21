@@ -41,10 +41,6 @@ services:
     build:
       context: images/htme
     container_name: export-s3
-    depends_on:
-      - hbase-init
-      - dks-standalone-https
-      - aws-init
     environment:
       - SPRING_CONFIG_LOCATION=config/application-s3.properties
       - CORRELATION_ID=s3-export
@@ -54,15 +50,25 @@ services:
       - COMPONENT=jar-file
       - ENVIRONMENT=local-docker
 
+  export-nothing:
+    image: hbase-to-mongo-export
+    build:
+      context: images/htme
+    container_name: export-nothing
+    environment:
+      - SPRING_CONFIG_LOCATION=config/application-empty.properties
+      - CORRELATION_ID=empty-export
+      - TOPIC_NAME=db.database.empty
+      - APPLICATION=htme-export-empty
+      - APP_VERSION=test
+      - COMPONENT=jar-file
+      - ENVIRONMENT=local-docker
+
   table-unavailable:
     image: hbase-to-mongo-export
     build:
       context: images/htme
     container_name: table-unavailable
-    depends_on:
-      - hbase-init
-      - dks-standalone-https
-      - aws-init
     environment:
       - SPRING_CONFIG_LOCATION=config/application-table-unavailable.properties
       - CORRELATION_ID=table-unavailable
@@ -77,10 +83,6 @@ services:
     build:
       context: images/htme
     container_name: blocked-topic
-    depends_on:
-      - hbase-init
-      - dks-standalone-https
-      - aws-init
     environment:
       - SPRING_CONFIG_LOCATION=config/application-blocked-topic.properties
       - CORRELATION_ID=blocked_topic

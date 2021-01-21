@@ -4,6 +4,7 @@ import app.services.ExportStatusService
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertEquals
@@ -91,4 +92,42 @@ class DynamoDBExportStatusServiceTest {
         exportStatusService.setFailedStatus()
         verify(amazonDynamoDB, times(3)).updateItem(any())
     }
+
+    @Test
+    fun exportedFileCountRetries() {
+        given(amazonDynamoDB.getItem(any()))
+                .willThrow(SdkClientException(""))
+                .willThrow(SdkClientException(""))
+                .willReturn(mock())
+        exportStatusService.exportedFilesCount()
+        verify(amazonDynamoDB, times(3)).getItem(any())
+        verifyNoMoreInteractions(amazonDynamoDB)
+    }
+
+    @Test
+    fun exportedFileCountReturnsExportedFileCount() {
+        val response = mock<GetItemResult> {
+            on { item } doReturn mapOf("FilesExported" to AttributeValue().apply { n = "0" })
+        }
+
+        given(amazonDynamoDB.getItem(any()))
+           .willReturn(response)
+        val actual = exportStatusService.exportedFilesCount()
+        assertEquals(0, actual)
+        verify(amazonDynamoDB, times(1)).getItem(any())
+        verifyNoMoreInteractions(amazonDynamoDB)
+    }
+
+    @Test
+    fun exportedFileCountReturnsMinusOneIfAttributeMissing() {
+        val response = mock<GetItemResult> {
+            on { item } doReturn mapOf("OtherAttribute" to AttributeValue().apply { n = "0" })
+        }
+        given(amazonDynamoDB.getItem(any())).willReturn(response)
+        val actual = exportStatusService.exportedFilesCount()
+        assertEquals(-1, actual)
+        verify(amazonDynamoDB, times(1)).getItem(any())
+        verifyNoMoreInteractions(amazonDynamoDB)
+    }
+
 }

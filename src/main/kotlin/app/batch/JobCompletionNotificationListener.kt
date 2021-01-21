@@ -2,6 +2,7 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.services.ExportStatusService
+import app.services.SnapshotSenderMessagingService
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
@@ -11,13 +12,17 @@ import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
-class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService) :
+class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
+                                        private val messagingService: SnapshotSenderMessagingService) :
         JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
         logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
         if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
             exportStatusService.setExportedStatus()
+            if (exportStatusService.exportedFilesCount() == 0) {
+                messagingService.notifySnapshotSenderNoFilesExported()
+            }
         }
         else {
             when {
