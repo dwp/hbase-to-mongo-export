@@ -48,3 +48,6 @@ venv/
 env/
 tmp/
 *.jar
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup

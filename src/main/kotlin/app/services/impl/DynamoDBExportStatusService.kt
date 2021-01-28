@@ -3,8 +3,8 @@ package app.services.impl
 import app.services.ExportStatusService
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.ItemCollection
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
@@ -22,19 +22,8 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
-    override fun exportStatus() {
-        val exportTable  = DynamoDB(dynamoDB).getTable(statusTableName)
-        val query = QuerySpec().apply {
-            withKeyConditionExpression("#cId = :s")
-            withNameMap(mapOf("#cId" to "CorrelationId"))
-            withValueMap(mapOf(":s" to correlationId))
-        }
-        val items: ItemCollection<QueryOutcome> = exportTable.query(query)
-        items.map {
-            it.get(COLLECTION_STATUS_ATTRIBUTE_NAME) }.map {
-        }
-    }
-
+    override fun exportCompletedSuccessfully(): Boolean =
+        exportStatusTable().query(statusQuerySpec()).map(::collectionStatus).all(::collectionCompletedSuccessfully)
 
     @Retryable(value = [Exception::class],
             maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
@@ -111,6 +100,20 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
                 expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = status })
                 returnValues = "ALL_NEW"
             }
+
+    private fun collectionStatus(item: Item): String = item[COLLECTION_STATUS_ATTRIBUTE_NAME] as String
+
+    private fun collectionCompletedSuccessfully(status: Any): Boolean =
+        status == "Exported" || status == "Sent" || status == "Received" || status == "Success"
+
+    private fun exportStatusTable(): Table = DynamoDB(dynamoDB).getTable(statusTableName)
+
+    private fun statusQuerySpec(): QuerySpec =
+        QuerySpec().apply {
+            withKeyConditionExpression("#cId = :s")
+            withNameMap(mapOf("#cId" to "CorrelationId"))
+            withValueMap(mapOf(":s" to correlationId))
+        }
 
     private val primaryKey by lazy {
         val correlationIdAttributeValue = AttributeValue().apply { s = correlationId }

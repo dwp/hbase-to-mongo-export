@@ -28,8 +28,21 @@ add_status_item() {
     add_item $(status_item_id)
 }
 
-add_feed_items() {
-  :
+add_completed_items() {
+    for i in $(seq 50); do
+
+        if [[ $((i % 4)) == 0 ]]; then
+            local status=Exported
+        elif [[ $((i % 4)) == 1 ]]; then
+            local status=Sent
+        elif [[ $((i % 4)) == 2 ]]; then
+            local status=Received
+        else
+            local status=Success
+        fi
+
+        add_item $(completed_item_id $i) $status 100 100
+    done
 }
 
 add_empty_status_item() {
@@ -37,19 +50,19 @@ add_empty_status_item() {
 }
 
 add_item() {
-    local id=${1:?Usage: $FUNCNAME id correlation-id}
+    local id=${1:?Usage: $FUNCNAME id}
+    local status=${2:-Exporting}
+    local files_exported=${3:-0}
+    local files_sent=${4:-0}
 
     aws_local dynamodb delete-item \
               --table-name $(ucc_ecc_table_name) \
-              --key $id \
+              --key "{"$id"}" \
               --return-values "ALL_OLD"
 
-    aws_local dynamodb update-item \
+    aws_local dynamodb put-item \
               --table-name $(ucc_ecc_table_name) \
-              --key $id \
-              --update-expression "SET CollectionStatus = :cs, FilesExported = :fe, FilesSent = :fs" \
-              --return-values "ALL_NEW" \
-              --expression-attribute-values '{":cs": {"S":"Exporting"}, ":fe": {"N":"0"}, ":fs": {"N":"0"}}'
+              --item '{'$id', "CollectionStatus": {"S":"'$status'"}, "FilesExported":{"N":"'$files_exported'"},"FilesSent":{"N":"'$files_sent'"}}'
 }
 
 create_sqs_queue() {
@@ -75,12 +88,17 @@ get_item() {
               --key $id
 }
 
+completed_item_id() {
+    local index=${1:?Usage}
+    echo '"CorrelationId":{"S":"s3-export"},"CollectionName":{"S":"db.database.collection'$index'"}'
+}
+
 status_item_id() {
-    echo '{"CorrelationId":{"S":"s3-export"},"CollectionName":{"S":"db.database.collection"}}'
+    echo '"CorrelationId":{"S":"s3-export"},"CollectionName":{"S":"db.database.collection"}'
 }
 
 empty_status_item_id() {
-    echo '{"CorrelationId":{"S":"empty-export"},"CollectionName":{"S":"db.database.empty"}}'
+    echo '"CorrelationId":{"S":"empty-export"},"CollectionName":{"S":"db.database.empty"}'
 }
 
 ucc_ecc_table_name() {

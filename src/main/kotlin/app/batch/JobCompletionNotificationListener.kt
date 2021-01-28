@@ -1,6 +1,7 @@
 package app.batch
 
 import app.exceptions.BlockedTopicException
+import app.services.AdgTrigger
 import app.services.ExportStatusService
 import app.services.SnapshotSenderMessagingService
 import org.apache.hadoop.hbase.TableNotEnabledException
@@ -14,7 +15,8 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
-                                        private val messagingService: SnapshotSenderMessagingService) :
+                                        private val messagingService: SnapshotSenderMessagingService,
+                                        private val adgTrigger: AdgTrigger) :
         JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
@@ -24,8 +26,9 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             if (exportStatusService.exportedFilesCount() == 0) {
                 messagingService.notifySnapshotSenderNoFilesExported()
             }
-
-
+            if (exportStatusService.exportCompletedSuccessfully()) {
+                adgTrigger.triggerAdg()
+            }
         }
         else {
             when {
