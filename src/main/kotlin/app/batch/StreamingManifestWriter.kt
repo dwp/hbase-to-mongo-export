@@ -47,7 +47,7 @@ class StreamingManifestWriter {
 
 
     companion object {
-        val logger = DataworksLogger.getLogger(StreamingManifestWriter::class.toString())
+        val logger = DataworksLogger.getLogger(StreamingManifestWriter::class)
     }
 
 

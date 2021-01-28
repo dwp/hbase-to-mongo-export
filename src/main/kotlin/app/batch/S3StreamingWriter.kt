@@ -77,13 +77,20 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
     fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
-            currentOutputStream!!.close()
+            val closed = currentOutputStream!!.close()
+
+
             val data = currentOutputStream!!.data()
 
             val inputStream = ByteArrayInputStream(data)
             val filePrefix = filePrefix()
             val slashRemovedPrefix = exportPrefix.replace(Regex("""/+$"""), "")
             val objectKey: String = "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
+
+            if (!closed) {
+                logger.error("Failed to close output streams cleanly", "object_key" to objectKey)
+            }
+
             val metadata = ObjectMetadata().apply {
                 contentType = "binary/octetstream"
                 addUserMetadata("x-amz-meta-title", objectKey)
@@ -186,6 +193,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private lateinit var manifestOutputDirectory: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(S3StreamingWriter::class.toString())
+        val logger = DataworksLogger.getLogger(S3StreamingWriter::class)
     }
 }

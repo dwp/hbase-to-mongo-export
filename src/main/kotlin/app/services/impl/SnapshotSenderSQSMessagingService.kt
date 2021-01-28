@@ -94,6 +94,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     private lateinit var snapshotType: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class.toString())
+        val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class)
     }
 }

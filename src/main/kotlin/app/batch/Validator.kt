@@ -184,7 +184,7 @@ class Validator {
     private lateinit var snapshotType: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(Validator::class.toString())
+        val logger = DataworksLogger.getLogger(Validator::class)
 
         const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
         const val CREATED_DATE_TIME_FIELD = "createdDateTime"

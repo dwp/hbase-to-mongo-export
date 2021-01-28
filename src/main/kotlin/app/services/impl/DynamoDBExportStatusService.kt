@@ -106,7 +106,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     private val correlationId by lazy { System.getProperty("correlation_id", "NOT_SET") }
 
     companion object {
-        val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
+        val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class)
         private const val EXPORTED_FILE_COUNT_ATTRIBUTE_NAME = "FilesExported"
     }
 }
