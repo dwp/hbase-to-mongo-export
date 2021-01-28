@@ -127,6 +127,6 @@ class ContextConfiguration {
     private lateinit var hbaseZookeeperQuorum: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(ContextConfiguration::class.toString())
+        val logger = DataworksLogger.getLogger(ContextConfiguration::class)
     }
 }

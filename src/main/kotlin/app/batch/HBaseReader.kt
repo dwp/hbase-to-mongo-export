@@ -217,6 +217,6 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
     private var stop: Int = Int.MAX_VALUE
 
     companion object {
-        val logger = DataworksLogger.getLogger(HBaseReader::class.toString())
+        val logger = DataworksLogger.getLogger(HBaseReader::class)
     }
 }

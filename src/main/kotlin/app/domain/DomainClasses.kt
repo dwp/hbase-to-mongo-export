@@ -2,6 +2,7 @@ package app.domain
 
 import com.google.gson.JsonObject
 import org.apache.commons.text.StringEscapeUtils
+import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.BufferedOutputStream
 import java.io.BufferedWriter
 import java.io.ByteArrayOutputStream
@@ -68,10 +69,15 @@ data class EncryptingOutputStream(private val outputStream: BufferedOutputStream
     fun write(data: ByteArray) = outputStream.write(data)
     fun data(): ByteArray = target.toByteArray()
 
-    fun close() {
-        outputStream.close()
-        manifestWriter.close()
-    }
+    fun close(): Boolean =
+        try {
+            outputStream.close()
+            manifestWriter.close()
+            true
+        } catch (e: Exception) {
+            logger.error("Failed to close output streams", e, "manifest_file" to "$manifestFile")
+            false
+        }
 
     fun writeManifestRecord(manifestRecord: ManifestRecord) = manifestWriter.write(csv(manifestRecord))
 
@@ -79,4 +85,5 @@ data class EncryptingOutputStream(private val outputStream: BufferedOutputStream
             "${escape(manifestRecord.id)}|${escape(manifestRecord.timestamp.toString())}|${escape(manifestRecord.db)}|${escape(manifestRecord.collection)}|${escape(manifestRecord.source)}|${escape(manifestRecord.externalOuterSource)}|${escape(manifestRecord.originalId)}|${escape(manifestRecord.externalInnerSource)}\n"
 
     private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
+    private val logger = DataworksLogger.getLogger(EncryptingOutputStream::class)
 }

@@ -29,7 +29,7 @@ class HttpKeyService(
     private val uuidGenerator: UUIDGenerator) : KeyService {
 
     companion object {
-        val logger = DataworksLogger.getLogger(HttpKeyService::class.toString())
+        val logger = DataworksLogger.getLogger(HttpKeyService::class)
     }
 
     @Override
