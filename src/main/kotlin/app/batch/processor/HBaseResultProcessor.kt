@@ -73,7 +73,7 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
     }
 
     companion object {
-        private val logger = DataworksLogger.getLogger(HBaseResultProcessor::class.java.toString())
+        private val logger = DataworksLogger.getLogger(HBaseResultProcessor::class)
         private val columnFamily = Bytes.toBytes("cf")
         private val columnQualifier = Bytes.toBytes("record")
     }

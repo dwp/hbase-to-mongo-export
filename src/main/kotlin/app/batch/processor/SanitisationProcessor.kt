@@ -41,6 +41,6 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
     }
 
     companion object {
-        val logger = DataworksLogger.getLogger(SanitisationProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(SanitisationProcessor::class)
     }
 }

@@ -60,11 +60,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("org.apache.commons:commons-text:1.8")
     implementation("com.beust:klaxon:4.0.2")
-    implementation("com.github.dwp:dataworks-common-logging:0.0.5")
+    implementation("com.github.dwp:dataworks-common-logging:0.0.6")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
-    testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
     testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.1")

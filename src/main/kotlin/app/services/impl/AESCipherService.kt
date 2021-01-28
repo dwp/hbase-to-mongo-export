@@ -64,6 +64,6 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
     private lateinit var targetCipherAlgorithm: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(AESCipherService::class.toString())
+        val logger = DataworksLogger.getLogger(AESCipherService::class)
     }
 }

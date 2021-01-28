@@ -43,7 +43,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
     }
 
     companion object {
-        val logger = DataworksLogger.getLogger(DecryptionProcessor::class.toString())
+        val logger = DataworksLogger.getLogger(DecryptionProcessor::class)
     }
 }
 

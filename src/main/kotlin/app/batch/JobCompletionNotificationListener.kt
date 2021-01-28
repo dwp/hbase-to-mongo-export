@@ -8,6 +8,7 @@ import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
@@ -40,7 +41,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                 }
                 else -> {
                     logger.error("Setting export failed status",
-                        "job_exit_status" to "${jobExecution.exitStatus}")
+                        "job_exit_status" to "${jobExecution.exitStatus}", "topic" to topicName)
                     exportStatusService.setFailedStatus()
                 }
             }
@@ -77,7 +78,10 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         return false
     }
 
+    @Value("\${topic.name}")
+    private lateinit var topicName: String // i.e. "db.user.data"
+
     companion object {
-        val logger = DataworksLogger.getLogger(S3StreamingWriter::class.toString())
+        val logger = DataworksLogger.getLogger(S3StreamingWriter::class)
     }
 }
