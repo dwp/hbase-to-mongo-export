@@ -17,7 +17,7 @@ services:
       - '4566:4566'
     container_name: aws
     environment:
-      - SERVICES=s3,dynamodb,sqs
+      - SERVICES=s3,dynamodb,sqs,sns
 
   aws-init:
     image: aws-init

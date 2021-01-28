@@ -2,6 +2,10 @@ package app.services.impl
 
 import app.services.ExportStatusService
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.ItemCollection
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
@@ -13,6 +17,23 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
 class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : ExportStatusService {
+
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
+            multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
+    override fun exportStatus() {
+        val exportTable  = DynamoDB(dynamoDB).getTable(statusTableName)
+        val query = QuerySpec().apply {
+            withKeyConditionExpression("#cId = :s")
+            withNameMap(mapOf("#cId" to "CorrelationId"))
+            withValueMap(mapOf(":s" to correlationId))
+        }
+        val items: ItemCollection<QueryOutcome> = exportTable.query(query)
+        items.map {
+            it.get(COLLECTION_STATUS_ATTRIBUTE_NAME) }.map {
+        }
+    }
 
 
     @Retryable(value = [Exception::class],
@@ -108,5 +129,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class.toString())
         private const val EXPORTED_FILE_COUNT_ATTRIBUTE_NAME = "FilesExported"
+        private const val COLLECTION_STATUS_ATTRIBUTE_NAME = "CollectionStatus"
     }
 }

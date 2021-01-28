@@ -23,6 +23,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             if (exportStatusService.exportedFilesCount() == 0) {
                 messagingService.notifySnapshotSenderNoFilesExported()
             }
+
+
         }
         else {
             when {

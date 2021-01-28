@@ -5,20 +5,6 @@ init() {
     aws_local configure set aws_secret_access_key secret_access_key
 }
 
-
-create_export_bucket() {
-    make_bucket exports
-}
-
-create_manifest_bucket() {
-    make_bucket manifests
-}
-
-create_crl_bucket() {
-    make_bucket dw-local-crl
-    aws_local s3api put-object --bucket dw-local-crl --key crl/
-}
-
 create_uc_ecc_table() {
     local existing_tables=$(aws_local dynamodb list-tables --query "TableNames")
     if [[ ! $existing_tables =~ $(ucc_ecc_table_name) ]]; then
@@ -40,6 +26,10 @@ create_uc_ecc_table() {
 
 add_status_item() {
     add_item $(status_item_id)
+}
+
+add_feed_items() {
+  :
 }
 
 add_empty_status_item() {
