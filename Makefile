@@ -27,14 +27,14 @@ git-hooks: ## Set up hooks in .git/hooks
 certificates: ## generate the mutual authentication certificates for communications with dks.
 	./generate-certificates.sh
 
-build-jar: ## build the main jar
+jar: ## build the main jar
 	gradle build
 	cp build/libs/*.jar images/htme/hbase-to-mongo-export.jar
 
-build-images: build-jar certificates ## build the images for local containerized running
+images: jar certificates ## build the images for local containerized running
 	docker-compose build
 
-build-all: build-jar build-images ## Build the jar file and then all docker images
+build-all: jar images ## Build the jar file and then all docker images
 
 build-hbase-init: ## build the image that populates hbase.
 	docker-compose build --no-cache hbase-populate
@@ -80,12 +80,3 @@ exports: services  ## run all the exports.
 
 integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
-
-integration-all: destroy build-images integration-tests ## teardown for fresh start, build the images and run the tests.
-
-down: ## Bring down the containers
-	docker-compose down
-
-destroy: down ## Bring down the containers Docker container and services then delete all volumes
-	docker network prune -f
-	docker volume prune -f

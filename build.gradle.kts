@@ -43,6 +43,7 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-core:1.11.706")
     implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.706")
     implementation("com.amazonaws:aws-java-sdk-sqs:1.11.706")
+    implementation("com.amazonaws:aws-java-sdk-sns:1.11.706")
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-batch:2.2.0.RELEASE")

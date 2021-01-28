@@ -65,9 +65,9 @@ add_item() {
               --item '{'$id', "CollectionStatus": {"S":"'$status'"}, "FilesExported":{"N":"'$files_exported'"},"FilesSent":{"N":"'$files_sent'"}}'
 }
 
-create_sqs_queue() {
-    aws_local sqs create-queue --queue-name integration-queue
-}
+#create_sqs_queue() {
+#    aws_local sqs create-queue --queue-name integration-queue
+#}
 
 read_sqs_queue() {
     aws_local sqs receive-message --queue-url $(sqs_queue_url)

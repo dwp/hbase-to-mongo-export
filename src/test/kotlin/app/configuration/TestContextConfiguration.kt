@@ -3,6 +3,7 @@ package app.configuration
 import app.services.KeyService
 import app.utils.UUIDGenerator
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.sns.AmazonSNS
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.http.client.HttpClient
 import org.mockito.Mockito
@@ -44,6 +45,12 @@ class TestContextConfiguration {
     @Profile("unitTest")
     fun amazonS3(): AmazonS3 {
         return Mockito.mock(AmazonS3::class.java)
+    }
+
+    @Bean
+    @Profile("unitTest")
+    fun amazonSNS(): AmazonSNS {
+        return Mockito.mock(AmazonSNS::class.java)
     }
 
 }

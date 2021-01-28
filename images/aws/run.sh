@@ -8,9 +8,8 @@ main() {
   add_status_item
   add_empty_status_item
   add_completed_items
-  create_sqs_queue
+  terraform init
+  terraform apply -auto-approve
 }
 
 main
-terraform init
-terraform apply -auto-approve

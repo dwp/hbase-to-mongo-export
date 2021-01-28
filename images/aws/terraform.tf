@@ -42,3 +42,11 @@ resource "aws_s3_bucket" "crl_bucket" {
 resource "aws_sns_topic" "adg_trigger" {
   name = "trigger-adg-topic"
 }
+
+resource "aws_sqs_queue" "trigger_adg_subscriber" {
+  name = "trigger-adg-subscriber"
+}
+
+resource "aws_sqs_queue" "integration-queue" {
+  name = "integration-queue"
+}

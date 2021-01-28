@@ -93,8 +93,8 @@ There are makefile commands for all your common actions;
  | `generate-developer-certs`   | Generate temporary local certs and stores for the local developer containers to use
  | `add-contaners-to-hosts`     | Update laptop hosts file with reference to containers (`http://local-hbase:8080`, `http://local-dks:8080`, etc etc)
  | `build-all`                  | Build the jar file and then all docker images
- | `build-images`               | Build the hbase, population, and exporter images
- | `build-jar`                  | Build the hbase exporter jar file
+ | `images`               | Build the hbase, population, and exporter images
+ | `jar`                  | Build the hbase exporter jar file
  | `destroy`                    | Bring down the hbase and other services then delete all volumes
  | `dist`                       | Assemble distribution files in build/dist
  | `down`                       | Bring down the hbase and other services

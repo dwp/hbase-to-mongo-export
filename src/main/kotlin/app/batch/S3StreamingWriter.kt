@@ -106,6 +106,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                 "total_snapshot_files_already_written" to "$totalBatches", "total_bytes_already_written" to "$totalBytes",
                 "total_records_already_written" to "$totalRecords")
 
+            // FIXME: 28/01/2021 Add retries 
             inputStream.use {
                 val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
                 s3.putObject(request)
