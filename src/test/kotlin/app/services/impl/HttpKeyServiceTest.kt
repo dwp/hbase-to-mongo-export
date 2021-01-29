@@ -16,7 +16,6 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.CloseableHttpClient
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -49,7 +48,8 @@ import java.io.ByteArrayInputStream
     "trust.store.password=changeit",
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2",
+    "s3.bucket=bucket",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",

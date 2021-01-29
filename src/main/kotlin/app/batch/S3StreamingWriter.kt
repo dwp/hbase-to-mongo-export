@@ -3,13 +3,8 @@ package app.batch
 import app.configuration.CompressionInstanceProvider
 import app.domain.EncryptingOutputStream
 import app.domain.Record
-import app.services.CipherService
-import app.services.ExportStatusService
-import app.services.KeyService
-import app.services.SnapshotSenderMessagingService
+import app.services.*
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.PutObjectRequest
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
@@ -40,8 +35,9 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val streamingManifestWriter: StreamingManifestWriter,
                         private val compressionInstanceProvider: CompressionInstanceProvider,
                         private val exportStatusService: ExportStatusService,
-                        private val snapshotSenderMessagingService: SnapshotSenderMessagingService):
-        ItemWriter<Record> {
+                        private val snapshotSenderMessagingService: SnapshotSenderMessagingService,
+                        private val s3ObjectService: S3ObjectService):
+    ItemWriter<Record> {
 
     private var absoluteStart: Int = Int.MIN_VALUE
     private var absoluteStop: Int = Int.MAX_VALUE
@@ -63,70 +59,64 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     override fun write(items: MutableList<out Record>) {
-        items.forEach {
-            val item = "${it.dbObjectAsString}\n"
+        items.forEach { record ->
+
+            val item = "${record.dbObjectAsString}\n"
+
             if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {
                 writeOutput()
             }
-            currentOutputStream!!.write(item.toByteArray())
-            batchSizeBytes += item.length
-            recordsInBatch++
-            currentOutputStream!!.writeManifestRecord(it.manifestRecord)
+
+            currentOutputStream?.let { output ->
+                output.write(item.toByteArray())
+                batchSizeBytes += item.length
+                recordsInBatch++
+                output.writeManifestRecord(record.manifestRecord)
+            }
         }
     }
 
     fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
-            val closed = currentOutputStream!!.close()
-
-
-            val data = currentOutputStream!!.data()
-
-            val inputStream = ByteArrayInputStream(data)
             val filePrefix = filePrefix()
             val slashRemovedPrefix = exportPrefix.replace(Regex("""/+$"""), "")
-            val objectKey: String = "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc".format(currentBatch)
+            val objectKey =
+                "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc"
+                    .format(currentBatch)
 
-            if (!closed) {
-                logger.error("Failed to close output streams cleanly", "object_key" to objectKey)
-            }
+            currentOutputStream?.let { encryptingOutputStream ->
+                try {
+                    val closed = encryptingOutputStream.close()
+                    val data = encryptingOutputStream.data()
 
-            val metadata = ObjectMetadata().apply {
-                contentType = "binary/octetstream"
-                addUserMetadata("x-amz-meta-title", objectKey)
-                addUserMetadata("iv", currentOutputStream!!.initialisationVector)
-                addUserMetadata("cipherText", currentOutputStream!!.dataKeyResult.ciphertextDataKey)
-                addUserMetadata("dataKeyEncryptionKeyId", currentOutputStream!!.dataKeyResult.dataKeyEncryptionKeyId)
-                contentLength = data.size.toLong()
-            }
+                    if (!closed) {
+                        logger.error("Failed to close output streams cleanly", "object_key" to objectKey)
+                    }
 
-            logger.info("Putting batch object into bucket",
-                "s3_location" to objectKey, "records_in_batch" to "$recordsInBatch", "batch_size_bytes" to "$batchSizeBytes",
-                "data_size_bytes" to "${data.size}", "export_bucket" to exportBucket, "max_batch_output_size_bytes" to "$maxBatchOutputSizeBytes",
-                "total_snapshot_files_already_written" to "$totalBatches", "total_bytes_already_written" to "$totalBytes",
-                "total_records_already_written" to "$totalRecords")
+                    s3ObjectService.putObject(objectKey, encryptingOutputStream)
 
-            // FIXME: 28/01/2021 Add retries 
-            inputStream.use {
-                val request = PutObjectRequest(exportBucket, objectKey, it, metadata)
-                s3.putObject(request)
-            }
+                    logger.info("Put batch object into bucket",
+                        "s3_location" to objectKey,
+                        "records_in_batch" to "$recordsInBatch",
+                        "batch_size_bytes" to "$batchSizeBytes",
+                        "data_size_bytes" to "${data.size}",
+                        "export_bucket" to exportBucket,
+                        "max_batch_output_size_bytes" to "$maxBatchOutputSizeBytes",
+                        "total_snapshot_files_already_written" to "$totalBatches",
+                        "total_bytes_already_written" to "$totalBytes",
+                        "total_records_already_written" to "$totalRecords")
 
-            logger.info("Put batch object into bucket")
-
-            exportStatusService.incrementExportedCount(objectKey)
-            snapshotSenderMessagingService.notifySnapshotSender(objectKey)
-            
-            totalBatches++
-            totalBytes += batchSizeBytes
-            totalRecords += recordsInBatch
-
-            try {
-                streamingManifestWriter.sendManifest(s3, currentOutputStream!!.manifestFile, manifestBucket, manifestPrefix)
-                totalManifestFiles++
-                totalManifestRecords += currentOutputStream!!.manifestFile.length()
-            } catch (e: Exception) {
-                logger.error("Failed to write manifest", e, "manifest_file" to "${currentOutputStream!!.manifestFile}")
+                    exportStatusService.incrementExportedCount(objectKey)
+                    snapshotSenderMessagingService.notifySnapshotSender(objectKey)
+                    totalBatches++
+                    totalBytes += batchSizeBytes
+                    totalRecords += recordsInBatch
+                    streamingManifestWriter.sendManifest(s3, encryptingOutputStream.manifestFile, manifestBucket, manifestPrefix)
+                    totalManifestFiles++
+                    totalManifestRecords += encryptingOutputStream.manifestFile.length()
+                } catch (e: Exception) {
+                    logger.error("Failed to write data", e,"object_key" to objectKey, "manifest_file" to "${encryptingOutputStream.manifestFile}")
+                }
             }
         }
 
@@ -157,7 +147,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
             keyResponse,
             Base64.getEncoder().encodeToString(initialisationVector),
             manifestFile,
-            manifestWriter)
+            manifestWriter
+        )
     }
 
     private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)

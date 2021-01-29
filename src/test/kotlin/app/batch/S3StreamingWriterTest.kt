@@ -4,13 +4,9 @@ import app.configuration.CompressionInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.ManifestRecord
 import app.domain.Record
-import app.services.CipherService
-import app.services.ExportStatusService
-import app.services.KeyService
-import app.services.SnapshotSenderMessagingService
+import app.services.*
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.services.sqs.AmazonSQS
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -42,6 +38,7 @@ import java.security.SecureRandom
     "s3.manifest.bucket=manifests",
     "s3.manifest.prefix.folder=manifestprefix",
     "s3.prefix.folder=prefix",
+    "s3.bucket=bucket",
     "topic.name=db.database.collection",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",
@@ -59,6 +56,9 @@ class S3StreamingWriterTest {
 
     @MockBean
     private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var s3ObjectService: S3ObjectService
 
     @MockBean
     @SuppressWarnings("Unused")
@@ -153,9 +153,8 @@ class S3StreamingWriterTest {
         }
 
         s3StreamingWriter.writeOutput()
-        val putObjectRequest = argumentCaptor<PutObjectRequest>()
         Mockito.verify(s3StreamingWriter, times(5)).writeOutput()
-        Mockito.verify(s3, times(4)).putObject(putObjectRequest.capture())
+        Mockito.verify(s3ObjectService, times(4)).putObject(any(), any())
         Mockito.verify(streamingManifestWriter, times(4)).sendManifest(any(), any(), any(), any())
    }
 
