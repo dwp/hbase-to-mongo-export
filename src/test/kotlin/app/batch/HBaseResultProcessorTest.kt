@@ -4,6 +4,7 @@ import app.batch.processor.HBaseResultProcessor
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
+import app.utils.TextUtils
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.sqs.AmazonSQS
 import com.nhaarman.mockitokotlin2.doReturn
@@ -23,9 +24,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
-import java.nio.charset.Charset
-import app.utils.TextUtils
 import org.springframework.test.util.ReflectionTestUtils
+import java.nio.charset.Charset
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
@@ -42,6 +42,7 @@ import org.springframework.test.util.ReflectionTestUtils
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
     "aws.region=eu-west-2",
+    "s3.bucket=bucket",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
