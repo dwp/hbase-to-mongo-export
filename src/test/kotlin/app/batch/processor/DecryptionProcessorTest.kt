@@ -36,6 +36,7 @@ import org.springframework.test.context.junit4.SpringRunner
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
     "aws.region=eu-west-2",
+    "s3.bucket=bucket",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
