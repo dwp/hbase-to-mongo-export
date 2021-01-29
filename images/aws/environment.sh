@@ -5,25 +5,6 @@ init() {
     aws_local configure set aws_secret_access_key secret_access_key
 }
 
-create_uc_ecc_table() {
-    local existing_tables=$(aws_local dynamodb list-tables --query "TableNames")
-    if [[ ! $existing_tables =~ $(ucc_ecc_table_name) ]]; then
-        echo Creating $(ucc_ecc_table_name) table.
-        aws_local dynamodb create-table \
-                  --table-name $(ucc_ecc_table_name) \
-                  --key-schema \
-                  AttributeName=CorrelationId,KeyType=HASH \
-                  AttributeName=CollectionName,KeyType=RANGE \
-                  --attribute-definitions \
-                  AttributeName=CorrelationId,AttributeType=S \
-                  AttributeName=CollectionName,AttributeType=S \
-                  --billing-mode PAY_PER_REQUEST
-    else
-        echo Table \'$(ucc_ecc_table_name)\' exists.
-    fi
-
-}
-
 add_status_item() {
     add_item $(status_item_id)
 }

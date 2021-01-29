@@ -24,6 +24,29 @@ provider "aws" {
   }
 }
 
+resource "aws_dynamodb_table" "uc_export_to_crown_status_table" {
+
+  name         = "UCExportToCrownStatus"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "CorrelationId"
+  range_key    = "CollectionName"
+
+  attribute {
+    name = "CorrelationId"
+    type = "S"
+  }
+
+  attribute {
+    name = "CollectionName"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "TimeToExist"
+    enabled        = true
+  }
+}
+
 resource "aws_s3_bucket" "export_bucket" {
   bucket = "exports"
   acl    = "public-read"
