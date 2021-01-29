@@ -35,7 +35,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "snapshot.sender.export.date=2020-06-05",
     "trigger.snapshot.sender=false",
     "snapshot.type=full",
-    "s3.bucket=bucket"
+    "s3.bucket=bucket",
+    "s3.prefix.folder=prefix"
 ])
 class AESCipherServiceTest {
 

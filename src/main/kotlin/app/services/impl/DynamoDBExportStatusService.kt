@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.services.ExportStatusService
+import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.document.Item
@@ -112,11 +113,11 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
         QuerySpec().apply {
             withKeyConditionExpression("#cId = :s")
             withNameMap(mapOf("#cId" to "CorrelationId"))
-            withValueMap(mapOf(":s" to correlationId))
+            withValueMap(mapOf(":s" to correlationId()))
         }
 
     private val primaryKey by lazy {
-        val correlationIdAttributeValue = AttributeValue().apply { s = correlationId }
+        val correlationIdAttributeValue = AttributeValue().apply { s = correlationId() }
         val collectionNameAttributeValue = AttributeValue().apply { s = topicName }
         mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
     }
@@ -126,8 +127,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
 
     @Value("\${topic.name}")
     private lateinit var topicName: String
-
-    private val correlationId by lazy { System.getProperty("correlation_id", "NOT_SET") }
 
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class)

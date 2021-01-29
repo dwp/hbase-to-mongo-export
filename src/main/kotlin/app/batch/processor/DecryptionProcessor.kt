@@ -33,12 +33,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
             throw e
         } catch (e: Exception) {
             logger.error("Rejecting invalid item", e, "item" to "$item")
-            throw DecryptionFailureException(
-                "database-unknown",
-                "collection-unknown",
-                item.hbaseRowId,
-                item.encryption.keyEncryptionKeyId,
-                e)
+            throw DecryptionFailureException(item.hbaseRowId, item.encryption.keyEncryptionKeyId,e)
         }
     }
 

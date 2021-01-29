@@ -49,6 +49,7 @@ import java.io.ByteArrayInputStream
     "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
     "s3.bucket=bucket",
+    "s3.prefix.folder=prefix",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",

@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.services.SnapshotSenderMessagingService
+import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.SendMessageRequest
 import org.springframework.beans.factory.annotation.Value
@@ -44,7 +45,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     private fun message(prefix: String)= """
             |{
             |   "shutdown_flag": "$shutdown",
-            |   "correlation_id": "$correlationId",
+            |   "correlation_id": "${correlationId()}",
             |   "topic_name": "$topicName",
             |   "export_date": "$exportDate",
             |   "reprocess_files": "$reprocess",
@@ -56,7 +57,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     private fun noFilesExportedMessage() = """
             |{
             |   "shutdown_flag": "$shutdown",
-            |   "correlation_id": "$correlationId",
+            |   "correlation_id": "${correlationId()}",
             |   "topic_name": "$topicName",
             |   "export_date": "$exportDate",
             |   "reprocess_files": "$reprocess",
@@ -67,7 +68,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     private val reprocess by lazy { reprocessFiles.toBoolean() }
     private val shutdown by lazy { shutdownOnCompletion.toBoolean() }
-    private val correlationId by lazy { System.getProperty("correlation_id") }
 
     @Value("\${topic.name}")
     private lateinit var topicName: String
