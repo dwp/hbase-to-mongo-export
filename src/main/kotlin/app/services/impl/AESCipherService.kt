@@ -25,7 +25,6 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
         Security.addProvider(BouncyCastleProvider())
     }
 
-
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
         val initialisationVector = ByteArray(16).apply {
             secureRandom.nextBytes(this)
@@ -46,22 +45,22 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
         return String(original)
     }
 
-    override fun cipherOutputStream(key: Key, initialisationVector: ByteArray, target: OutputStream): OutputStream {
-        return CipherOutputStream(target, encryptingCipher(key, initialisationVector))
-    }
+    override fun cipherOutputStream(key: Key, initialisationVector: ByteArray, target: OutputStream) =
+            CipherOutputStream(target, encryptingCipher(key, initialisationVector))
 
     override fun encryptingCipher(key: Key, initialisationVector: ByteArray): Cipher =
-            Cipher.getInstance(targetCipherAlgorithm, "BC").apply {
-                init(Cipher.ENCRYPT_MODE, key, IvParameterSpec(initialisationVector))
-            }
+            cipher(key, Cipher.ENCRYPT_MODE, initialisationVector)
 
     override fun decryptingCipher(key: Key, initialisationVector: ByteArray): Cipher =
-            Cipher.getInstance("AES/CTR/NoPadding", "BC").apply {
-                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(initialisationVector))
+            cipher(key, Cipher.DECRYPT_MODE, initialisationVector)
+
+    private fun cipher(key: Key, mode: Int, initialisationVector: ByteArray): Cipher =
+            Cipher.getInstance(cipherTransformation, "BC").apply {
+                init(mode, key, IvParameterSpec(initialisationVector))
             }
 
-    @Value("\${target.cipher.algorithm:AES/CTR/NoPadding}")
-    private lateinit var targetCipherAlgorithm: String
+    @Value("\${cipher.transformation:AES/CTR/NoPadding}")
+    private lateinit var cipherTransformation: String
 
     companion object {
         val logger = DataworksLogger.getLogger(AESCipherService::class)

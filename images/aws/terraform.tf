@@ -62,20 +62,20 @@ resource "aws_s3_bucket" "crl_bucket" {
   acl    = "public-read"
 }
 
-resource "aws_sqs_queue" "integration-queue" {
+resource "aws_sqs_queue" "integration_queue" {
   name = "integration-queue"
 }
 
-resource "aws_sns_topic" "adg_trigger" {
-  name = "trigger-adg-topic"
+resource "aws_sns_topic" "full_completion_topic" {
+  name = "full-completion-topic"
 }
 
 resource "aws_sqs_queue" "trigger_adg_subscriber" {
   name = "trigger-adg-subscriber"
 }
 
-resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
-  topic_arn = aws_sns_topic.adg_trigger.arn
+resource "aws_sns_topic_subscription" "full_completion_subscription" {
+  topic_arn = aws_sns_topic.full_completion_topic.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.trigger_adg_subscriber.arn
 }
