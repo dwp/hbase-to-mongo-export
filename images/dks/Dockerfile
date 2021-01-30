@@ -21,4 +21,4 @@ COPY dks-truststore.jks ./truststore.jks
 
 RUN chmod a+rwx -R /opt/data-key-service
 
-ENTRYPOINT ["sh", "-c", "java -Dlogging.level.root=DEBUG -Ddks.log.directory=/opt/data-key-service/logs -jar dks-latest.jar --server.environment_name=local --s3.service.endpoint=http://aws:4566 \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "java -Dlogging.level.root=INFO -Ddks.log.directory=/opt/data-key-service/logs -jar dks-latest.jar --server.environment_name=local --s3.service.endpoint=http://aws:4566 \"$@\"", "--"]

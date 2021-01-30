@@ -6,15 +6,25 @@ import app.utils.PropertyUtility
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${sns.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${sns.retry.delay:1000}",
+            multiplierExpression = "\${sns.retry.multiplier:2}"))
     override fun sendExportCompletedSuccessfullyMessage() =
         sendMessage(targetTopicArn(), exportCompletedPayload())
 
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${sns.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${sns.retry.delay:1000}",
+            multiplierExpression = "\${sns.retry.multiplier:2}"))
     override fun sendMonitoringMessage(completionStatus: ExportCompletionStatus) =
         sendMessage(monitoringTopicArn, monitoringPayload(completionStatus))
 

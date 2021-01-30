@@ -217,6 +217,7 @@ class UberTestSpec: StringSpec() {
         received shouldHaveSize 1
         received.first().asString shouldMatchJson expectedMessage
     }
+
     companion object {
         private val applicationContext by lazy { AnnotationConfigApplicationContext(TestConfiguration::class.java) }
         private val amazonS3 by lazy { applicationContext.getBean(AmazonS3::class.java) }
