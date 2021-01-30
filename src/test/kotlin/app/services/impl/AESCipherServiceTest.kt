@@ -79,7 +79,6 @@ class AESCipherServiceTest {
     @MockBean
     private lateinit var amazonSQS: AmazonSQS
 
-    companion object {
-    }
+    companion object
 
 }

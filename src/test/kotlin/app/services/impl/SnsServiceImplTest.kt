@@ -52,6 +52,7 @@ class SnsServiceImplTest {
             .willThrow(RuntimeException("Error")).willReturn(mock())
         snsService.sendExportCompletedSuccessfullyMessage()
         verify(amazonSNS, times(3)).publish(any())
+        verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
@@ -66,6 +67,7 @@ class SnsServiceImplTest {
                 "s3_prefix": "prefix"   
             }""", firstValue.message)
         }
+        verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
@@ -75,9 +77,10 @@ class SnsServiceImplTest {
             snsService.sendExportCompletedSuccessfullyMessage()
             fail("Expected exception")
         } catch (e: Exception) {
-            // do nothing
+            // expected
         }
         verify(amazonSNS, times(10)).publish(any())
+        verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
@@ -94,6 +97,7 @@ class SnsServiceImplTest {
                 "title_text": "full - Export finished - COMPLETED_SUCCESSFULLY"
             }""", firstValue.message)
         }
+        verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
@@ -103,7 +107,6 @@ class SnsServiceImplTest {
         verifyZeroInteractions(amazonSNS)
     }
 
-
     @Test
     fun retriesMonitoringUntilSuccessful() {
         given(amazonSNS.publish(any()))
@@ -111,6 +114,7 @@ class SnsServiceImplTest {
             .willThrow(RuntimeException("Error")).willReturn(mock())
         snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
         verify(amazonSNS, times(3)).publish(any())
+        verifyNoMoreInteractions(amazonSNS)
     }
 
     @Test
@@ -120,12 +124,11 @@ class SnsServiceImplTest {
             snsService.sendExportCompletedSuccessfullyMessage()
             fail("Expected exception")
         } catch (e: Exception) {
-            // do nothing
+            // expected
         }
         verify(amazonSNS, times(10)).publish(any())
+        verifyNoMoreInteractions(amazonSNS)
     }
-
-
 
     @MockBean
     private lateinit var amazonSNS: AmazonSNS

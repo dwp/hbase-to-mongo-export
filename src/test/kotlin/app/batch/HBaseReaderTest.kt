@@ -34,7 +34,7 @@ class HBaseReaderTest {
             on { row } doReturn byteArrayOf(2)
         }
 
-        val resultScanner = mock<ResultScanner>() {
+        val resultScanner = mock<ResultScanner> {
             on { next() } doReturn result
         }
 
@@ -75,7 +75,7 @@ class HBaseReaderTest {
             on { row } doReturn byteArrayOf(2)
         }
 
-        val failingScanner = mock<ResultScanner>() {
+        val failingScanner = mock<ResultScanner> {
             on { next() } doReturn firstResult doThrow NotServingRegionException("Error")
         }
 
@@ -83,7 +83,7 @@ class HBaseReaderTest {
             on { row } doReturn byteArrayOf(5)
         }
 
-        val successfulScanner = mock<ResultScanner>() {
+        val successfulScanner = mock<ResultScanner> {
             on { next() } doReturn secondResult doReturn null
         }
 

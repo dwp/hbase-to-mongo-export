@@ -241,7 +241,7 @@ class HBaseResultProcessorTest {
     private val textUtils = TextUtils()
 
     private fun actualResult(): SourceRecord? {
-        var processor = HBaseResultProcessor(textUtils)
+        val processor = HBaseResultProcessor(textUtils)
         ReflectionTestUtils.setField(processor, "topicName", "db.a.b")
         return processor.process(result)
     }
@@ -277,10 +277,10 @@ class HBaseResultProcessorTest {
     companion object {
         const val rowId = "EXPECTED_ID"
         const val dbObject = "EXPECTED_DB_OBJECT"
-        const val encryptionKeyId = "EXPECTED_ENCRYPTION_KEY_ID"
-        const val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
-        const val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
-        const val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
+        private const val encryptionKeyId = "EXPECTED_ENCRYPTION_KEY_ID"
+        private const val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
+        private const val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
+        private const val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
 
         val idBlock = """
             |"_id": {

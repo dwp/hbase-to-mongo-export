@@ -1,10 +1,8 @@
 package app.utils
 
-import app.batch.HBaseReaderTest
 import app.exceptions.BlockedTopicException
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.test.TestResult.Companion.success
 import io.kotest.fp.success
 import io.kotest.matchers.shouldBe
 import org.junit.Test

@@ -73,7 +73,7 @@ class HttpKeyServiceTest {
     private lateinit var uuidGenerator: UUIDGenerator
 
     companion object {
-        var dksCorrelationId = 0
+        private var dksCorrelationId = 0
 
         private fun nextDksCorrelationId(): String {
             return "dks-id-${++dksCorrelationId}"

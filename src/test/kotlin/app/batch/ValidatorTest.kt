@@ -29,7 +29,7 @@ class ValidatorTest {
     @Test
     fun Should_Process_If_Decrypted_DbObject_Is_A_Valid_Json() {
         val id = """{"someId":"RANDOM_GUID","declarationId":1234}"""
-        val id_sorted = """{"declarationId":1234,"someId":"RANDOM_GUID"}"""
+        val idSorted = """{"declarationId":1234,"someId":"RANDOM_GUID"}"""
         val decryptedDbObject = """{"_id": $id, "type": "addressDeclaration", "contractId": 1234, "addressNumber": {"type": "AddressLine", "cryptoId": 1234}, "addressLine2": null, "townCity": {"type": "AddressLine", "cryptoId": 1234}, "postcode": "SM5 2LE", "processId": 1234, "effectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "paymentEffectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "createdDateTime": {"${"$"}date": "2015-03-20T12:23:25.183Z", "_archivedDateTime": "should be replaced by _removedDateTime"}, "_version": 2, "_archived": "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime": "2019-07-04T07:27:35.104+0000"}"""
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
@@ -39,7 +39,7 @@ class ValidatorTest {
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
         val manifest = decrypted?.manifestRecord
-        val expectedManifest = ManifestRecord(id_sorted, 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", id_sorted)
+        val expectedManifest = ManifestRecord(idSorted, 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", idSorted)
         assertEquals(expectedManifest, manifest)
     }
 
@@ -63,7 +63,7 @@ class ValidatorTest {
     @Test
     fun Should_Process_If_Decrypted_DbObject_Is_A_Valid_Json_With_Object_Id() {
         val id = """{"someId":"RANDOM_GUID","declarationId":1234}"""
-        val id_sorted = """{"declarationId":1234,"someId":"RANDOM_GUID"}"""
+        val idSorted = """{"declarationId":1234,"someId":"RANDOM_GUID"}"""
         val decryptedDbObject = """{"_id": $id, "type": "addressDeclaration", "contractId": 1234, "addressNumber": {"type": "AddressLine", "cryptoId": 1234}, "addressLine2": null, "townCity": {"type": "AddressLine", "cryptoId": 1234}, "postcode": "SM5 2LE", "processId": 1234, "effectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "paymentEffectiveDate": {"type": "SPECIFIC_EFFECTIVE_DATE", "date": 20150320, "knownDate": 20150320}, "createdDateTime": {"${"$"}date": "2015-03-20T12:23:25.183Z", "_archivedDateTime": "should be replaced by _removedDateTime"}, "_version": 2, "_archived": "should be replaced by _removed", "unicodeNull": "\u0000", "unicodeNullwithText": "some\u0000text", "lineFeedChar": "\n", "lineFeedCharWithText": "some\ntext", "carriageReturn": "\r", "carriageReturnWithText": "some\rtext", "carriageReturnLineFeed": "\r\n", "carriageReturnLineFeedWithText": "some\r\ntext", "_lastModifiedDateTime": {"${"$"}date": "2019-07-04T07:27:35.104+0000"}}"""
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
@@ -73,7 +73,7 @@ class ValidatorTest {
         assertNotNull(decrypted)
         assertNotNull(decrypted?.manifestRecord)
         val manifest = decrypted?.manifestRecord
-        val expectedManifest = ManifestRecord(id_sorted, 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", id_sorted)
+        val expectedManifest = ManifestRecord(idSorted, 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", idSorted)
         assertEquals(expectedManifest, manifest)
     }
 
