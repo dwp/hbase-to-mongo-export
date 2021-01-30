@@ -3,7 +3,7 @@ package app.services
 interface ExportStatusService {
     fun incrementExportedCount(exportedFile: String)
     fun exportedFilesCount(): Int
-    fun exportCompletedSuccessfully(): Boolean
+    fun exportCompletionStatus(): ExportCompletionStatus
     fun setExportedStatus()
     fun setFailedStatus()
     fun setTableUnavailableStatus()

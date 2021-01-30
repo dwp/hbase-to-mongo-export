@@ -1,5 +1,6 @@
 package app.services.impl
 
+import app.services.ExportCompletionStatus
 import app.services.SnsService
 import app.utils.PropertyUtility
 import com.amazonaws.services.sns.AmazonSNS
@@ -11,14 +12,17 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
-    override fun sendExportCompletedMessage() = sendMessage(targetTopicArn(), exportCompletedPayload())
-    override fun sendMonitoringMessage() = sendMessage(monitoringTopicArn, monitoringPayload())
+    override fun sendExportCompletedSuccessfullyMessage() =
+        sendMessage(targetTopicArn(), exportCompletedPayload())
+
+    override fun sendMonitoringMessage(completionStatus: ExportCompletionStatus) =
+        sendMessage(monitoringTopicArn, monitoringPayload(completionStatus))
 
     private fun sendMessage(topicArn: String, payload: String) {
         topicArn.takeIf(String::isNotBlank)?.let { arn ->
             logger.info("Publishing message to topic", "arn" to arn)
             val result = sns.publish(request(arn, payload))
-            logger.info("Published message to adg trigger topic", "arn" to arn,
+            logger.info("Published message to topic", "arn" to arn,
                 "message_id" to result.messageId, "snapshot_type" to snapshotType)
         } ?: run {
             logger.info("Not publishing message to topic", "reason" to "No arn configured")
@@ -31,12 +35,12 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                 "s3_prefix": "$s3prefix"   
             }"""
 
-    private fun monitoringPayload() =
+    private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
             """{
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "$snapshotType - Export finished",
+                "title_text": "$snapshotType - Export finished - $exportCompletionStatus"
             }"""
 
     private fun request(arn: String, payload: String) =
@@ -55,13 +59,13 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
             }
         }
 
-    @Value("\${full.topic.arn:}")
+    @Value("\${topic.arn.completion.full:}")
     private lateinit var fullTopicArn: String
 
-    @Value("\${incremental.topic.arn:}")
+    @Value("\${topic.arn.completion.incremental:}")
     private lateinit var incrementalTopicArn: String
 
-    @Value("\${monitoring.topic.arn:}")
+    @Value("\${topic.arn.monitoring:}")
     private lateinit var monitoringTopicArn: String
 
     @Value("\${snapshot.type}")

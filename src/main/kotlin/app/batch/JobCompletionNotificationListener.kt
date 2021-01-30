@@ -1,9 +1,10 @@
 package app.batch
 
 import app.exceptions.BlockedTopicException
-import app.services.SnsService
+import app.services.ExportCompletionStatus
 import app.services.ExportStatusService
 import app.services.SnapshotSenderMessagingService
+import app.services.SnsService
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
@@ -22,12 +23,21 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     override fun afterJob(jobExecution: JobExecution) {
         logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
         if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
+
             exportStatusService.setExportedStatus()
+
             if (exportStatusService.exportedFilesCount() == 0) {
                 messagingService.notifySnapshotSenderNoFilesExported()
             }
-            if (exportStatusService.exportCompletedSuccessfully()) {
-                snsService.sendExportCompletedMessage()
+
+            when (val completionStatus = exportStatusService.exportCompletionStatus()) {
+                ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                    snsService.sendExportCompletedSuccessfullyMessage()
+                    snsService.sendMonitoringMessage(completionStatus)
+                }
+                ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
+                    snsService.sendMonitoringMessage(completionStatus)
+                }
             }
         }
         else {

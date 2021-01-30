@@ -112,7 +112,7 @@ class UberTestSpec: StringSpec() {
         }
 
         "Correct messages sent" {
-            val received = allMessages()
+            val received = queueMessages(snapshotSenderQueueUrl)
                 .map(Message::getBody)
                 .map {Gson().fromJson(it, JsonObject::class.java)}
             received shouldHaveSize 21
@@ -149,6 +149,22 @@ class UberTestSpec: StringSpec() {
                             "files_exported":0
                         }"""
 
+        }
+
+        "f:It should send the successful completion message" {
+            validateQueueMessage(adgQueueUrl, """{
+                    "correlation_id": "s3-export",
+                    "s3_prefix": "output"   
+                }""")
+        }
+
+        "f:It should send the monitoring message" {
+            validateQueueMessage(monitoringQueueUrl, """{
+                    "severity": "Critical",
+                    "notification_type": "Information",
+                    "slack_username": "Crown Export Poller",
+                    "title_text": "full - Export finished - COMPLETED_SUCCESSFULLY"
+                }""")
         }
 
         "dynamoDB should have no files record" {
@@ -192,7 +208,15 @@ class UberTestSpec: StringSpec() {
         }
     }
 
+    private fun validateQueueMessage(queueUrl: String, expectedMessage: String) {
+        val received = queueMessages(queueUrl)
+            .map(Message::getBody)
+            .map {Gson().fromJson(it, JsonObject::class.java)}
+            .mapNotNull { it["Message"] }
 
+        received shouldHaveSize 1
+        received.first().asString shouldMatchJson expectedMessage
+    }
     companion object {
         private val applicationContext by lazy { AnnotationConfigApplicationContext(TestConfiguration::class.java) }
         private val amazonS3 by lazy { applicationContext.getBean(AmazonS3::class.java) }
@@ -200,7 +224,10 @@ class UberTestSpec: StringSpec() {
         private val amazonSqs by lazy { applicationContext.getBean(AmazonSQS::class.java) }
         private val keyService by lazy { applicationContext.getBean(KeyService::class.java) }
         private val cipherService by lazy { applicationContext.getBean(CipherService::class.java)}
-        private const val sqsQueueUrl = "http://aws:4566/000000000000/integration-queue"
+
+        private const val snapshotSenderQueueUrl = "http://aws:4566/000000000000/integration-queue"
+        private const val adgQueueUrl = "http://aws:4566/000000000000/trigger-adg-subscriber"
+        private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-subscriber"
 
         fun InputStream.copyToByteArray(): ByteArray = this.copyToByteArrayOutputStream().toByteArray()
 
@@ -234,17 +261,17 @@ class UberTestSpec: StringSpec() {
             key = primaryKey
         }
 
-        private tailrec fun allMessages(accumulated: List<Message> = listOf()): List<Message> {
-            val messages = amazonSqs.receiveMessage(sqsQueueUrl).messages
+        private tailrec fun queueMessages(queueUrl: String, accumulated: List<Message> = listOf()): List<Message> {
+            val messages = amazonSqs.receiveMessage(queueUrl).messages
 
             if (messages == null || messages.isEmpty()) {
                 return accumulated
             }
-            messages.forEach(::deleteMessage)
-            return allMessages(accumulated + messages)
+            messages.forEach{ deleteMessage(queueUrl, it) }
+            return queueMessages(queueUrl, accumulated + messages)
         }
 
-        private fun deleteMessage(it: Message) = amazonSqs.deleteMessage(sqsQueueUrl, it.receiptHandle)
+        private fun deleteMessage(queueUrl: String, it: Message) = amazonSqs.deleteMessage(queueUrl, it.receiptHandle)
         
         private fun expectedExports(): List<String> =
                 listOf("output/db.database.collection-000-040-000001.txt.bz2.enc",

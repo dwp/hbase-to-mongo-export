@@ -70,12 +70,40 @@ resource "aws_sns_topic" "full_completion_topic" {
   name = "full-completion-topic"
 }
 
+resource "aws_sns_topic" "incremental_completion_topic" {
+  name = "incremental-completion-topic"
+}
+
+resource "aws_sns_topic" "monitoring_topic" {
+  name = "monitoring-topic"
+}
+
 resource "aws_sqs_queue" "trigger_adg_subscriber" {
   name = "trigger-adg-subscriber"
+}
+
+resource "aws_sqs_queue" "incremental_subscriber" {
+  name = "incremental-subscriber"
+}
+
+resource "aws_sqs_queue" "monitoring_subscriber" {
+  name = "monitoring-subscriber"
 }
 
 resource "aws_sns_topic_subscription" "full_completion_subscription" {
   topic_arn = aws_sns_topic.full_completion_topic.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.trigger_adg_subscriber.arn
+}
+
+resource "aws_sns_topic_subscription" "incremental_completion_subscription" {
+  topic_arn = aws_sns_topic.incremental_completion_topic.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.incremental_subscriber.arn
+}
+
+resource "aws_sns_topic_subscription" "monitoring_subscription" {
+  topic_arn = aws_sns_topic.monitoring_topic.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.monitoring_subscriber.arn
 }
