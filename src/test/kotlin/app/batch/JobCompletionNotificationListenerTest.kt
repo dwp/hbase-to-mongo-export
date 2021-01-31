@@ -29,6 +29,7 @@ class JobCompletionNotificationListenerTest {
         verify(exportStatusService, times(1)).setExportedStatus()
     }
 
+
     @Test
     fun setsFailedStatusOnFailure() {
         val exportStatusService = mock<ExportStatusService> {
@@ -39,7 +40,7 @@ class JobCompletionNotificationListenerTest {
         val snsService = mock<SnsService>()
         val jobCompletionNotificationListener =
             JobCompletionNotificationListener(exportStatusService, messagingService, snsService)
-        ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", "db.test.topic")
+        ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
             on { allFailureExceptions } doReturn listOf(Exception(Exception("Failed")))
@@ -58,7 +59,7 @@ class JobCompletionNotificationListenerTest {
         val snsService = mock<SnsService>()
         val jobCompletionNotificationListener =
             JobCompletionNotificationListener(exportStatusService, messagingService, snsService)
-        ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", "db.test.topic")
+        ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
             on { allFailureExceptions } doReturn listOf(Exception(BlockedTopicException("Blocked")))
@@ -115,7 +116,7 @@ class JobCompletionNotificationListenerTest {
             val messagingService = mock<SnapshotSenderMessagingService>()
             val snsService = mock<SnsService>()
             val jobCompletionNotificationListener = JobCompletionNotificationListener(exportStatusService, messagingService, snsService)
-            ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", "db.test.topic")
+            ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
@@ -175,4 +176,7 @@ class JobCompletionNotificationListenerTest {
         verifyZeroInteractions(snsService)
     }
 
+    companion object {
+        private const val TEST_TOPIC = "db.test.topic"
+    }
 }

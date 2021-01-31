@@ -31,8 +31,8 @@ class SnsServiceImplTest {
     @Before
     fun before() {
         System.setProperty("correlation_id", "correlation.id")
-        ReflectionTestUtils.setField(snsService, "fullTopicArn", "arn:sns")
-        ReflectionTestUtils.setField(snsService, "monitoringTopicArn", "arn:sns")
+        ReflectionTestUtils.setField(snsService, "fullTopicArn", TOPIC_ARN)
+        ReflectionTestUtils.setField(snsService, "monitoringTopicArn", TOPIC_ARN)
         ReflectionTestUtils.setField(snsService, "snapshotType", "full")
         ReflectionTestUtils.setField(snsService, "s3prefix", "prefix")
         reset(amazonSNS)
@@ -61,7 +61,7 @@ class SnsServiceImplTest {
         snsService.sendExportCompletedSuccessfullyMessage()
         argumentCaptor<PublishRequest> {
             verify(amazonSNS, times(1)).publish(capture())
-            assertEquals("arn:sns", firstValue.topicArn)
+            assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
                 "correlation_id": "correlation.id",
                 "s3_prefix": "prefix"   
@@ -89,7 +89,7 @@ class SnsServiceImplTest {
         snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
         argumentCaptor<PublishRequest> {
             verify(amazonSNS, times(1)).publish(capture())
-            assertEquals("arn:sns", firstValue.topicArn)
+            assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
                 "severity": "Critical",
                 "notification_type": "Information",
@@ -121,7 +121,7 @@ class SnsServiceImplTest {
     fun givesUpMonitoringAfterMaxTriesUntilSuccessful() {
         given(amazonSNS.publish(any())).willThrow(RuntimeException("Error"))
         try {
-            snsService.sendExportCompletedSuccessfullyMessage()
+            snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY                              )
             fail("Expected exception")
         } catch (e: Exception) {
             // expected
@@ -135,4 +135,8 @@ class SnsServiceImplTest {
 
     @Autowired
     private lateinit var snsService: SnsService
+
+    companion object {
+        private const val TOPIC_ARN = "arn:sns"
+    }
 }

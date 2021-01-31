@@ -60,10 +60,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     }
 
     private fun sendSqsMessages(jobExecution: JobExecution) {
-        if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
-            if (exportStatusService.exportedFilesCount() == 0) {
-                messagingService.notifySnapshotSenderNoFilesExported()
-            }
+        if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED) && exportStatusService.exportedFilesCount() == 0) {
+            messagingService.notifySnapshotSenderNoFilesExported()
         }
     }
 
