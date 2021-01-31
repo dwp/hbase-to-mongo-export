@@ -26,22 +26,22 @@ import org.springframework.test.context.junit4.SpringRunner
 @SpringBootTest
 @TestPropertySource(properties = [
     "topic.name=db.a.b",
-    "identity.keystore=resources/identity.jks",
-    "trust.keystore=resources/truststore.jks",
-    "identity.store.password=changeit",
-    "identity.key.password=changeit",
-    "trust.store.password=changeit",
-    "identity.store.alias=cid",
-    "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2",
-    "s3.bucket=bucket",
-    "s3.prefix.folder=prefix",
+//    "identity.keystore=resources/identity.jks",
+//    "trust.keystore=resources/truststore.jks",
+//    "identity.store.password=changeit",
+//    "identity.key.password=changeit",
+//    "trust.store.password=changeit",
+//    "identity.store.alias=cid",
+//    "hbase.zookeeper.quorum=hbase",
+//    "aws.region=eu-west-2",
+//    "s3.bucket=bucket",
+//    "s3.prefix.folder=prefix",
     "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05",
-    "trigger.snapshot.sender=false",
-    "snapshot.type=full"
+//    "snapshot.sender.shutdown.flag=true",
+//    "snapshot.sender.export.date=2020-06-05",
+//    "trigger.snapshot.sender=false",
+//    "snapshot.type=full"
 ])
 class DecryptionProcessorTest {
 

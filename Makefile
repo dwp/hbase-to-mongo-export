@@ -55,7 +55,7 @@ service-hbase: ## bring up hbase, populate it.
 	docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
 	docker-compose up hbase-init
 
-service-aws: ##bring up aws and prepare the services.
+service-aws: ## bring up aws and prepare the services.
 	docker-compose up -d aws
 	@{ \
 		while ! docker logs aws 2> /dev/null | grep -q $(S3_READY_REGEX); do \
@@ -65,7 +65,7 @@ service-aws: ##bring up aws and prepare the services.
 	}
 	docker-compose up aws-init
 
-service-dks:
+service-dks: # bring up the data key service
 	docker-compose up -d dks
 
 services: service-dks service-hbase service-aws ## bring up dks, hbase, aws.
@@ -75,3 +75,5 @@ exports: services  ## run all the exports.
 
 integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
+
+integration-all: images integration-tests
