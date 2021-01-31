@@ -21,16 +21,16 @@ import org.springframework.test.util.ReflectionTestUtils
 @EnableRetry
 @SpringBootTest(classes = [SnapshotSenderSQSMessagingService::class])
 @TestPropertySource(properties = [
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.export.date=2020-06-05",
     "snapshot.sender.reprocess.files=false",
     "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.type=incremental",
+    "sqs.retry.delay=1",
+    "sqs.retry.maxAttempts=10",
+    "sqs.retry.multiplier=1",
     "topic.name=db.database.collection",
     "trigger.snapshot.sender=true",
-    "snapshot.type=incremental",
-    "sqs.retry.maxAttempts=10",
-    "sqs.retry.delay=1",
-    "sqs.retry.multiplier=1"
 ])
 class SnapshotSenderSQSMessagingServiceTest {
 

@@ -34,16 +34,10 @@ import java.security.SecureRandom
 @ActiveProfiles("streamingWriter")
 @TestPropertySource(properties = [
     "output.batch.size.max.bytes=100000",
-    "s3.bucket=exportbucket",
     "s3.manifest.bucket=manifests",
     "s3.manifest.prefix.folder=manifestprefix",
     "s3.prefix.folder=prefix",
-    "s3.bucket=bucket",
     "topic.name=db.database.collection",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05"
 ])
 
 class S3StreamingWriterTest {

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
-import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.ByteArrayInputStream
 
 @Service
@@ -39,8 +38,4 @@ class S3ObjectServiceImpl(private val amazonS3: AmazonS3): S3ObjectService {
 
     @Value("\${s3.bucket}")
     private lateinit var exportBucket: String
-
-    companion object {
-        private val logger = DataworksLogger.getLogger(S3ObjectService::class)
-    }
 }

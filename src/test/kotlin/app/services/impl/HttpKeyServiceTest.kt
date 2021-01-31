@@ -37,27 +37,22 @@ import java.io.ByteArrayInputStream
 @ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
 @TestPropertySource(properties = [
-    "data.key.service.url=dummy.com:8090",
-    "topic.name=db.a.b",
-    "identity.keystore=resources/identity.jks",
-    "trust.keystore=resources/truststore.jks",
-    "identity.store.password=changeit",
-    "identity.key.password=changeit",
-    "trust.store.password=changeit",
-    "identity.store.alias=cid",
+    "data.key.service.url=https://dks:8443",
     "hbase.zookeeper.quorum=hbase",
+    "keyservice.retry.delay=1",
+    "keyservice.retry.maxAttempts=5",
+    "keyservice.retry.multiplier=1",
     "s3.bucket=bucket",
     "s3.prefix.folder=prefix",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.export.date=2020-06-05",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05",
-    "trigger.snapshot.sender=false",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.type=full",
-    "keyservice.retry.maxAttempts=5",
-    "keyservice.retry.delay=1",
-    "keyservice.retry.multiplier=1"
+    "topic.name=db.a.b",
+    "trigger.snapshot.sender=false",
+//    "trust.keystore=resources/truststore.jks",
+//    "trust.store.password=changeit",
 ])
 class HttpKeyServiceTest {
 
@@ -117,7 +112,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -140,7 +135,7 @@ class HttpKeyServiceTest {
             assertEquals("Getting batch data key - data key service returned bad status code '503' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -165,7 +160,7 @@ class HttpKeyServiceTest {
             assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -201,7 +196,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
         verify(httpClient, times(3)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -232,7 +227,7 @@ class HttpKeyServiceTest {
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -264,7 +259,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(3)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -297,7 +292,7 @@ class HttpKeyServiceTest {
 
         val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
     }
 
     @Test
@@ -319,7 +314,7 @@ class HttpKeyServiceTest {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(1)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -342,7 +337,7 @@ class HttpKeyServiceTest {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '503' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 
@@ -365,7 +360,7 @@ class HttpKeyServiceTest {
             assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!' for dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
-            assertEquals("dummy.com:8090/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 

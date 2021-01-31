@@ -1,3 +1,5 @@
+@file:Suppress("ReplaceCallWithBinaryOperator")
+
 package app.batch
 
 import app.exceptions.BlockedTopicException
