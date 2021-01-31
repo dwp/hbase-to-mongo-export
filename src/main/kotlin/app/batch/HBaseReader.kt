@@ -51,30 +51,36 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             throw e
         }
         catch (e: Exception) {
+            logger.error("Error with scanner", e)
             reopenScannerAndRetry(e)
         }
 
     private fun reopenScannerAndRetry(e: Exception): Result? {
-        val lastKey = latestId ?: byteArrayOf(start.toByte())
-        return if (++retryAttempts < scanMaxRetries.toInt()) {
-            logger.warn("Failed to get next record, reopening scanner",
-                    "exception" to (e.message ?: ""),
-                    "attempt" to "$retryAttempts",
-                    "max_attempts" to scanMaxRetries,
-                    "latest_id" to printableKey(lastKey))
+        try {
+            val lastKey = latestId ?: byteArrayOf(start.toByte())
+            return if (++retryAttempts < scanMaxRetries.toInt()) {
+                logger.warn("Failed to get next record, reopening scanner",
+                        "exception" to (e.message ?: ""),
+                        "attempt" to "$retryAttempts",
+                        "max_attempts" to scanMaxRetries,
+                        "latest_id" to printableKey(lastKey))
 
-            scanner?.close()
-            Thread.sleep(scanRetrySleepMs.toLong())
-            scanner = newScanner(lastKey)
-            read()
-        }
-        else {
-            logger.error("Failed to get next record after max retries", e,
-                    "exception" to (e.message ?: ""),
-                    "attempt" to "$retryAttempts",
-                    "max_attempts" to scanMaxRetries,
-                    "latest_id" to printableKey(lastKey))
-            throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
+                scanner?.close()
+                Thread.sleep(scanRetrySleepMs.toLong())
+                scanner = newScanner(lastKey)
+                read()
+            }
+            else {
+                logger.error("Failed to get next record after max retries", e,
+                        "exception" to (e.message ?: ""),
+                        "attempt" to "$retryAttempts",
+                        "max_attempts" to scanMaxRetries,
+                        "latest_id" to printableKey(lastKey))
+                throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to open scanner", e)
+            throw e
         }
     }
 

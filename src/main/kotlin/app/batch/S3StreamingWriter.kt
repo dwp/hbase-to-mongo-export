@@ -59,20 +59,25 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     override fun write(items: MutableList<out Record>) {
-        items.forEach { record ->
+        try {
+            items.forEach { record ->
 
-            val item = "${record.dbObjectAsString}\n"
+                val item = "${record.dbObjectAsString}\n"
 
-            if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {
-                writeOutput()
+                if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {
+                    writeOutput()
+                }
+
+                currentOutputStream?.let { output ->
+                    output.write(item.toByteArray())
+                    batchSizeBytes += item.length
+                    recordsInBatch++
+                    output.writeManifestRecord(record.manifestRecord)
+                }
             }
-
-            currentOutputStream?.let { output ->
-                output.write(item.toByteArray())
-                batchSizeBytes += item.length
-                recordsInBatch++
-                output.writeManifestRecord(record.manifestRecord)
-            }
+        } catch (e: Exception) {
+            logger.error("Error in write", e)
+            throw e
         }
     }
 
