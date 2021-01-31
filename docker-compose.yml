@@ -41,56 +41,49 @@ services:
     build:
       context: images/htme
     container_name: export-s3
+    command: >-
+      --send.success.indicator=true
+      --scan.width=40
+      --topic.arn.completion.full=arn:aws:sns:us-east-1:000000000000:full-completion-topic
+      --topic.arn.monitoring=arn:aws:sns:us-east-1:000000000000:monitoring-topic
+      --topic.name=db.database.collection
     environment:
-      - SPRING_CONFIG_LOCATION=config/application-s3.properties
       - CORRELATION_ID=s3-export
-      - TOPIC_NAME=db.database.collection
-      - APPLICATION=htme-export-s3
-      - APP_VERSION=test
-      - COMPONENT=jar-file
-      - ENVIRONMENT=local-docker
 
   export-nothing:
     image: hbase-to-mongo-export
     build:
       context: images/htme
     container_name: export-nothing
+    command: >-
+      --scan.time.range.end=2021-01-20T10:15:30+00:00
+      --scan.time.range.start=2021-01-20T09:15:30+00:00
+      --scan.width=256
+      --topic.name=db.database.empty
     environment:
-      - SPRING_CONFIG_LOCATION=config/application-empty.properties
       - CORRELATION_ID=empty-export
-      - TOPIC_NAME=db.database.empty
-      - APPLICATION=htme-export-empty
-      - APP_VERSION=test
-      - COMPONENT=jar-file
-      - ENVIRONMENT=local-docker
 
   table-unavailable:
     image: hbase-to-mongo-export
     build:
       context: images/htme
     container_name: table-unavailable
+    command: >-
+      --scan.width=256
+      --topic.name=does.not.exist
     environment:
-      - SPRING_CONFIG_LOCATION=config/application-table-unavailable.properties
       - CORRELATION_ID=table-unavailable
-      - TOPIC_NAME=does.not.exist
-      - APPLICATION=htme-table-unavailable
-      - APP_VERSION=test
-      - COMPONENT=jar-file
-      - ENVIRONMENT=local-docker
 
   blocked-topic:
     image: hbase-to-mongo-export
     build:
       context: images/htme
     container_name: blocked-topic
+    command: >-
+      --scan.width=256
+      --topic.name=db.blocked.topic
     environment:
-      - SPRING_CONFIG_LOCATION=config/application-blocked-topic.properties
       - CORRELATION_ID=blocked_topic
-      - TOPIC_NAME=db.blocked.topic
-      - APPLICATION=htme-blocked-topic
-      - APP_VERSION=test
-      - COMPONENT=jar-file
-      - ENVIRONMENT=local-docker
 
   integration-tests:
     image: integration-tests

@@ -31,8 +31,6 @@ import java.nio.charset.Charset
 @ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
 @SpringBootTest
 @TestPropertySource(properties = [
-    "data.table.name=ucfs-data",
-    "column.family=topic",
     "topic.name=db.a.b",
     "identity.keystore=resources/identity.jks",
     "trust.keystore=resources/truststore.jks",
