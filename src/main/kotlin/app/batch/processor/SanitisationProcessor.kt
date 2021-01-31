@@ -15,16 +15,21 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
 
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: DecryptedRecord): Record? {
-        val output = sanitiseCollectionSpecific(item)
-        val replacedOutput = output.replace("$", "d_")
-            .replace("\\u0000", "")
-            .replace("_archivedDateTime", "_removedDateTime")
-            .replace("_archived", "_removed")
+        try {
+            val output = sanitiseCollectionSpecific(item)
+            val replacedOutput = output.replace("$", "d_")
+                .replace("\\u0000", "")
+                .replace("_archivedDateTime", "_removedDateTime")
+                .replace("_archived", "_removed")
 
-        val manifestRecord = item.manifestRecord
-        logger.debug("Sanitized record", "manifest_record_id" to manifestRecord.id,
-                "manifest_record_timestamp" to "${manifestRecord.timestamp}")
-        return Record(replacedOutput, manifestRecord)
+            val manifestRecord = item.manifestRecord
+            logger.debug("Sanitized record", "manifest_record_id" to manifestRecord.id,
+                    "manifest_record_timestamp" to "${manifestRecord.timestamp}")
+            return Record(replacedOutput, manifestRecord)
+        } catch (e: Exception) {
+            logger.error("Error sanitising", e)
+            throw e
+        }
     }
 
     fun sanitiseCollectionSpecific(input: DecryptedRecord): String {
