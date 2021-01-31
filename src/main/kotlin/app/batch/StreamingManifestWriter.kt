@@ -23,16 +23,31 @@ class StreamingManifestWriter {
         val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
         val prefix = "$manifestPrefix/$manifestFileName"
 
-        logger.info("Writing manifest manifestFile to s3",
+        logger.info("Writing manifest to s3",
                 "s3_location" to "s3://$manifestBucket/$prefix",
                 "manifest_size" to "$manifestSize",
                 "total_manifest_files_already_written" to "$totalManifestFiles",
                 "total_manifest_records_already_written" to "$totalManifestRecords")
 
-        FileInputStream(manifestFile).use { inputStream ->
-            val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
-            s3.putObject(request)
+        try {
+            FileInputStream(manifestFile).use { inputStream ->
+                val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
+                s3.putObject(request)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to write manifest to s3", e,
+                "s3_location" to "s3://$manifestBucket/$prefix",
+                "manifest_size" to "$manifestSize",
+                "total_manifest_files_already_written" to "$totalManifestFiles",
+                "total_manifest_records_already_written" to "$totalManifestRecords")
+            throw e
         }
+
+        logger.info("Written manifest to s3",
+            "s3_location" to "s3://$manifestBucket/$prefix",
+            "manifest_size" to "$manifestSize",
+            "total_manifest_files_already_written" to "$totalManifestFiles",
+            "total_manifest_records_already_written" to "$totalManifestRecords")
 
         totalManifestFiles++
         totalManifestRecords += manifestSize
