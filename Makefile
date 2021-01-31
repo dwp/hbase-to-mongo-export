@@ -65,15 +65,10 @@ service-aws: ##bring up aws and prepare the services.
 	}
 	docker-compose up aws-init
 
-service-dks-insecure: ## bring up dks on 8080
-	docker-compose up -d dks-standalone-http
+service-dks:
+	docker-compose up -d dks
 
-service-dks-secure: ## bring up secure dks on 8443
-	docker-compose up -d dks-standalone-https
-
-services-dks: service-dks-insecure service-dks-secure ## bring up the two dkses.
-
-services: services-dks service-hbase service-aws ## bring up dks, hbase, aws.
+services: service-dks service-hbase service-aws ## bring up dks, hbase, aws.
 
 exports: services  ## run all the exports.
 	docker-compose up export-s3 blocked-topic table-unavailable export-nothing

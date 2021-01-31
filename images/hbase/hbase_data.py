@@ -15,9 +15,13 @@ from Crypto.Util import Counter
 
 def main():
     args = command_line_args()
-    connection = happybase.Connection(args.zookeeper_quorum)
+    connection = happybase.Connection("hbase")
     connection.open()
-    content = requests.get(args.data_key_service).json()
+    response = requests.get("https://dks:8443/datakey",
+                            cert=("hbase-init-crt.pem",
+                                  "hbase-init-key.pem"),
+                            verify="dks-crt.pem")
+    content = response.json()
     encryption_key = content['plaintextDataKey']
     encrypted_key = content['ciphertextDataKey']
     master_key_id = content['dataKeyEncryptionKeyId']
@@ -31,7 +35,7 @@ def main():
     table = connection.table(table_name)
     batch = table.batch(timestamp=1000)
     print("Creating batch.")
-    for i in range(int(args.records)):
+    for i in range(int(10000)):
         wrapper = kafka_message(i)
         record = decrypted_db_object(i)
         record_string = json.dumps(record)
@@ -98,12 +102,6 @@ def decrypted_db_object(i: int):
 
 def command_line_args():
     parser = argparse.ArgumentParser(description='Pre-populate hbase for profiling.')
-    parser.add_argument('-k', '--data-key-service', default='http://dks-standalone-http:8080/datakey',
-                        help='Use the specified data key service.')
-    parser.add_argument('-z', '--zookeeper-quorum', default='hbase',
-                        help='The zookeeper quorum host.')
-    parser.add_argument('-r', '--records', default='10000',
-                        help='The number of records to create.')
     parser.add_argument('-t', '--table', default='database:collection',
                         help='The table to write to.')
     return parser.parse_args()

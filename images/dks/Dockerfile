@@ -1,6 +1,5 @@
 FROM openjdk:8-jre
 
-EXPOSE 8080
 EXPOSE 8443
 
 RUN apt-get update && apt-get install -y jq
@@ -13,12 +12,12 @@ RUN curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/
              | jq -r '.assets[0].browser_download_url' > dks_version
 RUN cat dks_version
 RUN wget --input-file dks_version --no-verbose --no-check-certificate --output-document dks-latest.jar
-RUN ls -la *.jar
 
-COPY application_dks.properties ./
+COPY application.properties ./
 COPY dks-keystore.jks ./keystore.jks
 COPY dks-truststore.jks ./truststore.jks
 
 RUN chmod a+rwx -R /opt/data-key-service
 
-ENTRYPOINT ["sh", "-c", "java -Dlogging.level.root=INFO -Ddks.log.directory=/opt/data-key-service/logs -jar dks-latest.jar --server.environment_name=local --s3.service.endpoint=http://aws:4566 \"$@\"", "--"]
+ENTRYPOINT ["java", "-Dlogging.level.root=INFO", "-Ddks.log.directory=/opt/data-key-service/logs", \
+            "-jar", "dks-latest.jar", "--server.environment_name=local", "--s3.service.endpoint=http://aws:4566"]

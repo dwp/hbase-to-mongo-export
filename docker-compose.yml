@@ -24,17 +24,12 @@ services:
     build:
       context: images/aws
     container_name: aws-init
-    depends_on:
-      - aws
 
   hbase-init:
     image: hbase-init
     build:
       context: images/hbase
     container_name: hbase-init
-    depends_on:
-      - hbase
-      - dks-standalone-http
 
   export-s3:
     image: hbase-to-mongo-export
@@ -91,26 +86,12 @@ services:
       context: .
       dockerfile: images/tests/Dockerfile
     container_name: integration-tests
-    depends_on:
-      - hbase
     command: "gradle --rerun-tasks integration"
 
-  dks-standalone-http:
-    image: dks-standalone-http
-    ports:
-      - 8090:8080
-    build:
-      context: images/dks
-    container_name: dks-standalone-http
-    environment:
-      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE,LocalAWS
-
-  dks-standalone-https:
-    image: dks-standalone-https
+  dks:
+    image: dks
     ports:
       - 8091:8443
     build:
       context: images/dks
-    container_name: dks-standalone-https
-    environment:
-      - SPRING_CONFIG_LOCATION=application_dks.properties
+    container_name: dks
