@@ -13,7 +13,7 @@
     enabled. This occurred when a call to the aws library was executed to get a password out of the
     parameter store. The following config silences the http library.
     -->
-    <logger name="org.apache" level="INFO" additivity="true">
+    <logger name="org.apache" level="ERROR" additivity="true">
         <appender-ref ref="STDOUT"/>
     </logger>
 
