@@ -95,7 +95,7 @@ class SnsServiceImplTest {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "full - Export finished - COMPLETED_SUCCESSFULLY",
+                "title_text": "FULL - Export finished - Completed Successfully",
                 "custom_elements": [
                     {
                         "key": "Export date",

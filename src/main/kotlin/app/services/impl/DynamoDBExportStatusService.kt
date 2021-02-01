@@ -2,12 +2,9 @@ package app.services.impl
 
 import app.services.ExportCompletionStatus
 import app.services.ExportStatusService
+import app.services.TableService
 import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Item
-import com.amazonaws.services.dynamodbv2.document.Table
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
@@ -18,26 +15,27 @@ import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
-class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : ExportStatusService {
+class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB,
+                                  private val tableService: TableService) : ExportStatusService {
 
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
             multiplierExpression = "\${dynamodb.retry.multiplier:2}"))
     override fun exportCompletionStatus(): ExportCompletionStatus =
-        exportStatusTable().query(statusQuerySpec()).map(::collectionStatus).run {
-            when {
-                all(::completedSuccessfully) -> {
-                    ExportCompletionStatus.COMPLETED_SUCCESSFULLY
-                }
-                any(::completedUnsuccessfully) -> {
-                    ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY
-                }
-                else -> {
-                    ExportCompletionStatus.NOT_COMPLETED
+            tableService.statuses().run {
+                when {
+                    all(::completedSuccessfully) -> {
+                        ExportCompletionStatus.COMPLETED_SUCCESSFULLY
+                    }
+                    any(::completedUnsuccessfully) -> {
+                        ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY
+                    }
+                    else -> {
+                        ExportCompletionStatus.NOT_COMPLETED
+                    }
                 }
             }
-        }
 
 
     @Retryable(value = [Exception::class],
@@ -115,22 +113,11 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
                 returnValues = "ALL_NEW"
             }
 
-    private fun collectionStatus(item: Item): String = item[COLLECTION_STATUS_ATTRIBUTE_NAME] as String
-
     private fun completedSuccessfully(status: Any): Boolean =
         successfulCompletionStatuses.contains(status)
 
     private fun completedUnsuccessfully(status: Any): Boolean =
         unsuccessfulCompletionStatuses.contains(status)
-
-    private fun exportStatusTable(): Table = DynamoDB(dynamoDB).getTable(statusTableName)
-
-    private fun statusQuerySpec(): QuerySpec =
-        QuerySpec().apply {
-            withKeyConditionExpression("#cId = :s")
-            withNameMap(mapOf("#cId" to "CorrelationId"))
-            withValueMap(mapOf(":s" to correlationId()))
-        }
 
     private val primaryKey by lazy {
         val correlationIdAttributeValue = AttributeValue().apply { s = correlationId() }
@@ -147,7 +134,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB) : Export
     companion object {
         val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class)
         private const val EXPORTED_FILE_COUNT_ATTRIBUTE_NAME = "FilesExported"
-        private const val COLLECTION_STATUS_ATTRIBUTE_NAME = "CollectionStatus"
         private val successfulCompletionStatuses = listOf("Exported", "Sent", "Received", "Success", "Table_Unavailable", "Blocked_Topic")
         private val unsuccessfulCompletionStatuses = listOf("Export_Failed")
     }

@@ -1,6 +1,8 @@
 package app.services.impl
 
+import app.services.ExportCompletionStatus
 import app.services.ExportStatusService
+import app.services.TableService
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
@@ -36,8 +38,37 @@ class DynamoDBExportStatusServiceTest {
     @MockBean
     private lateinit var amazonDynamoDB: AmazonDynamoDB
 
+    @MockBean
+    private lateinit var tableService: TableService
+
     @Before
-    fun before() = reset(amazonDynamoDB)
+    fun before()  {
+        System.setProperty("correlation_id", "correlation.id")
+        reset(amazonDynamoDB)
+    }
+
+    @Test
+    fun textExportCompletionStatusSuccessful() {
+        given(tableService.statuses()).willReturn(listOf("Exported", "Sent", "Received", "Success", "Table_Unavailable", "Blocked_Topic"))
+        val actual = exportStatusService.exportCompletionStatus()
+        assertEquals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY, actual)
+    }
+
+    @Test
+    fun textExportCompletionStatusUnsuccessful() {
+        given(tableService.statuses()).willReturn(listOf("Exported", "Sent", "Received", "Success",
+            "Table_Unavailable", "Blocked_Topic", "Export_Failed"))
+        val actual = exportStatusService.exportCompletionStatus()
+        assertEquals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY, actual)
+    }
+
+    @Test
+    fun textExportCompletionStatusInProgress() {
+        given(tableService.statuses()).willReturn(listOf("Exported", "Sent", "Received", "Success",
+            "Table_Unavailable", "Blocked_Topic", "Exporting"))
+        val actual = exportStatusService.exportCompletionStatus()
+        assertEquals(ExportCompletionStatus.NOT_COMPLETED, actual)
+    }
 
     @Test
     fun incrementExportedCountRetries() {

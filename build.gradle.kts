@@ -5,13 +5,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
-    id("org.springframework.boot") version "2.4.2"
+    application
+    id ("net.researchgate.release") version "2.8.1"
+    id( "com.github.ben-manes.versions") version "0.36.0"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("org.springframework.boot") version "2.4.2"
     kotlin("jvm") version "1.4.21"
     kotlin("plugin.spring") version "1.4.21"
-    id ("net.researchgate.release") version "2.8.1"
-    application
-    id( "com.github.ben-manes.versions") version "0.36.0"
 }
 
 group = "uk.gov.dwp.dataworks"
@@ -59,23 +59,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.retry:spring-retry")
 
-    implementation("org.spockframework:spock-core:1.3-groovy-2.5")
-    implementation("junit:junit:4.12")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("junit:junit:4.12")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:2.3.0.RELEASE")
     testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
-    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.1")
-    testImplementation("io.kotest:kotest-property-jvm:4.2.0")
-
-//    implementation("junit:junit:4.12")
-//    testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.springframework.batch:spring-batch-test")
-//    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-//    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.3.2")
-//    testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.2")
-//    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.2")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.3.2")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.2")
+    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.2")
 }
 
 tasks.withType<KotlinCompile> {

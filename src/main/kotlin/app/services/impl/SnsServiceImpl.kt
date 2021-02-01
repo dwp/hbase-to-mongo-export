@@ -51,7 +51,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "$snapshotType - Export finished - $exportCompletionStatus",
+                "title_text": "${snapshotType.toUpperCase()} - Export finished - ${exportCompletionStatus.description}",
                 "custom_elements": [
                     {
                         "key": "Export date",
