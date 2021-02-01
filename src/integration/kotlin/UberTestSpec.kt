@@ -163,7 +163,7 @@ class UberTestSpec: StringSpec() {
                     "severity": "Critical",
                     "notification_type": "Information",
                     "slack_username": "Crown Export Poller",
-                    "title_text": "FULL - Export finished - Completed Successfully",
+                    "title_text": "Full - Export finished - completed successfully",
                     "custom_elements":[
                         {
                             "key":"Export date",

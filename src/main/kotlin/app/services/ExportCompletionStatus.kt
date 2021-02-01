@@ -1,7 +1,7 @@
 package app.services
 
 enum class ExportCompletionStatus(val description: String) {
-    COMPLETED_SUCCESSFULLY("Completed Successfully"),
-    COMPLETED_UNSUCCESSFULLY("Failed"),
-    NOT_COMPLETED("In progress")
+    COMPLETED_SUCCESSFULLY("completed successfully"),
+    COMPLETED_UNSUCCESSFULLY("failed"),
+    NOT_COMPLETED("in progress")
 }
