@@ -3,6 +3,7 @@ package app.services.impl
 import app.services.ExportCompletionStatus
 import app.services.SnsService
 import app.utils.PropertyUtility
+import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest
 import org.springframework.beans.factory.annotation.Value
@@ -50,7 +51,17 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "$snapshotType - Export finished - $exportCompletionStatus"
+                "title_text": "$snapshotType - Export finished - $exportCompletionStatus",
+                "custom_elements": [
+                    {
+                        "key": "Export date",
+                        "value": "$exportDate"
+                    },
+                    {
+                        "key": "Correlation Id",
+                        "value": "${correlationId()}"
+                    }
+                ]
             }"""
 
     private fun request(arn: String, payload: String) =
@@ -80,6 +91,9 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
+
+    @Value("\${snapshot.sender.export.date}")
+    private lateinit var exportDate: String
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3prefix: String
