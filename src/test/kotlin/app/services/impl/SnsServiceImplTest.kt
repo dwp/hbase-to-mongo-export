@@ -22,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils
 @EnableRetry
 @SpringBootTest(classes = [SnsServiceImpl::class])
 @TestPropertySource(properties = [
+    "snapshot.sender.export.date=2020-12-12",
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
     "sns.retry.multiplier=1"
@@ -94,7 +95,17 @@ class SnsServiceImplTest {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "Crown Export Poller",
-                "title_text": "full - Export finished - COMPLETED_SUCCESSFULLY"
+                "title_text": "full - Export finished - COMPLETED_SUCCESSFULLY",
+                "custom_elements": [
+                    {
+                        "key": "Export date",
+                        "value": "2020-12-12"
+                    },
+                    {
+                        "key": "Correlation Id",
+                        "value": "correlation.id"
+                    }
+                ]
             }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)

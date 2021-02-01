@@ -59,13 +59,23 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.retry:spring-retry")
 
-    testImplementation("junit:junit:4.13.1")
+    implementation("org.spockframework:spock-core:1.3-groovy-2.5")
+    implementation("junit:junit:4.12")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.batch:spring-batch-test")
+    testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.3.2")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.2")
-    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.2")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.2.0")
+    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.1")
+    testImplementation("io.kotest:kotest-property-jvm:4.2.0")
+
+//    implementation("junit:junit:4.12")
+//    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.batch:spring-batch-test")
+//    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+//    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.3.2")
+//    testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.2")
+//    testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.2")
 }
 
 tasks.withType<KotlinCompile> {
