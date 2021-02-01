@@ -59,13 +59,15 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.retry:spring-retry")
 
-    testImplementation("junit:junit:4.12")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:2.3.0.RELEASE")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("junit:junit:4.13.1")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.3.2")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.2")
     testImplementation("io.kotest:kotest-assertions-json-jvm:4.3.2")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }
 
 tasks.withType<KotlinCompile> {
@@ -86,7 +88,6 @@ tasks.getByName<BootRun>("bootRun") {
 
 sourceSets {
     create("integration") {
-        java.srcDir(file("src/integration/groovy"))
         java.srcDir(file("src/integration/kotlin"))
         compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
