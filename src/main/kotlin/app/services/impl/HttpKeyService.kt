@@ -24,9 +24,8 @@ import java.net.URLEncoder
 
 @Service
 @Profile("httpDataKeyService")
-class HttpKeyService(
-    private val httpClientProvider: HttpClientProvider,
-    private val uuidGenerator: UUIDGenerator) : KeyService {
+class HttpKeyService(private val httpClientProvider: HttpClientProvider,
+                     private val uuidGenerator: UUIDGenerator): KeyService {
 
     companion object {
         val logger = DataworksLogger.getLogger(HttpKeyService::class)
@@ -34,20 +33,26 @@ class HttpKeyService(
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-            maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
-            backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
-                    multiplierExpression = "\${keyservice.retry.multiplier:2}"))
+        maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+            multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class)
+    @Synchronized
     override fun batchDataKey(): DataKeyResult {
+        if (dataKeyResult == null) {
+            dataKeyResult = dataKey()
+        }
+        return dataKeyResult!!
+    }
+
+    private fun dataKey(): DataKeyResult {
         val dksUrl = "$dataKeyServiceUrl/datakey"
         val dksCorrelationId = uuidGenerator.randomUUID()
         val dksUrlWithCorrelationId = "$dksUrl?correlationId=$dksCorrelationId"
         try {
-            logger.debug("Starting batchDataKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId)
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet(dksUrlWithCorrelationId)).use { response ->
                     val statusCode = response.statusLine.statusCode
-                    logger.debug("Finished batchDataKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
@@ -57,7 +62,10 @@ class HttpKeyService(
                         EntityUtils.consume(entity)
                         result
                     } else {
-                        logger.warn("Getting batch data key - data key service returned bad status code", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
+                        logger.warn("Getting batch data key - data key service returned bad status code",
+                            "dks_url" to dksUrl,
+                            "dks_correlation_id" to dksCorrelationId,
+                            "status_code" to "$statusCode")
                         throw DataKeyServiceUnavailableException("Getting batch data key - data key service returned bad status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'")
                     }
                 }
@@ -67,16 +75,19 @@ class HttpKeyService(
                 is DataKeyServiceUnavailableException -> {
                     throw ex
                 }
-                else -> throw DataKeyServiceUnavailableException("Error contacting data key service: '$ex' for dks_correlation_id: '$dksCorrelationId'")
+                else -> {
+                    ex.printStackTrace()
+                    throw DataKeyServiceUnavailableException("Error contacting data key service: '$ex' for dks_correlation_id: '$dksCorrelationId'")
+                }
             }
         }
     }
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-            maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
-            backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
-                    multiplierExpression = "\${keyservice.retry.multiplier:2}"))
+                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+                backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+                                  multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
@@ -86,32 +97,63 @@ class HttpKeyService(
                 decryptedKeyCache[cacheKey]!!
             } else {
                 httpClientProvider.client().use { client ->
-                    val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
+                    val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${
+                        URLEncoder.encode(
+                            encryptionKeyId,
+                            "US-ASCII"
+                        )
+                    }"
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
-                    logger.debug("Starting decryptKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId)
+                    logger.debug(
+                        "Starting decryptKey call to data key service",
+                        "dks_url" to dksUrl,
+                        "dks_correlation_id" to dksCorrelationId
+                    )
                     val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logger.debug("Finished decryptKey call to data key service", "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
+                        logger.debug(
+                            "Finished decryptKey call to data key service",
+                            "dks_url" to dksUrl,
+                            "dks_correlation_id" to dksCorrelationId,
+                            "status_code" to "$statusCode"
+                        )
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity
-                                val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
+                                val text =
+                                    BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
                                 EntityUtils.consume(entity)
                                 val dataKeyResult = Gson().fromJson(text, DataKeyResult::class.java)
                                 decryptedKeyCache[cacheKey] = dataKeyResult.plaintextDataKey
                                 dataKeyResult.plaintextDataKey
                             }
                             400 -> {
-                                logger.error("DataKeyDecryptionException from data key service", "encrypted_key" to encryptedKey, "key_encryption_key_id" to encryptionKeyId, "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
+                                logger.error(
+                                    "DataKeyDecryptionException from data key service",
+                                    "encrypted_key" to encryptedKey,
+                                    "key_encryption_key_id" to encryptionKeyId,
+                                    "dks_url" to dksUrl,
+                                    "dks_correlation_id" to dksCorrelationId,
+                                    "status_code" to "$statusCode"
+                                )
                                 throw DataKeyDecryptionException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'")
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'"
+                                )
                             }
                             else -> {
-                                logger.error("DataKeyServiceUnavailableException from data key service", "encrypted_key" to encryptedKey, "key_encryption_key_id" to encryptionKeyId, "dks_url" to dksUrl, "dks_correlation_id" to dksCorrelationId, "status_code" to "$statusCode")
+                                logger.error(
+                                    "DataKeyServiceUnavailableException from data key service",
+                                    "encrypted_key" to encryptedKey,
+                                    "key_encryption_key_id" to encryptionKeyId,
+                                    "dks_url" to dksUrl,
+                                    "dks_correlation_id" to dksCorrelationId,
+                                    "status_code" to "$statusCode"
+                                )
                                 val ex = DataKeyServiceUnavailableException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'")
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode' for dks_correlation_id: '$dksCorrelationId'"
+                                )
                                 throw ex
                             }
                         }
@@ -133,6 +175,8 @@ class HttpKeyService(
     }
 
     private var decryptedKeyCache = mutableMapOf<String, String>()
+
+    private var dataKeyResult: DataKeyResult? = null
 
     @Value("\${data.key.service.url}")
     private lateinit var dataKeyServiceUrl: String

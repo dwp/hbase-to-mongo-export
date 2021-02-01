@@ -35,6 +35,18 @@ class UberTestSpec: StringSpec() {
             s3BucketKeys("exports") shouldContainExactly expectedExports()
         }
 
+        "Should use a single datakey" {
+            s3BucketObjects("exports").mapNotNull {
+                with(it.objectMetadata.userMetadata) {
+                    get("datakeyencryptionkeyid")?.let { masterKeyId ->
+                        get("ciphertext")?.let { encryptedKey ->
+                            keyService.decryptKey(masterKeyId, encryptedKey)
+                        }
+                    }
+                }
+            }.toSet() shouldHaveSize 1
+        }
+
         "Writes the manifests" {
             s3BucketKeys("manifests") shouldContainExactly expectedManifests()
         }
@@ -254,7 +266,8 @@ class UberTestSpec: StringSpec() {
 
 
         private fun s3BucketObjects(bucket: String) = s3BucketKeys(bucket).map { amazonS3.getObject(bucket, it) }
-        private fun s3BucketKeys(bucket: String)= amazonS3.listObjects(bucket).objectSummaries.map(S3ObjectSummary::getKey)
+        private fun s3BucketKeys(bucket: String)= s3Objects(bucket).objectSummaries.map(S3ObjectSummary::getKey)
+        private fun s3Objects(bucket: String)= amazonS3.listObjects(bucket)
 
         private fun primaryKeyMap(correlationIdAttributeValue: AttributeValue, collectionNameAttributeValue: AttributeValue) =
                 mapOf("CorrelationId" to correlationIdAttributeValue, "CollectionName" to collectionNameAttributeValue)
