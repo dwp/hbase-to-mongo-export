@@ -28,27 +28,19 @@ import org.springframework.test.util.ReflectionTestUtils
 import java.nio.charset.Charset
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
+@ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest")
 @SpringBootTest
 @TestPropertySource(properties = [
-    "data.table.name=ucfs-data",
-    "column.family=topic",
-    "topic.name=db.a.b",
-    "identity.keystore=resources/identity.jks",
-    "trust.keystore=resources/truststore.jks",
-    "identity.store.password=changeit",
-    "identity.key.password=changeit",
-    "trust.store.password=changeit",
-    "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2",
     "s3.bucket=bucket",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "s3.prefix.folder=prefix",
+    "snapshot.sender.export.date=2020-06-05",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.type=full",
+    "topic.name=db.a.b",
     "trigger.snapshot.sender=false",
-    "snapshot.type=full"
 ])
 class HBaseResultProcessorTest {
     @Before
@@ -240,7 +232,7 @@ class HBaseResultProcessorTest {
     private val textUtils = TextUtils()
 
     private fun actualResult(): SourceRecord? {
-        var processor = HBaseResultProcessor(textUtils)
+        val processor = HBaseResultProcessor(textUtils)
         ReflectionTestUtils.setField(processor, "topicName", "db.a.b")
         return processor.process(result)
     }
@@ -276,10 +268,10 @@ class HBaseResultProcessorTest {
     companion object {
         const val rowId = "EXPECTED_ID"
         const val dbObject = "EXPECTED_DB_OBJECT"
-        const val encryptionKeyId = "EXPECTED_ENCRYPTION_KEY_ID"
-        const val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
-        const val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
-        const val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
+        private const val encryptionKeyId = "EXPECTED_ENCRYPTION_KEY_ID"
+        private const val encryptedEncryptionKey = "EXPECTED_ENCRYPTED_ENCRYPTION_KEY"
+        private const val keyEncryptionKeyId = "EXPECTED_KEY_ENCRYPTION_KEY_ID"
+        private const val initialisationVector = "EXPECTED_INITIALISATION_VECTOR"
 
         val idBlock = """
             |"_id": {

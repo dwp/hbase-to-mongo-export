@@ -5,7 +5,7 @@ import app.domain.EncryptingOutputStream
 import app.services.S3ObjectService
 import com.amazonaws.services.s3.AmazonS3
 import com.nhaarman.mockitokotlin2.*
-import junit.framework.Assert.fail
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

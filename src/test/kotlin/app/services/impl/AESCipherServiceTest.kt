@@ -15,27 +15,19 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("aesCipherService", "phoneyDataKeyService", "unitTest", "outputToConsole")
+@ActiveProfiles("aesCipherService", "phoneyDataKeyService", "unitTest")
 @SpringBootTest
 @TestPropertySource(properties = [
-    "data.table.name=ucfs-data",
-    "column.family=topic",
-    "topic.name=db.a.b",
-    "identity.keystore=resources/identity.jks",
-    "trust.keystore=resources/truststore.jks",
-    "identity.store.password=changeit",
-    "identity.key.password=changeit",
-    "trust.store.password=changeit",
-    "identity.store.alias=cid",
     "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "s3.bucket=bucket",
+    "s3.prefix.folder=prefix",
+    "snapshot.sender.export.date=2020-06-05",
     "snapshot.sender.reprocess.files=true",
     "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.export.date=2020-06-05",
-    "trigger.snapshot.sender=false",
+    "snapshot.sender.sqs.queue.url=http://aws:4566",
     "snapshot.type=full",
-    "s3.bucket=bucket"
+    "topic.name=db.a.b",
+    "trigger.snapshot.sender=false",
 ])
 class AESCipherServiceTest {
 
@@ -78,7 +70,6 @@ class AESCipherServiceTest {
     @MockBean
     private lateinit var amazonSQS: AmazonSQS
 
-    companion object {
-    }
+    companion object
 
 }

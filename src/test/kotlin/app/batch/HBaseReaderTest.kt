@@ -1,22 +1,15 @@
 package app.batch
 
-import app.exceptions.ScanRetriesExhaustedException
 import app.exceptions.BlockedTopicException
+import app.exceptions.ScanRetriesExhaustedException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import com.nhaarman.mockitokotlin2.*
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
 import org.apache.hadoop.hbase.NotServingRegionException
 import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.Connection
-import org.apache.hadoop.hbase.client.Result
-import org.apache.hadoop.hbase.client.ResultScanner
-import org.apache.hadoop.hbase.client.Scan
-import org.apache.hadoop.hbase.client.Table
-import org.junit.Test
-
+import org.apache.hadoop.hbase.client.*
 import org.junit.Assert.*
+import org.junit.Test
 import org.springframework.test.util.ReflectionTestUtils
 
 class HBaseReaderTest {
@@ -34,7 +27,7 @@ class HBaseReaderTest {
             on { row } doReturn byteArrayOf(2)
         }
 
-        val resultScanner = mock<ResultScanner>() {
+        val resultScanner = mock<ResultScanner> {
             on { next() } doReturn result
         }
 
@@ -75,7 +68,7 @@ class HBaseReaderTest {
             on { row } doReturn byteArrayOf(2)
         }
 
-        val failingScanner = mock<ResultScanner>() {
+        val failingScanner = mock<ResultScanner> {
             on { next() } doReturn firstResult doThrow NotServingRegionException("Error")
         }
 
@@ -83,7 +76,7 @@ class HBaseReaderTest {
             on { row } doReturn byteArrayOf(5)
         }
 
-        val successfulScanner = mock<ResultScanner>() {
+        val successfulScanner = mock<ResultScanner> {
             on { next() } doReturn secondResult doReturn null
         }
 
@@ -180,7 +173,7 @@ class HBaseReaderTest {
         }
     }
 
-    @Test
+    @Test(expected = BlockedTopicException::class)
     fun throwsFilterBlockedTopicException() {
 
         val table = mock<Table>()
@@ -200,13 +193,6 @@ class HBaseReaderTest {
         ReflectionTestUtils.setField(hBaseReader, "topicName", blockedTopicName)
         ReflectionTestUtils.setField(hBaseReader, "start", 0)
         ReflectionTestUtils.setField(hBaseReader, "stop", 10)
-
-        val exception = shouldThrow<BlockedTopicException> {
-            val spy = spy(hBaseReader)
-            while (true) {
-                spy.read()
-            }
-        }
-        exception.message shouldBe "Provided topic is blocked so cannot be processed: 'db.crypto.encryptedData.unencrypted'"
+        hBaseReader.read()
     }
 }

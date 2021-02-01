@@ -3,12 +3,10 @@ package app.exceptions
 class MissingFieldException(id: ByteArray, field: String) :
         Exception("Missing field '$field' in record '$id'")
 
-class DecryptionFailureException(database: String,
-                                 collection: String,
-                                 id: ByteArray,
+class DecryptionFailureException(id: ByteArray,
                                  masterKeyId: String,
                                  cause: Throwable) :
-        Exception("Failed to decrypt record '$id' sourced from collection '$collection' on database '$database', master key id: '$masterKeyId'", cause)
+        Exception("Failed to decrypt record '${String(id)}' , master key id: '$masterKeyId'", cause)
 
 class DataKeyDecryptionException(message: String) : Exception(message)
 

@@ -27,14 +27,14 @@ git-hooks: ## Set up hooks in .git/hooks
 certificates: ## generate the mutual authentication certificates for communications with dks.
 	./generate-certificates.sh
 
-build-jar: ## build the main jar
+jar: ## build the main jar
 	gradle build
 	cp build/libs/*.jar images/htme/hbase-to-mongo-export.jar
 
-build-images: build-jar certificates ## build the images for local containerized running
+images: jar certificates ## build the images for local containerized running
 	docker-compose build
 
-build-all: build-jar build-images ## Build the jar file and then all docker images
+build-all: jar images ## Build the jar file and then all docker images
 
 build-hbase-init: ## build the image that populates hbase.
 	docker-compose build --no-cache hbase-populate
@@ -55,7 +55,7 @@ service-hbase: ## bring up hbase, populate it.
 	docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
 	docker-compose up hbase-init
 
-service-aws: ##bring up aws and prepare the services.
+service-aws: ## bring up aws and prepare the services.
 	docker-compose up -d aws
 	@{ \
 		while ! docker logs aws 2> /dev/null | grep -q $(S3_READY_REGEX); do \
@@ -65,15 +65,10 @@ service-aws: ##bring up aws and prepare the services.
 	}
 	docker-compose up aws-init
 
-service-dks-insecure: ## bring up dks on 8080
-	docker-compose up -d dks-standalone-http
+service-dks: # bring up the data key service
+	docker-compose up -d dks
 
-service-dks-secure: ## bring up secure dks on 8443
-	docker-compose up -d dks-standalone-https
-
-services-dks: service-dks-insecure service-dks-secure ## bring up the two dkses.
-
-services: services-dks service-hbase service-aws ## bring up dks, hbase, aws.
+services: service-dks service-hbase service-aws ## bring up dks, hbase, aws.
 
 exports: services  ## run all the exports.
 	docker-compose up export-s3 blocked-topic table-unavailable export-nothing
@@ -81,11 +76,4 @@ exports: services  ## run all the exports.
 integration-tests: exports ## run the integration tests
 	docker-compose up integration-tests
 
-integration-all: destroy build-images integration-tests ## teardown for fresh start, build the images and run the tests.
-
-down: ## Bring down the containers
-	docker-compose down
-
-destroy: down ## Bring down the containers Docker container and services then delete all volumes
-	docker network prune -f
-	docker volume prune -f
+integration-all: images integration-tests
