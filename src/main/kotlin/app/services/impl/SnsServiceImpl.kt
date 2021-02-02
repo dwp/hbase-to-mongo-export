@@ -48,8 +48,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
             """{
-                "severity": "Critical",
-                "notification_type": "Information",
+                "severity": "${severity(exportCompletionStatus)}",
+                "notification_type": "${notificationType(exportCompletionStatus)}",
                 "slack_username": "Crown Export Poller",
                 "title_text": "${snapshotType.capitalize()} - Export finished - ${exportCompletionStatus.description}",
                 "custom_elements": [
@@ -63,6 +63,26 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                     }
                 ]
             }"""
+
+    private fun severity(exportCompletionStatus: ExportCompletionStatus): String =
+        when (exportCompletionStatus) {
+            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                "Critical"
+            }
+            else -> {
+                "High"
+            }
+        }
+
+    private fun notificationType(exportCompletionStatus: ExportCompletionStatus): String =
+        when (exportCompletionStatus) {
+            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
+                "Error"
+            }
+            else -> {
+                "Information"
+            }
+        }
 
     private fun request(arn: String, payload: String) =
         PublishRequest().apply {
