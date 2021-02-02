@@ -1,5 +1,6 @@
 package app.configuration
 
+import io.prometheus.client.CollectorRegistry
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorOutputStream
 import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream
@@ -20,6 +21,9 @@ import javax.crypto.Cipher
 
 @Configuration
 class ContextConfiguration {
+
+    @Bean
+    fun collectorRegistry(): CollectorRegistry = CollectorRegistry()
 
     @Bean
     @Profile("bz2Compressor")

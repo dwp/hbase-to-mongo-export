@@ -7,6 +7,8 @@ import app.services.ExportCompletionStatus
 import app.services.ExportStatusService
 import app.services.SnapshotSenderMessagingService
 import app.services.SnsService
+import io.prometheus.client.CollectorRegistry
+import io.prometheus.client.exporter.PushGateway
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
@@ -19,10 +21,14 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
                                         private val messagingService: SnapshotSenderMessagingService,
-                                        private val snsService: SnsService) :
+                                        private val snsService: SnsService,
+                                        private val collectorRegistry: CollectorRegistry) :
         JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
+
+        val pushGateway = PushGateway("pushgateway:9091")
+        pushGateway.pushAdd(collectorRegistry, "htme")
         logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
         setExportStatus(jobExecution)
         sendSqsMessages(jobExecution)

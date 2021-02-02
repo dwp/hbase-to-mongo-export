@@ -5,6 +5,7 @@ import app.domain.EncryptingOutputStream
 import app.domain.Record
 import app.services.*
 import com.amazonaws.services.s3.AmazonS3
+import io.prometheus.client.Counter
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
