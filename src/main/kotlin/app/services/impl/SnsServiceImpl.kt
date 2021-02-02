@@ -48,8 +48,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
             """{
-                "severity": ${severity(exportCompletionStatus)},
-                "notification_type": ${notificationType(exportCompletionStatus)},
+                "severity": "${severity(exportCompletionStatus)}",
+                "notification_type": "${notificationType(exportCompletionStatus)}",
                 "slack_username": "Crown Export Poller",
                 "title_text": "${snapshotType.capitalize()} - Export finished - ${exportCompletionStatus.description}",
                 "custom_elements": [
