@@ -88,6 +88,7 @@ class ContextConfiguration {
     fun insecureHttpClient() = HttpClients.createDefault()!!
 
     @Bean
+    @Profile("realHbaseDataSource")
     fun localConnection(): Connection {
 
         val configuration = HBaseConfiguration.create().apply {

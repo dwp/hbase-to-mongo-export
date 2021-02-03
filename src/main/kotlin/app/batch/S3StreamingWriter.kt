@@ -5,7 +5,6 @@ import app.domain.EncryptingOutputStream
 import app.domain.Record
 import app.services.*
 import com.amazonaws.services.s3.AmazonS3
-import io.prometheus.client.Counter
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
@@ -37,8 +36,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val compressionInstanceProvider: CompressionInstanceProvider,
                         private val exportStatusService: ExportStatusService,
                         private val snapshotSenderMessagingService: SnapshotSenderMessagingService,
-                        private val s3ObjectService: S3ObjectService,
-                        private val metricsService: MetricsService):
+                        private val s3ObjectService: S3ObjectService):
 
     ItemWriter<Record> {
 
@@ -118,8 +116,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         "total_bytes_already_written" to "$totalBytes",
                         "total_records_already_written" to "$totalRecords")
 
-                    recordsWrittenCounter.labels(split).inc(recordsInBatch.toDouble())
-
                     exportStatusService.incrementExportedCount(objectKey)
                     snapshotSenderMessagingService.notifySnapshotSender(objectKey)
                     totalBatches++
@@ -170,9 +166,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private val split: String by lazy {
         "%03d-%03d".format(start, stop)
     }
-
-    private val recordsWrittenCounter
-            = metricsService.counter("htme_records_written", "The number of records written to s3", "split")
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 0

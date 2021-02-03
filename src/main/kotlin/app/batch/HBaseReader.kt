@@ -24,8 +24,7 @@ import kotlin.math.absoluteValue
 @StepScope
 class HBaseReader(private val connection: Connection,
                   private val textUtils: TextUtils,
-                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
-                  private val metricsService: MetricsService) : ItemReader<Result> {
+                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
 
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
@@ -33,7 +32,6 @@ class HBaseReader(private val connection: Connection,
             val result = scanner().next()
             if (result != null) {
                 latestId = result.row
-                rowsReadCounter.labels(split).inc()
             }
             retryAttempts = 0
             result
@@ -202,8 +200,6 @@ class HBaseReader(private val connection: Connection,
 
     private var scanner: ResultScanner? = null
 
-    private val rowsReadCounter
-        = metricsService.counter("htme_rows_read", "The number of rows read from hbase", "split")
 
     @Value("\${scan.time.range.start:}")
     private var scanTimeRangeStart: String = ""
