@@ -36,7 +36,6 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", TOPIC_ARN)
         ReflectionTestUtils.setField(snsService, "snapshotType", "full")
         ReflectionTestUtils.setField(snsService, "s3prefix", "prefix")
-        ReflectionTestUtils.setField(snsService, "triggerAdg", "false")
         reset(amazonSNS)
     }
 
@@ -57,18 +56,9 @@ class SnsServiceImplTest {
         verifyNoMoreInteractions(amazonSNS)
     }
 
-    @Test
-    fun doesntTriggerAdg() {
-        validateMessage(false)
-    }
 
     @Test
     fun triggersAdg() {
-        validateMessage(true)
-    }
-
-    private fun validateMessage(triggerAdg: Boolean) {
-        ReflectionTestUtils.setField(snsService, "triggerAdg", "$triggerAdg")
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendExportCompletedSuccessfullyMessage()
         argumentCaptor<PublishRequest> {
@@ -76,12 +66,12 @@ class SnsServiceImplTest {
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
                 "correlation_id": "correlation.id",
-                "s3_prefix": "prefix",
-                "trigger_adg": $triggerAdg   
+                "s3_prefix": "prefix"   
             }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
     }
+
 
     @Test
     fun givesUpSuccessAfterMaxTriesUntilSuccessful() {

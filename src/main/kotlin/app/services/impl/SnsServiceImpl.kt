@@ -42,9 +42,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     private fun exportCompletedPayload() =
             """{
-                "correlation_id": "${PropertyUtility.correlationId()}",
-                "s3_prefix": "$s3prefix",
-                "trigger_adg": ${triggerAdg.toBoolean()}   
+                "correlation_id": "${correlationId()}",
+                "s3_prefix": "$s3prefix"   
             }"""
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
@@ -115,9 +114,6 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     @Value("\${snapshot.sender.export.date}")
     private lateinit var exportDate: String
-
-    @Value("\${trigger.adg:false}")
-    private lateinit var triggerAdg: String
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3prefix: String
