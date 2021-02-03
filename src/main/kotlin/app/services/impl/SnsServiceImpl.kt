@@ -42,7 +42,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     private fun exportCompletedPayload() =
             """{
-                "correlation_id": "${PropertyUtility.correlationId()}",
+                "correlation_id": "${correlationId()}",
                 "s3_prefix": "$s3prefix"   
             }"""
 

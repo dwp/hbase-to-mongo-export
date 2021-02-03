@@ -72,7 +72,9 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     private fun sendSnsMessages() {
         when (val completionStatus = exportStatusService.exportCompletionStatus()) {
             ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
-                snsService.sendExportCompletedSuccessfullyMessage()
+                if (triggerAdg.toBoolean()) {
+                    snsService.sendExportCompletedSuccessfullyMessage()
+                }
                 snsService.sendMonitoringMessage(completionStatus)
             }
             ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
@@ -89,6 +91,10 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${topic.name}")
     private lateinit var topicName: String
+
+    @Value("\${trigger.adg:false}")
+    private lateinit var triggerAdg: String
+
 
     companion object {
         val logger = DataworksLogger.getLogger(S3StreamingWriter::class)

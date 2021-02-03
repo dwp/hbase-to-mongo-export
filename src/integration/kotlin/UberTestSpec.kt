@@ -166,7 +166,7 @@ class UberTestSpec: StringSpec() {
         "It should send the successful completion message" {
             validateQueueMessage(adgQueueUrl, """{
                     "correlation_id": "s3-export",
-                    "s3_prefix": "output"   
+                    "s3_prefix": "output"
                 }""")
         }
 

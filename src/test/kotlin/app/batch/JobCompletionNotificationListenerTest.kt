@@ -3,12 +3,14 @@ package app.batch
 import app.exceptions.BlockedTopicException
 import app.services.*
 import com.nhaarman.mockitokotlin2.*
+import org.junit.Before
 import org.junit.Test
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.test.util.ReflectionTestUtils
 
 class JobCompletionNotificationListenerTest {
+
 
     @Test
     fun setsExportedStatusOnSuccess() {
@@ -150,6 +152,25 @@ class JobCompletionNotificationListenerTest {
     }
 
     @Test
+    fun doesNotSendExportCompletedSuccessfullyMessageOnSuccessIfNotRequired() {
+        val exportStatusService = mock<ExportStatusService> {
+            on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_SUCCESSFULLY
+        }
+        val messagingService = mock<SnapshotSenderMessagingService>()
+        val snsService = mock<SnsService>()
+        val metricsService = mock<MetricsService>()
+        val jobCompletionNotificationListener =
+            jobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService, "false")
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        jobCompletionNotificationListener.afterJob(jobExecution)
+//        verify(snsService, times(1)).sendExportCompletedSuccessfullyMessage()
+        verify(snsService, times(1)).sendMonitoringMessage(any())
+        verifyNoMoreInteractions(snsService)
+    }
+
+    @Test
     fun doesNotSendExportCompletedSuccessfullyMessageOnFailure() {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY
@@ -183,6 +204,13 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(snsService)
     }
+
+    private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
+                                                  messagingService: SnapshotSenderMessagingService,
+                                                  snsService: SnsService, metricsService: MetricsService, triggerAdg: String = "true"): JobCompletionNotificationListener =
+        JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService).apply {
+            ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
+        }
 
     companion object {
         private const val TEST_TOPIC = "db.test.topic"
