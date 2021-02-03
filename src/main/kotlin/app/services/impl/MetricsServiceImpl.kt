@@ -12,14 +12,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Service
-class MetricsServiceImpl(private val registry: CollectorRegistry,
-                         private val pushGateway: PushGateway): MetricsService {
+class MetricsServiceImpl(private val pushGateway: PushGateway): MetricsService {
 
 
-    @Scheduled(fixedRateString = "\${prometheus.push.rate:60000}", initialDelay = 60_000)
+    @Scheduled(fixedRateString = "\${metrics.push.rate:10000}", initialDelayString = "\${metrics.initial.delay:10000}")
     override fun pushMetrics() {
-        println("=============================== PUSHING METRICS ======================================")
-        pushGateway.pushAdd(registry, "htme", metricsGroupingKey())
+        pushGateway.push(CollectorRegistry.defaultRegistry, "htme", metricsGroupingKey())
     }
 
     @Cacheable("COUNTER_CACHE")
@@ -29,7 +27,7 @@ class MetricsServiceImpl(private val registry: CollectorRegistry,
                 name(name)
                 labelNames(*labels)
                 help(help)
-                register(registry)
+                register()
             }
 
     fun metricsGroupingKey(): Map<String, String> =

@@ -13,6 +13,7 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.annotation.Profile
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -38,11 +39,13 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
             multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class)
     @Synchronized
+    @Cacheable("ENCRYPTED_KEY_CACHE")
     override fun batchDataKey(): DataKeyResult {
-        if (dataKeyResult == null) {
-            dataKeyResult = dataKey()
-        }
-        return dataKeyResult!!
+        return dataKey()
+//        if (dataKeyResult == null) {
+//            dataKeyResult = dataKey()
+//        }
+//        return dataKeyResult!!
     }
 
     private fun dataKey(): DataKeyResult {
@@ -85,23 +88,22 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-                maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
-                backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
-                                  multiplierExpression = "\${keyservice.retry.multiplier:2}"))
+        maxAttemptsExpression = "\${keyservice.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${keyservice.retry.delay:1000}",
+            multiplierExpression = "\${keyservice.retry.multiplier:2}"))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
+    @Cacheable("DECRYPTED_KEY_CACHE")
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
-            return if (decryptedKeyCache.containsKey(cacheKey)) {
-                decryptedKeyCache[cacheKey]!!
-            } else {
+//            return if (decryptedKeyCache.containsKey(cacheKey)) {
+//                decryptedKeyCache[cacheKey]!!
+//            } else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${
-                        URLEncoder.encode(
-                            encryptionKeyId,
-                            "US-ASCII"
-                        )
+                        URLEncoder.encode(encryptionKeyId,
+                            "US-ASCII")
                     }"
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
                     logger.debug(
@@ -159,7 +161,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
                         }
                     }
                 }
-            }
+            //}
         } catch (ex: Exception) {
             when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {

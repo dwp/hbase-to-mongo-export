@@ -1,5 +1,6 @@
 package app.configuration
 
+import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
@@ -13,17 +14,12 @@ import javax.annotation.PostConstruct
 @Configuration
 class MetricsConfiguration {
 
-    val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-
-    @Bean
-    fun collectorRegistry(): CollectorRegistry = meterRegistry.prometheusRegistry
-
     @Bean
     fun pushGateway(): PushGateway = PushGateway(pushgatewayAddress)
 
     @PostConstruct
     fun init() {
-        Metrics.globalRegistry.add(meterRegistry)
+        Metrics.globalRegistry.add(PrometheusMeterRegistry(PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM))
     }
 
     @Value("\${pushgateway.address}")

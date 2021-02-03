@@ -1,5 +1,6 @@
 package app
 
+import io.prometheus.client.spring.web.EnablePrometheusTiming
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -13,6 +14,7 @@ import kotlin.system.exitProcess
 @EnableRetry
 @EnableCaching
 @EnableScheduling
+@EnablePrometheusTiming
 class HBaseToMongoExport
 
 fun main(args: Array<String>) {
