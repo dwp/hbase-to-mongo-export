@@ -25,7 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils
     "snapshot.sender.export.date=2020-12-12",
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
-    "sns.retry.multiplier=1"
+    "sns.retry.multiplier=1",
 ])
 class SnsServiceImplTest {
 
@@ -56,8 +56,9 @@ class SnsServiceImplTest {
         verifyNoMoreInteractions(amazonSNS)
     }
 
+
     @Test
-    fun sendsTheCorrectSuccessMessage() {
+    fun triggersAdg() {
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendExportCompletedSuccessfullyMessage()
         argumentCaptor<PublishRequest> {
@@ -70,6 +71,7 @@ class SnsServiceImplTest {
         }
         verifyNoMoreInteractions(amazonSNS)
     }
+
 
     @Test
     fun givesUpSuccessAfterMaxTriesUntilSuccessful() {
