@@ -25,7 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils
     "snapshot.sender.export.date=2020-12-12",
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
-    "sns.retry.multiplier=1"
+    "sns.retry.multiplier=1",
 ])
 class SnsServiceImplTest {
 
@@ -36,6 +36,7 @@ class SnsServiceImplTest {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", TOPIC_ARN)
         ReflectionTestUtils.setField(snsService, "snapshotType", "full")
         ReflectionTestUtils.setField(snsService, "s3prefix", "prefix")
+        ReflectionTestUtils.setField(snsService, "triggerAdg", "false")
         reset(amazonSNS)
     }
 
@@ -57,7 +58,17 @@ class SnsServiceImplTest {
     }
 
     @Test
-    fun sendsTheCorrectSuccessMessage() {
+    fun doesntTriggerAdg() {
+        validateMessage(false)
+    }
+
+    @Test
+    fun triggersAdg() {
+        validateMessage(true)
+    }
+
+    private fun validateMessage(triggerAdg: Boolean) {
+        ReflectionTestUtils.setField(snsService, "triggerAdg", "$triggerAdg")
         given(amazonSNS.publish(any())).willReturn(mock())
         snsService.sendExportCompletedSuccessfullyMessage()
         argumentCaptor<PublishRequest> {
@@ -65,7 +76,8 @@ class SnsServiceImplTest {
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
                 "correlation_id": "correlation.id",
-                "s3_prefix": "prefix"   
+                "s3_prefix": "prefix",
+                "trigger_adg": $triggerAdg   
             }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
