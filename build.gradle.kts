@@ -78,6 +78,9 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5-jvm:4.4.0")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.4.0")
     testImplementation("io.kotest:kotest-assertions-json-jvm:4.4.0")
+    testImplementation("io.ktor:ktor-client-core:1.5.1")
+    testImplementation("io.ktor:ktor-client-gson:1.5.1")
+    testImplementation("io.ktor:ktor-client-apache:1.5.1")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }
 

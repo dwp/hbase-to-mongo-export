@@ -5,6 +5,7 @@ import app.domain.EncryptingOutputStream
 import app.domain.Record
 import app.services.*
 import com.amazonaws.services.s3.AmazonS3
+import io.prometheus.client.Counter
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
@@ -36,7 +37,11 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val compressionInstanceProvider: CompressionInstanceProvider,
                         private val exportStatusService: ExportStatusService,
                         private val snapshotSenderMessagingService: SnapshotSenderMessagingService,
-                        private val s3ObjectService: S3ObjectService):
+                        private val s3ObjectService: S3ObjectService,
+                        private val recordCounter: Counter,
+                        private val byteCounter: Counter,
+                        private val failedBatchPutCounter: Counter,
+                        private val failedManifestPutCounter: Counter):
 
     ItemWriter<Record> {
 
@@ -103,7 +108,12 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         logger.error("Failed to close output streams cleanly", "object_key" to objectKey)
                     }
 
-                    s3ObjectService.putObject(objectKey, encryptingOutputStream)
+                    try {
+                        s3ObjectService.putObject(objectKey, encryptingOutputStream)
+                    } catch (e: Exception) {
+                        failedBatchPutCounter.labels(split()).inc()
+                        throw e
+                    }
 
                     logger.info("Put batch object into bucket",
                         "s3_location" to objectKey,
@@ -121,7 +131,17 @@ class S3StreamingWriter(private val cipherService: CipherService,
                     totalBatches++
                     totalBytes += batchSizeBytes
                     totalRecords += recordsInBatch
-                    streamingManifestWriter.sendManifest(s3, encryptingOutputStream.manifestFile, manifestBucket, manifestPrefix)
+
+                    recordCounter.labels(split()).inc(recordsInBatch.toDouble())
+                    byteCounter.labels(split()).inc(batchSizeBytes.toDouble())
+
+                    try {
+                        streamingManifestWriter.sendManifest(s3, encryptingOutputStream.manifestFile, manifestBucket, manifestPrefix)
+                    } catch (e: Exception) {
+                        failedManifestPutCounter.labels(split()).inc()
+                        throw e
+                    }
+
                     totalManifestFiles++
                     totalManifestRecords += encryptingOutputStream.manifestFile.length()
                 } catch (e: Exception) {
@@ -151,21 +171,17 @@ class S3StreamingWriter(private val cipherService: CipherService,
         val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
         val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
-        return EncryptingOutputStream(
-            BufferedOutputStream(compressingStream),
-            byteArrayOutputStream,
-            keyResponse,
-            Base64.getEncoder().encodeToString(initialisationVector),
-            manifestFile,
-            manifestWriter
-        )
+        return EncryptingOutputStream(BufferedOutputStream(compressingStream),
+                                        byteArrayOutputStream,
+                                        keyResponse,
+                                        Base64.getEncoder().encodeToString(initialisationVector),
+                                        manifestFile,
+                                        manifestWriter)
     }
 
     private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
 
-    private val split: String by lazy {
-        "%03d-%03d".format(start, stop)
-    }
+    private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 0

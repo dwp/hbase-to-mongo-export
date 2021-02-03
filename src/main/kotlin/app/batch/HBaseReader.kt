@@ -2,9 +2,9 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.exceptions.ScanRetriesExhaustedException
-import app.services.MetricsService
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
+import io.prometheus.client.Counter
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
@@ -24,7 +24,9 @@ import kotlin.math.absoluteValue
 @StepScope
 class HBaseReader(private val connection: Connection,
                   private val textUtils: TextUtils,
-                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
+                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
+                  private val scanRetriesCounter: Counter,
+                  private val failedScansCounter: Counter) : ItemReader<Result> {
 
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
@@ -72,6 +74,7 @@ class HBaseReader(private val connection: Connection,
                 scanner?.close()
                 Thread.sleep(scanRetrySleepMs.toLong())
                 scanner = newScanner(lastKey)
+                scanRetriesCounter.labels(split()).inc()
                 read()
             }
             else {
@@ -80,16 +83,13 @@ class HBaseReader(private val connection: Connection,
                         "attempt" to "$retryAttempts",
                         "max_attempts" to scanMaxRetries,
                         "latest_id" to printableKey(lastKey))
+                failedScansCounter.labels(split()).inc()
                 throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
             }
         } catch (e: Exception) {
             logger.error("Failed to open scanner", e)
             throw e
         }
-    }
-
-    private val split: String by lazy {
-        "%03d-%03d".format(start, stop)
     }
 
     private var latestId: ByteArray? = null
@@ -233,6 +233,8 @@ class HBaseReader(private val connection: Connection,
 
     private var start: Int = Int.MIN_VALUE
     private var stop: Int = Int.MAX_VALUE
+
+    private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
     companion object {
         val logger = DataworksLogger.getLogger(HBaseReader::class)

@@ -1,6 +1,5 @@
-package app.batch.processor
+package app.batch
 
-import app.batch.Validator
 import app.domain.DecryptedRecord
 import app.domain.SourceRecord
 import app.exceptions.DataKeyServiceUnavailableException

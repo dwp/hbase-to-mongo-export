@@ -4,33 +4,33 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.services.*
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.exporter.PushGateway
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import java.text.SimpleDateFormat
-import java.util.*
+
+
+
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
                                         private val messagingService: SnapshotSenderMessagingService,
                                         private val snsService: SnsService,
-                                        private val metricsService: MetricsService): JobExecutionListenerSupport() {
+                                        private val pushGatewayService: PushGatewayService): JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-        metricsService.pushMetrics()
-        logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
-        setExportStatus(jobExecution)
-        sendSqsMessages(jobExecution)
-        sendSnsMessages()
+        try {
+            logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
+            setExportStatus(jobExecution)
+            sendSqsMessages(jobExecution)
+            sendSnsMessages()
+        } finally {
+            pushGatewayService.pushFinalMetrics()
+        }
     }
 
     private fun setExportStatus(jobExecution: JobExecution) {
@@ -39,24 +39,18 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         } else {
             when {
                 isATableUnavailableException(jobExecution.allFailureExceptions) -> {
-                    logger.error(
-                        "Setting table unavailable status",
-                        "job_exit_status" to "${jobExecution.exitStatus}"
-                    )
+                    logger.error("Setting table unavailable status",
+                        "job_exit_status" to "${jobExecution.exitStatus}")
                     exportStatusService.setTableUnavailableStatus()
                 }
                 isABlockedTopicException(jobExecution.allFailureExceptions) -> {
-                    logger.error(
-                        "Setting blocked topic status",
-                        "job_exit_status" to "${jobExecution.exitStatus}"
-                    )
+                    logger.error("Setting blocked topic status",
+                        "job_exit_status" to "${jobExecution.exitStatus}")
                     exportStatusService.setBlockedTopicStatus()
                 }
                 else -> {
-                    logger.error(
-                        "Setting export failed status",
-                        "job_exit_status" to "${jobExecution.exitStatus}", "topic" to topicName
-                    )
+                    logger.error("Setting export failed status",
+                        "job_exit_status" to "${jobExecution.exitStatus}", "topic" to topicName)
                     exportStatusService.setFailedStatus()
                 }
             }
@@ -94,7 +88,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${trigger.adg:false}")
     private lateinit var triggerAdg: String
-
 
     companion object {
         val logger = DataworksLogger.getLogger(S3StreamingWriter::class)

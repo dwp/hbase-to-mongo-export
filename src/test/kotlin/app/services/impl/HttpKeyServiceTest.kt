@@ -4,11 +4,11 @@ import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
+import app.services.KeyService
 import app.utils.UUIDGenerator
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.sqs.AmazonSQS
 import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -23,42 +23,22 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
 import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
-@SpringBootTest
+@SpringBootTest(classes = [HttpKeyService::class])
+@EnableRetry
 @TestPropertySource(properties = [
     "data.key.service.url=https://dks:8443",
-    "hbase.zookeeper.quorum=hbase",
     "keyservice.retry.delay=1",
     "keyservice.retry.maxAttempts=5",
     "keyservice.retry.multiplier=1",
-    "pushgateway.address=pushgateway:9090",
-    "s3.bucket=bucket",
-    "s3.prefix.folder=prefix",
-    "snapshot.sender.export.date=2020-06-05",
-    "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.type=full",
-    "topic.name=db.a.b",
-    "trigger.snapshot.sender=false",
 ])
 class HttpKeyServiceTest {
-
-    @Autowired
-    private lateinit var keyService: HttpKeyService
-
-    @Autowired
-    private lateinit var httpClientProvider: HttpClientProvider
-
-    @Autowired
-    private lateinit var uuidGenerator: UUIDGenerator
 
     companion object {
         private val datakeyServiceResponseBody = """
@@ -78,9 +58,11 @@ class HttpKeyServiceTest {
 
     @Before
     fun init() {
-        this.keyService.clearCache()
+        keyService.clearCache()
         reset(this.httpClientProvider)
         reset(this.uuidGenerator)
+        reset(dksDecryptKeyRetriesCounter)
+        reset(dksNewDataKeyRetriesCounter)
         ReflectionTestUtils.setField(keyService, "dataKeyResult", null)
     }
 
@@ -118,6 +100,8 @@ class HttpKeyServiceTest {
         verify(httpClient, times(1)).execute(any())
         verify(httpClient, times(1)).close()
         verifyNoMoreInteractions(httpClient)
+        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+        verifyZeroInteractions(dksNewDataKeyRetriesCounter)
     }
 
     @Test
@@ -146,6 +130,8 @@ class HttpKeyServiceTest {
         val argumentCaptor = argumentCaptor<HttpGet>()
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
         assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+        verifyZeroInteractions(dksNewDataKeyRetriesCounter)
     }
 
     @Test
@@ -169,6 +155,9 @@ class HttpKeyServiceTest {
             val argumentCaptor = argumentCaptor<HttpGet>()
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+            verify(dksNewDataKeyRetriesCounter, times(5)).inc()
+            verifyNoMoreInteractions(dksNewDataKeyRetriesCounter)
         }
     }
 
@@ -194,6 +183,9 @@ class HttpKeyServiceTest {
             val argumentCaptor = argumentCaptor<HttpGet>()
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+            verify(dksNewDataKeyRetriesCounter, times(5)).inc()
+            verifyNoMoreInteractions(dksNewDataKeyRetriesCounter)
         }
     }
 
@@ -224,6 +216,9 @@ class HttpKeyServiceTest {
         val argumentCaptor = argumentCaptor<HttpGet>()
         verify(httpClient, times(3)).execute(argumentCaptor.capture())
         assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+        verify(dksNewDataKeyRetriesCounter, times(2)).inc()
+        verifyNoMoreInteractions(dksNewDataKeyRetriesCounter)
     }
 
     @Test
@@ -255,6 +250,8 @@ class HttpKeyServiceTest {
         val argumentCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
         assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+        verifyZeroInteractions(dksNewDataKeyRetriesCounter)
     }
 
     @Test
@@ -287,6 +284,9 @@ class HttpKeyServiceTest {
         val argumentCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, times(3)).execute(argumentCaptor.capture())
         assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verify(dksDecryptKeyRetriesCounter, times(2)).inc()
+        verifyNoMoreInteractions(dksDecryptKeyRetriesCounter)
+        verifyZeroInteractions(dksNewDataKeyRetriesCounter)
     }
 
     @Test
@@ -320,6 +320,8 @@ class HttpKeyServiceTest {
         val argumentCaptor = argumentCaptor<HttpPost>()
         verify(httpClient, times(1)).execute(argumentCaptor.capture())
         assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+        verifyZeroInteractions(dksNewDataKeyRetriesCounter)
     }
 
     @Test
@@ -342,6 +344,8 @@ class HttpKeyServiceTest {
             val argumentCaptor = argumentCaptor<HttpPost>()
             verify(httpClient, times(1)).execute(argumentCaptor.capture())
             assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+            verifyZeroInteractions(dksNewDataKeyRetriesCounter)
         }
     }
 
@@ -365,6 +369,9 @@ class HttpKeyServiceTest {
             val argumentCaptor = argumentCaptor<HttpPost>()
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            verify(dksDecryptKeyRetriesCounter, times(5)).inc()
+            verifyNoMoreInteractions(dksDecryptKeyRetriesCounter)
+            verifyZeroInteractions(dksNewDataKeyRetriesCounter)
         }
     }
 
@@ -388,13 +395,23 @@ class HttpKeyServiceTest {
             val argumentCaptor = argumentCaptor<HttpPost>()
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
             assertEquals("https://dks:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            verifyZeroInteractions(dksDecryptKeyRetriesCounter)
+            verifyZeroInteractions(dksNewDataKeyRetriesCounter)
         }
     }
 
-    @MockBean
-    private lateinit var amazonDynamoDb: AmazonDynamoDB
+    @Autowired
+    private lateinit var keyService: KeyService
+
+    @MockBean(name = "dksDecryptKeyRetriesCounter")
+    private lateinit var dksDecryptKeyRetriesCounter: Counter
+
+    @MockBean(name = "dksNewDataKeyRetriesCounter")
+    private lateinit var dksNewDataKeyRetriesCounter: Counter
 
     @MockBean
-    private lateinit var amazonSQS: AmazonSQS
+    private lateinit var httpClientProvider: HttpClientProvider
 
+    @MockBean
+    private lateinit var uuidGenerator: UUIDGenerator
 }

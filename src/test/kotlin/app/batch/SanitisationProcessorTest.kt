@@ -1,9 +1,7 @@
-package app.batch.processor
+package app.batch
 
 import app.domain.DecryptedRecord
 import app.domain.ManifestRecord
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.sqs.AmazonSQS
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.assertj.core.api.Assertions.assertThat
@@ -12,27 +10,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("decryptionTest", "aesCipherService", "unitTest")
-@SpringBootTest
-@TestPropertySource(properties = [
-    "hbase.zookeeper.quorum=hbase",
-    "pushgateway.address=pushgateway:9090",
-    "s3.bucket=bucket",
-    "s3.prefix.folder=prefix",
-    "snapshot.sender.export.date=2020-06-05",
-    "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.type=full",
-    "topic.name=db.a.b",
-    "trigger.snapshot.sender=false",
-])
+@SpringBootTest(classes = [SanitisationProcessor::class])
 class SanitisationProcessorTest {
 
     @Test
@@ -161,10 +142,4 @@ class SanitisationProcessorTest {
 
     @Autowired
     private lateinit var sanitisationProcessor: SanitisationProcessor
-
-    @MockBean
-    private lateinit var amazonDynamoDb: AmazonDynamoDB
-
-    @MockBean
-    private lateinit var amazonSQS: AmazonSQS
 }

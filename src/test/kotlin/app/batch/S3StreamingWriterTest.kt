@@ -8,20 +8,16 @@ import app.services.*
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.sqs.AmazonSQS
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
-import org.mockito.Mockito
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.BufferedInputStream
@@ -31,7 +27,6 @@ import java.security.SecureRandom
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [S3StreamingWriter::class])
-@ActiveProfiles("streamingWriter")
 @TestPropertySource(properties = [
     "output.batch.size.max.bytes=100000",
     "s3.manifest.bucket=manifests",
@@ -39,7 +34,6 @@ import java.security.SecureRandom
     "s3.prefix.folder=prefix",
     "topic.name=db.database.collection",
 ])
-
 class S3StreamingWriterTest {
 
     @MockBean
@@ -55,7 +49,6 @@ class S3StreamingWriterTest {
     private lateinit var s3ObjectService: S3ObjectService
 
     @MockBean
-    @SuppressWarnings("Unused")
     private lateinit var secureRandom: SecureRandom
 
     @MockBean
@@ -63,6 +56,24 @@ class S3StreamingWriterTest {
 
     @MockBean
     private lateinit var streamingManifestWriter: StreamingManifestWriter
+
+    @MockBean(name = "recordCounter")
+    private lateinit var recordCounter: Counter
+
+    @MockBean(name = "byteCounter")
+    private lateinit var byteCounter: Counter
+
+    @MockBean(name = "failedBatchPutCounter")
+    private lateinit var failedBatchPutCounter: Counter
+
+    @MockBean(name = "failedManifestPutCounter")
+    private lateinit var failedManifestPutCounter: Counter
+
+    @Before
+    fun before() {
+        reset(recordCounter)
+        reset(byteCounter)
+    }
 
     @Test
     fun testExportStatusServiceIncrementsExportedCount() {
@@ -79,11 +90,21 @@ class S3StreamingWriterTest {
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
         val record = Record(dbObject, manifestRecord)
+
+        val recordCounterChild = mock<Counter.Child>()
+        val byteCounterChild = mock<Counter.Child>()
+        given(recordCounter.labels(any())).willReturn(recordCounterChild)
+        given(byteCounter.labels(any())).willReturn(byteCounterChild)
+
         s3StreamingWriter.write(mutableListOf(record))
         s3StreamingWriter.writeOutput()
         verify(exportStatusService, times(1)).incrementExportedCount(any())
+        verify(recordCounterChild, times(1)).inc(1.toDouble())
+        verify(byteCounterChild, times(1)).inc("dbObject\n".length.toDouble())
         val key = "prefix/db.database.collection-${Int.MIN_VALUE}-${Int.MAX_VALUE}-000001.txt.bz2.enc"
         verify(snapshotSenderMessagingService, times(1)).notifySnapshotSender(key)
+        verifyZeroInteractions(failedBatchPutCounter)
+        verifyZeroInteractions(failedManifestPutCounter)
     }
 
     @Test
@@ -111,6 +132,8 @@ class S3StreamingWriterTest {
         val actual = String(sink)
         val expected = "$dbObject\n"
         Assert.assertEquals(expected, actual)
+        verifyZeroInteractions(failedBatchPutCounter)
+        verifyZeroInteractions(failedManifestPutCounter)
     }
 
     @Test
@@ -141,15 +164,19 @@ class S3StreamingWriterTest {
             }
             listOfLists.add(list)
         }
+        given(recordCounter.labels(any())).willReturn(mock())
+        given(byteCounter.labels(any())).willReturn(mock())
 
         listOfLists.forEach {
             s3StreamingWriter.write(it)
         }
 
         s3StreamingWriter.writeOutput()
-        Mockito.verify(s3StreamingWriter, times(5)).writeOutput()
-        Mockito.verify(s3ObjectService, times(4)).putObject(any(), any())
-        Mockito.verify(streamingManifestWriter, times(4)).sendManifest(any(), any(), any(), any())
+        verify(s3StreamingWriter, times(5)).writeOutput()
+        verify(s3ObjectService, times(4)).putObject(any(), any())
+        verify(streamingManifestWriter, times(4)).sendManifest(any(), any(), any(), any())
+        verifyZeroInteractions(failedBatchPutCounter)
+        verifyZeroInteractions(failedManifestPutCounter)
    }
 
     @Test
@@ -167,17 +194,19 @@ class S3StreamingWriterTest {
         val dbObject = "dbObject"
         val manifestRecord = manifestRecord()
         val record = Record(dbObject, manifestRecord)
+        given(recordCounter.labels(any())).willReturn(mock())
+        given(byteCounter.labels(any())).willReturn(mock())
         s3StreamingWriter.write(mutableListOf(record))
         s3StreamingWriter.writeOutput()
         val s3Captor = argumentCaptor<AmazonS3>()
         val bucketCaptor = argumentCaptor<String>()
         val prefixCaptor = argumentCaptor<String>()
-        Mockito.verify(streamingManifestWriter, Mockito.times(1))
-                .sendManifest(s3Captor.capture(), any(), bucketCaptor.capture(), prefixCaptor.capture())
-
+        verify(streamingManifestWriter, times(1)).sendManifest(s3Captor.capture(), any(), bucketCaptor.capture(), prefixCaptor.capture())
         Assert.assertEquals(s3, s3Captor.firstValue)
         Assert.assertEquals("manifests", bucketCaptor.firstValue)
         Assert.assertEquals("manifestprefix", prefixCaptor.firstValue)
+        verifyZeroInteractions(failedBatchPutCounter)
+        verifyZeroInteractions(failedManifestPutCounter)
     }
 
     private fun dataKeyResult() = DataKeyResult("dataKeyEncryptionKeyId",

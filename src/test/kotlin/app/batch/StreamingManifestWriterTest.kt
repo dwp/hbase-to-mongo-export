@@ -4,10 +4,13 @@ import com.amazonaws.SdkClientException
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectResult
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
@@ -23,8 +26,16 @@ import java.io.File
 ])
 class StreamingManifestWriterTest {
 
+    @Before
+    fun before() {
+        reset(counter)
+    }
+
     @Autowired
     private lateinit var streamingManifestWriter: StreamingManifestWriter
+
+    @MockBean
+    private lateinit var counter: Counter
 
     @Test
     fun writeManifestDoesNotRetryOnSuccess() {
@@ -34,6 +45,7 @@ class StreamingManifestWriterTest {
         streamingManifestWriter.sendManifest(amazonS3, file(),"bucket", "prefix")
         verify(amazonS3, times(1)).putObject(any())
         verifyNoMoreInteractions(amazonS3)
+        verifyZeroInteractions(counter)
     }
 
     @Test
@@ -49,6 +61,7 @@ class StreamingManifestWriterTest {
             // do nothing
         }
         verify(amazonS3, times(10)).putObject(any())
+        verify(counter, times(10)).inc()
     }
 
     @Test
@@ -64,6 +77,7 @@ class StreamingManifestWriterTest {
         }
 
         verify(amazonS3, times(2)).putObject(any())
+        verify(counter, times(1)).inc()
     }
 
     private fun file() = File("src/test/kotlin/app/batch/StreamingManifestWriterTest.kt")

@@ -7,26 +7,33 @@ import org.junit.Before
 import org.junit.Test
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
+import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor
 import org.springframework.test.util.ReflectionTestUtils
 
 class JobCompletionNotificationListenerTest {
 
+
+    @Before
+    fun before() {
+        reset(messagingService)
+        reset(snsService)
+        reset(pushgatewayService)
+        reset(postProcessor)
+    }
 
     @Test
     fun setsExportedStatusOnSuccess() {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_SUCCESSFULLY
         }
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val snsService = mock<SnsService>()
-        val metricsService = mock<MetricsService>()
-        val jobCompletionNotificationListener =
-            JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+        val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(exportStatusService, times(1)).setExportedStatus()
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
 
@@ -36,11 +43,7 @@ class JobCompletionNotificationListenerTest {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_SUCCESSFULLY
         }
 
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val snsService = mock<SnsService>()
-        val metricsService = mock<MetricsService>()
-        val jobCompletionNotificationListener =
-            JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+        val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
         ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
@@ -48,6 +51,8 @@ class JobCompletionNotificationListenerTest {
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(exportStatusService, times(1)).setFailedStatus()
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
     @Test
@@ -56,11 +61,7 @@ class JobCompletionNotificationListenerTest {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_SUCCESSFULLY
         }
 
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val metricsService = mock<MetricsService>()
-        val snsService = mock<SnsService>()
-        val jobCompletionNotificationListener =
-            JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+        val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
         ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
@@ -69,6 +70,8 @@ class JobCompletionNotificationListenerTest {
 
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(exportStatusService, times(1)).setBlockedTopicStatus()
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
     @Test
@@ -78,17 +81,17 @@ class JobCompletionNotificationListenerTest {
                 on { exportedFilesCount() } doReturn 0
                 on { exportCompletionStatus() } doReturn exportCompletionStatus
             }
-            val messagingService = mock<SnapshotSenderMessagingService>()
-            val snsService = mock<SnsService>()
-            val metricsService = mock<MetricsService>()
-            val jobCompletionNotificationListener
-                = JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+            val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.COMPLETED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).notifySnapshotSenderNoFilesExported()
             verifyNoMoreInteractions(messagingService)
+            verify(pushgatewayService, times(1)).pushFinalMetrics()
+            verifyNoMoreInteractions(pushgatewayService)
+            reset(messagingService)
+            reset(pushgatewayService)
         }
     }
 
@@ -99,16 +102,17 @@ class JobCompletionNotificationListenerTest {
                 on { exportedFilesCount() } doReturn 1
                 on { exportCompletionStatus() } doReturn exportCompletionStatus
             }
-            val messagingService = mock<SnapshotSenderMessagingService>()
-            val snsService = mock<SnsService>()
-            val metricsService = mock<MetricsService>()
             val jobCompletionNotificationListener
-                = JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+                = jobCompletionNotificationListener(exportStatusService)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.COMPLETED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verifyZeroInteractions(messagingService)
+            verify(pushgatewayService, times(1)).pushFinalMetrics()
+            verifyNoMoreInteractions(pushgatewayService)
+            reset(messagingService)
+            reset(pushgatewayService)
         }
     }
 
@@ -119,16 +123,17 @@ class JobCompletionNotificationListenerTest {
                 on { exportedFilesCount() } doReturn 1
                 on { exportCompletionStatus() } doReturn exportCompletionStatus
             }
-            val messagingService = mock<SnapshotSenderMessagingService>()
-            val metricsService = mock<MetricsService>()
-            val snsService = mock<SnsService>()
-            val jobCompletionNotificationListener = JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+            val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
             ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verifyZeroInteractions(messagingService)
+            verify(pushgatewayService, times(1)).pushFinalMetrics()
+            verifyNoMoreInteractions(pushgatewayService)
+            reset(messagingService)
+            reset(pushgatewayService)
         }
     }
 
@@ -137,11 +142,8 @@ class JobCompletionNotificationListenerTest {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_SUCCESSFULLY
         }
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val snsService = mock<SnsService>()
-        val metricsService = mock<MetricsService>()
         val jobCompletionNotificationListener =
-            JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+            jobCompletionNotificationListener(exportStatusService)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
@@ -149,6 +151,8 @@ class JobCompletionNotificationListenerTest {
         verify(snsService, times(1)).sendExportCompletedSuccessfullyMessage()
         verify(snsService, times(1)).sendMonitoringMessage(any())
         verifyNoMoreInteractions(snsService)
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
     @Test
@@ -156,18 +160,16 @@ class JobCompletionNotificationListenerTest {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_SUCCESSFULLY
         }
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val snsService = mock<SnsService>()
-        val metricsService = mock<MetricsService>()
         val jobCompletionNotificationListener =
-            jobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService, "false")
+            jobCompletionNotificationListener(exportStatusService, "false")
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
-//        verify(snsService, times(1)).sendExportCompletedSuccessfullyMessage()
         verify(snsService, times(1)).sendMonitoringMessage(any())
         verifyNoMoreInteractions(snsService)
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
     @Test
@@ -175,17 +177,16 @@ class JobCompletionNotificationListenerTest {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY
         }
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val metricsService = mock<MetricsService>()
-        val snsService = mock<SnsService>()
         val jobCompletionNotificationListener =
-            JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+            jobCompletionNotificationListener(exportStatusService)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(snsService, times(1)).sendMonitoringMessage(any())
         verifyNoMoreInteractions(snsService)
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
     @Test
@@ -193,24 +194,28 @@ class JobCompletionNotificationListenerTest {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.NOT_COMPLETED
         }
-        val messagingService = mock<SnapshotSenderMessagingService>()
-        val metricsService = mock<MetricsService>()
-        val snsService = mock<SnsService>()
         val jobCompletionNotificationListener =
-            JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService)
+            jobCompletionNotificationListener(exportStatusService)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verifyZeroInteractions(snsService)
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(pushgatewayService)
     }
 
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
-                                                  messagingService: SnapshotSenderMessagingService,
-                                                  snsService: SnsService, metricsService: MetricsService, triggerAdg: String = "true"): JobCompletionNotificationListener =
-        JobCompletionNotificationListener(exportStatusService, messagingService, snsService, metricsService).apply {
-            ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
-        }
+                                                  triggerAdg: String = "true"): JobCompletionNotificationListener =
+        JobCompletionNotificationListener(exportStatusService, messagingService,
+            snsService, pushgatewayService).apply {
+                    ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
+                }
+
+    private val messagingService = mock<SnapshotSenderMessagingService>()
+    private val snsService = mock<SnsService>()
+    private val pushgatewayService = mock<PushGatewayService>()
+    private val postProcessor = mock<ScheduledAnnotationBeanPostProcessor>()
 
     companion object {
         private const val TEST_TOPIC = "db.test.topic"

@@ -1,12 +1,9 @@
 package app.batch
 
-import app.batch.processor.HBaseResultProcessor
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.MissingFieldException
 import app.utils.TextUtils
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.sqs.AmazonSQS
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.reset
@@ -16,34 +13,13 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
 import java.nio.charset.Charset
 
-@RunWith(SpringRunner::class)
-@ActiveProfiles("phoneyCipherService", "phoneyDataKeyService", "unitTest")
-@SpringBootTest
-@TestPropertySource(properties = [
-    "hbase.zookeeper.quorum=hbase",
-    "pushgateway.address=pushgateway:9090",
-    "s3.bucket=bucket",
-    "s3.prefix.folder=prefix",
-    "snapshot.sender.export.date=2020-06-05",
-    "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.type=full",
-    "topic.name=db.a.b",
-    "trigger.snapshot.sender=false",
-])
 class HBaseResultProcessorTest {
+
     @Before
     fun setUp() {
         reset(result)
@@ -224,14 +200,6 @@ class HBaseResultProcessorTest {
     }
 
 
-    @MockBean
-    private lateinit var amazonDynamoDb: AmazonDynamoDB
-
-    @MockBean
-    private lateinit var amazonSQS: AmazonSQS
-
-    private val textUtils = TextUtils()
-
     private fun actualResult(): SourceRecord? {
         val processor = HBaseResultProcessor(textUtils)
         ReflectionTestUtils.setField(processor, "topicName", "db.a.b")
@@ -292,5 +260,7 @@ class HBaseResultProcessorTest {
         val expectedEncryptionBlock = EncryptionBlock(keyEncryptionKeyId, initialisationVector, encryptedEncryptionKey)
         val result: Result = Mockito.mock(Result::class.java)
     }
+
+    private val textUtils: TextUtils = TextUtils()
 }
 

@@ -6,15 +6,19 @@ import app.domain.SourceRecord
 import app.exceptions.BadDecryptedDataException
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
+import com.nhaarman.mockitokotlin2.*
 import io.kotest.assertions.json.shouldMatchJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.prometheus.client.Counter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import java.nio.ByteBuffer
@@ -25,6 +29,11 @@ import java.util.zip.CRC32
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [Validator::class])
 class ValidatorTest {
+
+    @Before
+    fun before() {
+        reset(counter)
+    }
 
     @Test
     fun Should_Process_If_Decrypted_DbObject_Is_A_Valid_Json() {
@@ -41,6 +50,7 @@ class ValidatorTest {
         val manifest = decrypted?.manifestRecord
         val expectedManifest = ManifestRecord(idSorted, 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", idSorted)
         assertEquals(expectedManifest, manifest)
+        verifyZeroInteractions(counter)
     }
 
     @Test
@@ -58,6 +68,7 @@ class ValidatorTest {
         val oid = "\$oid"
         val expectedManifest = ManifestRecord("""{"$oid":"$id"}""", 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", id)
         assertEquals(expectedManifest, manifest)
+        verifyZeroInteractions(counter)
     }
 
     @Test
@@ -75,6 +86,7 @@ class ValidatorTest {
         val manifest = decrypted?.manifestRecord
         val expectedManifest = ManifestRecord(idSorted, 1000, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", idSorted)
         assertEquals(expectedManifest, manifest)
+        verifyZeroInteractions(counter)
     }
 
     @Test
@@ -91,6 +103,8 @@ class ValidatorTest {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
         exception.message shouldBe "Exception in processing the decrypted record id '00003' in db 'db' in collection 'collection' with the reason 'java.io.EOFException: End of input at line 1 column 32 path \$.testTwo'"
+        verify(counter, times(1)).inc()
+        verifyNoMoreInteractions(counter)
     }
 
     @Test
@@ -107,6 +121,8 @@ class ValidatorTest {
             validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
         }
         exception.message shouldBe "Exception in processing the decrypted record id '00003' in db 'db' in collection 'collection' with the reason 'Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive'"
+        verify(counter, times(1)).inc()
+        verifyNoMoreInteractions(counter)
     }
 
     @Test
@@ -789,6 +805,8 @@ class ValidatorTest {
     @SpyBean
     private lateinit var validator: Validator
 
+    @MockBean
+    private lateinit var counter: Counter
     private val gson = GsonBuilder().serializeNulls().create()
 }
 

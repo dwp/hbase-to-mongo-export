@@ -2,7 +2,6 @@ package app.services.impl
 
 import app.services.ExportCompletionStatus
 import app.services.SnsService
-import app.utils.PropertyUtility
 import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest

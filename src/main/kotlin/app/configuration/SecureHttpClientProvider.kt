@@ -6,14 +6,12 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContexts
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.File
 import javax.net.ssl.SSLContext
 
 
 @Component
-@Profile("secureHttpClient")
 class SecureHttpClientProvider : HttpClientProvider {
 
     override fun client(): CloseableHttpClient =

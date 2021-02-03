@@ -11,4 +11,6 @@ interface KeyService {
 
     @Throws(DataKeyServiceUnavailableException::class)
     fun batchDataKey(): DataKeyResult
+
+    fun clearCache()
 }
