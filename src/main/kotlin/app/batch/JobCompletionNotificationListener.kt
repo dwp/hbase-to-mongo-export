@@ -3,10 +3,7 @@
 package app.batch
 
 import app.exceptions.BlockedTopicException
-import app.services.ExportCompletionStatus
-import app.services.ExportStatusService
-import app.services.SnapshotSenderMessagingService
-import app.services.SnsService
+import app.services.*
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.PushGateway
 import org.apache.hadoop.hbase.TableNotEnabledException
@@ -14,21 +11,22 @@ import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
                                         private val messagingService: SnapshotSenderMessagingService,
                                         private val snsService: SnsService,
-                                        private val collectorRegistry: CollectorRegistry) :
-        JobExecutionListenerSupport() {
+                                        private val metricsService: MetricsService): JobExecutionListenerSupport() {
 
     override fun afterJob(jobExecution: JobExecution) {
-
-        val pushGateway = PushGateway("pushgateway:9091")
-        pushGateway.pushAdd(collectorRegistry, "htme")
+        metricsService.pushMetrics()
         logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
         setExportStatus(jobExecution)
         sendSqsMessages(jobExecution)

@@ -32,6 +32,7 @@ import java.nio.charset.Charset
 @SpringBootTest
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=hbase",
+    "pushgateway.address=pushgateway:9090",
     "s3.bucket=bucket",
     "s3.prefix.folder=prefix",
     "snapshot.sender.export.date=2020-06-05",

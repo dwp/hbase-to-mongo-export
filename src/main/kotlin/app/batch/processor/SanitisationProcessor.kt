@@ -23,8 +23,6 @@ class SanitisationProcessor : ItemProcessor<DecryptedRecord, Record> {
                 .replace("_archived", "_removed")
 
             val manifestRecord = item.manifestRecord
-            logger.debug("Sanitized record", "manifest_record_id" to manifestRecord.id,
-                    "manifest_record_timestamp" to "${manifestRecord.timestamp}")
             return Record(replacedOutput, manifestRecord)
         } catch (e: Exception) {
             logger.error("Error sanitising", e)

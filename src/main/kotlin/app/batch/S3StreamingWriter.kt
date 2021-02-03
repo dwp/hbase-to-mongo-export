@@ -37,16 +37,22 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val compressionInstanceProvider: CompressionInstanceProvider,
                         private val exportStatusService: ExportStatusService,
                         private val snapshotSenderMessagingService: SnapshotSenderMessagingService,
-                        private val s3ObjectService: S3ObjectService):
+                        private val s3ObjectService: S3ObjectService,
+                        private val metricsService: MetricsService):
+
     ItemWriter<Record> {
 
     private var absoluteStart: Int = Int.MIN_VALUE
     private var absoluteStop: Int = Int.MAX_VALUE
+    private var start: Int = Int.MIN_VALUE
+    private var stop: Int = Int.MAX_VALUE
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
         absoluteStart = (stepExecution.executionContext["start"] as Int).absoluteValue
         absoluteStop = (stepExecution.executionContext["stop"] as Int).absoluteValue
+        start = stepExecution.executionContext["start"] as Int
+        stop = stepExecution.executionContext["stop"] as Int
     }
 
     @AfterStep
@@ -112,6 +118,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         "total_bytes_already_written" to "$totalBytes",
                         "total_records_already_written" to "$totalRecords")
 
+                    recordsWrittenCounter.labels(split).inc(recordsInBatch.toDouble())
+
                     exportStatusService.incrementExportedCount(objectKey)
                     snapshotSenderMessagingService.notifySnapshotSender(objectKey)
                     totalBatches++
@@ -158,6 +166,13 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
+
+    private val split: String by lazy {
+        "%03d-%03d".format(start, stop)
+    }
+
+    private val recordsWrittenCounter
+            = metricsService.counter("htme_records_written", "The number of records written to s3", "split")
 
     private var currentOutputStream: EncryptingOutputStream? = null
     private var currentBatch = 0

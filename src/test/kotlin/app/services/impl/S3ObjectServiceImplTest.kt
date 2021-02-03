@@ -2,6 +2,7 @@ package app.services.impl
 
 import app.domain.DataKeyResult
 import app.domain.EncryptingOutputStream
+import app.services.MetricsService
 import app.services.S3ObjectService
 import com.amazonaws.services.s3.AmazonS3
 import com.nhaarman.mockitokotlin2.*
@@ -53,6 +54,7 @@ class S3ObjectServiceImplTest {
             .willThrow(RuntimeException("ERROR 2"))
             .willThrow(RuntimeException("ERROR 3"))
             .willReturn(mock())
+        given(metricsService.counter(any(), any())).willReturn(mock())
         s3ObjectService.putObject("key", encryptingOutputStream())
         verify(amazonS3, times(4)).putObject(any())
     }
@@ -66,6 +68,9 @@ class S3ObjectServiceImplTest {
 
     @Autowired
     private lateinit var s3ObjectService: S3ObjectService
+
+    @MockBean
+    private lateinit var metricsService: MetricsService
 
     @MockBean
     private lateinit var amazonS3: AmazonS3

@@ -43,7 +43,7 @@ class HBaseReaderTest {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
         }
 
-        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils, mock())
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
@@ -93,7 +93,7 @@ class HBaseReaderTest {
         val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
         ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
 
-        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils, mock())
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
@@ -146,7 +146,7 @@ class HBaseReaderTest {
 
         val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
 
-        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils, mock())
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", topicName)
@@ -187,7 +187,7 @@ class HBaseReaderTest {
 
         val textUtils = TextUtils()
 
-        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils)
+        val hBaseReader = HBaseReader(connection, textUtils, filterBlockedTopicsUtils, mock())
         ReflectionTestUtils.setField(hBaseReader, "scanRetrySleepMs", "1")
         ReflectionTestUtils.setField(hBaseReader, "scanMaxRetries", "5")
         ReflectionTestUtils.setField(hBaseReader, "topicName", blockedTopicName)

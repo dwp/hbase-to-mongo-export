@@ -2,6 +2,7 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.exceptions.ScanRetriesExhaustedException
+import app.services.MetricsService
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
 import org.apache.hadoop.hbase.TableName
@@ -17,10 +18,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
+import kotlin.math.absoluteValue
 
 @Component
 @StepScope
-class HBaseReader(private val connection: Connection, private val textUtils: TextUtils, private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
+class HBaseReader(private val connection: Connection,
+                  private val textUtils: TextUtils,
+                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
+                  private val metricsService: MetricsService) : ItemReader<Result> {
 
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
@@ -28,6 +33,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             val result = scanner().next()
             if (result != null) {
                 latestId = result.row
+                rowsReadCounter.labels(split).inc()
             }
             retryAttempts = 0
             result
@@ -84,15 +90,22 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
         }
     }
 
+    private val split: String by lazy {
+        "%03d-%03d".format(start, stop)
+    }
 
     private var latestId: ByteArray? = null
     private var retryAttempts = 0
     private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000Z"
+    private var absoluteStart: Int = Int.MIN_VALUE
+    private var absoluteStop: Int = Int.MAX_VALUE
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
         start = stepExecution.executionContext["start"] as Int
         stop = stepExecution.executionContext["stop"] as Int
+        absoluteStart = (stepExecution.executionContext["start"] as Int).absoluteValue
+        absoluteStop = (stepExecution.executionContext["stop"] as Int).absoluteValue
     }
 
     @AfterStep
@@ -188,6 +201,9 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
             }
 
     private var scanner: ResultScanner? = null
+
+    private val rowsReadCounter
+        = metricsService.counter("htme_rows_read", "The number of rows read from hbase", "split")
 
     @Value("\${scan.time.range.start:}")
     private var scanTimeRangeStart: String = ""

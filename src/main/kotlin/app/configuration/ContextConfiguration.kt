@@ -1,6 +1,7 @@
 package app.configuration
 
 import io.prometheus.client.CollectorRegistry
+import io.prometheus.client.exporter.PushGateway
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorOutputStream
 import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream
@@ -9,6 +10,7 @@ import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
 import org.apache.http.impl.client.HttpClients
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -16,14 +18,13 @@ import org.springframework.context.annotation.Profile
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.OutputStream
 import java.security.SecureRandom
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.crypto.Cipher
 
 
 @Configuration
 class ContextConfiguration {
-
-    @Bean
-    fun collectorRegistry(): CollectorRegistry = CollectorRegistry()
 
     @Bean
     @Profile("bz2Compressor")
@@ -87,7 +88,6 @@ class ContextConfiguration {
     fun insecureHttpClient() = HttpClients.createDefault()!!
 
     @Bean
-    @Profile("realHbaseDataSource")
     fun localConnection(): Connection {
 
         val configuration = HBaseConfiguration.create().apply {

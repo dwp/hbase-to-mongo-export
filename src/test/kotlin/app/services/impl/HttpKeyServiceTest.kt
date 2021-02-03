@@ -38,6 +38,7 @@ import java.io.ByteArrayInputStream
     "keyservice.retry.delay=1",
     "keyservice.retry.maxAttempts=5",
     "keyservice.retry.multiplier=1",
+    "pushgateway.address=pushgateway:9090",
     "s3.bucket=bucket",
     "s3.prefix.folder=prefix",
     "snapshot.sender.export.date=2020-06-05",

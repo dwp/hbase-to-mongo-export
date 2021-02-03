@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.domain.EncryptingOutputStream
+import app.services.MetricsService
 import app.services.S3ObjectService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
@@ -14,8 +15,7 @@ import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 
 @Service
-class S3ObjectServiceImpl(private val amazonS3: AmazonS3,
-                          private val registry: CollectorRegistry): S3ObjectService {
+class S3ObjectServiceImpl(private val amazonS3: AmazonS3, private val metricsService: MetricsService): S3ObjectService {
 
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${s3.retry.maxAttempts:5}",
@@ -25,7 +25,7 @@ class S3ObjectServiceImpl(private val amazonS3: AmazonS3,
         ByteArrayInputStream(encryptingOutputStream.data()).use {
             amazonS3.putObject(PutObjectRequest(exportBucket, objectKey, it,
                 objectMetadata(objectKey, encryptingOutputStream)))
-            batchesCounter.labels(topicName).inc()
+            batchesCounter.inc()
         }
     }
 
@@ -43,15 +43,7 @@ class S3ObjectServiceImpl(private val amazonS3: AmazonS3,
     @Value("\${s3.bucket}")
     private lateinit var exportBucket: String
 
-    @Value("\${topic.name}")
-    private var topicName: String = ""
-
     private val batchesCounter: Counter by lazy {
-        with (Counter.build()) {
-            name("htme_s3_objects_total")
-            help("Total batches placed into s3.")
-            labelNames("topic")
-            register(registry)
-        }
+        metricsService.counter("htme_s3_objects_written", "The number of objects written to s3")
     }
 }
