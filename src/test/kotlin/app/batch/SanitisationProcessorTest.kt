@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner
 class SanitisationProcessorTest {
 
     @Test
-    fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
+    fun shouldRemoveDesiredCharsInCollections() {
         val jsonWithRemovableChars = "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = DecryptedRecord(Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java), ManifestRecord("", 0, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         val expectedOutput = """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
@@ -27,7 +27,7 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
+    fun shouldNotRemoveMultiEscapedNewlines() {
         val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
         val input = DecryptedRecord(Gson().fromJson(data, JsonObject::class.java), ManifestRecord("", 0, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         val actualOutput = sanitisationProcessor.process(input)?.dbObjectAsString
@@ -35,7 +35,7 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testSanitisationProcessor_RemovesDsesiredCharsFromSpecificCollections() {
+    fun shouldRemoveDesiredCharsFromSpecificCollections() {
         var input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         var expected = getOutputDBObject()
         var actual = sanitisationProcessor.process(input)?.dbObjectAsString
@@ -54,7 +54,7 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
+    fun shouldNotRemoveCharsFromOtherCollections() {
         val input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         val expected = getOutputDBObject()
         val actual = sanitisationProcessor.process(input)
