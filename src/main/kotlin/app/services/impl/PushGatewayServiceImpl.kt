@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.services.PushGatewayService
+import app.utils.PropertyUtility
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.PushGateway
 import org.springframework.beans.factory.annotation.Value
@@ -44,6 +45,7 @@ class PushGatewayServiceImpl(private val pushGateway: PushGateway,
 
     private fun metricsGroupingKey(): Map<String, String> =
         mapOf("type" to snapshotType, "topic" to topicName, "instance" to instanceName,
+            "correlation_id" to PropertyUtility.correlationId(),
             "export_date" to SimpleDateFormat("yyyy-MM-dd").format(Date()))
 
 
