@@ -42,7 +42,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     private fun exportCompletedPayload() =
             """{
                 "correlation_id": "${correlationId()}",
-                "s3_prefix": "$s3prefix"   
+                "s3_prefix": "$s3prefix",
+                "snapshot_type": "$snapshotType"
             }"""
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
