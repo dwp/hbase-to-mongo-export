@@ -36,22 +36,25 @@ class SanitisationProcessorTest {
 
     @Test
     fun shouldRemoveDesiredCharsFromSpecificCollections() {
-        var input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
+        var input = DecryptedRecord(getInputDBObject(), manifestRecord())
         var expected = getOutputDBObject()
         var actual = sanitisationProcessor.process(input)?.dbObjectAsString
 
         assertTrue(expected == actual)
 
-        input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
+        input = DecryptedRecord(getInputDBObject(), manifestRecord())
         expected = getOutputDBObject()
         actual = sanitisationProcessor.process(input)?.dbObjectAsString
         assertEquals(expected, actual)
 
-        input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
+        input = DecryptedRecord(getInputDBObject(), manifestRecord())
         expected = getOutputDBObject()
         actual = sanitisationProcessor.process(input)?.dbObjectAsString
         assertEquals(expected, actual)
     }
+
+    private fun manifestRecord() =
+        ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID")
 
     @Test
     fun shouldNotRemoveCharsFromOtherCollections() {
