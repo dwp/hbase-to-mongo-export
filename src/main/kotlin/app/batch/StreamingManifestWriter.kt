@@ -3,6 +3,8 @@ package app.batch
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
@@ -11,12 +13,13 @@ import java.io.File
 import java.io.FileInputStream
 
 @Component
-class StreamingManifestWriter {
+class StreamingManifestWriter(private val retriedManifestPutCounter: Counter) {
 
     @Retryable(value = [Exception::class],
             maxAttemptsExpression = "\${manifest.retry.maxAttempts:5}",
             backoff = Backoff(delayExpression = "\${manifest.retry.delay:1000}",
                               multiplierExpression = "\${manifest.retry.multiplier:2}"))
+    @PrometheusTimeMethod(name = "htme_s3_manifest_put_operation_duration", help = "Duration of manifest s3 puts")
     fun sendManifest(s3: AmazonS3, manifestFile: File, manifestBucket: String, manifestPrefix: String) {
         val manifestSize = manifestFile.length()
         val manifestFileName = manifestFile.name
@@ -40,6 +43,7 @@ class StreamingManifestWriter {
                 "manifest_size" to "$manifestSize",
                 "total_manifest_files_already_written" to "$totalManifestFiles",
                 "total_manifest_records_already_written" to "$totalManifestRecords")
+            retriedManifestPutCounter.inc()
             throw e
         }
 

@@ -1,14 +1,25 @@
 
 import app.configuration.ContextConfiguration
 import app.configuration.LocalStackConfiguration
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import
-import org.springframework.context.annotation.PropertySource
+import app.configuration.SecureHttpClientProvider
+import app.services.impl.AESCipherService
+import app.services.impl.HttpKeyService
+import io.prometheus.client.Counter
+import org.springframework.context.annotation.*
 
 @Configuration
-@Import(LocalStackConfiguration::class, ContextConfiguration::class)
-@ComponentScan("app.utils", "app.services.impl", "app.configuration")
+@Import(LocalStackConfiguration::class, ContextConfiguration::class, HttpKeyService::class,
+    SecureHttpClientProvider::class, AESCipherService::class)
+@ComponentScan("app.utils")
 @PropertySource("classpath:integration.properties")
-class TestConfiguration
+class TestConfiguration {
+
+    @Bean
+    fun counter(): Counter = with(Counter.build()) {
+        name("test_counter")
+        help("Test help")
+        register()
+    }
+
+}
 

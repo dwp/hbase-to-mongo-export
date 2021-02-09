@@ -5,6 +5,7 @@ import app.domain.EncryptingOutputStream
 import app.services.S3ObjectService
 import com.amazonaws.services.s3.AmazonS3
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
@@ -43,6 +44,7 @@ class S3ObjectServiceImplTest {
             // just catch it
         }
         verify(amazonS3, times(5)).putObject(any())
+        verify(counter, times(5)).inc()
     }
 
 
@@ -55,6 +57,7 @@ class S3ObjectServiceImplTest {
             .willReturn(mock())
         s3ObjectService.putObject("key", encryptingOutputStream())
         verify(amazonS3, times(4)).putObject(any())
+        verify(counter, times(3)).inc()
     }
 
     private fun dataKeyResult(): DataKeyResult =
@@ -69,4 +72,7 @@ class S3ObjectServiceImplTest {
 
     @MockBean
     private lateinit var amazonS3: AmazonS3
+
+    @MockBean
+    private lateinit var counter: Counter
 }

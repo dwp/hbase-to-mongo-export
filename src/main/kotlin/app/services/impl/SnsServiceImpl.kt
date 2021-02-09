@@ -2,7 +2,6 @@ package app.services.impl
 
 import app.services.ExportCompletionStatus
 import app.services.SnsService
-import app.utils.PropertyUtility
 import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest
@@ -43,7 +42,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     private fun exportCompletedPayload() =
             """{
                 "correlation_id": "${correlationId()}",
-                "s3_prefix": "$s3prefix"   
+                "s3_prefix": "$s3prefix",
+                "snapshot_type": "$snapshotType"
             }"""
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =

@@ -5,16 +5,27 @@ services:
   hbase:
     image: harisekhon/hbase:1.4
     ports:
-      - 9090:9090
-      - 9095:9095
-      - 2181:2181
-      - 16201:16201
+      - "9090:9090"
+      - "9095:9095"
+      - "2181:2181"
+      - "16201:16201"
     container_name: hbase
+
+  prometheus:
+    build:
+      context: images/prometheus
+    container_name: prometheus
+
+  pushgateway:
+    image: prom/pushgateway
+    ports:
+      - "9091:9091"
+    container_name: pushgateway
 
   aws:
     image: localstack/localstack:latest
     ports:
-      - '4566:4566'
+      - "4566:4566"
     container_name: aws
     environment:
       - SERVICES=s3,dynamodb,sqs,sns

@@ -1,9 +1,7 @@
-package app.batch.processor
+package app.batch
 
 import app.domain.DecryptedRecord
 import app.domain.ManifestRecord
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.sqs.AmazonSQS
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.assertj.core.api.Assertions.assertThat
@@ -12,30 +10,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("decryptionTest", "aesCipherService", "unitTest")
-@SpringBootTest
-@TestPropertySource(properties = [
-    "hbase.zookeeper.quorum=hbase",
-    "s3.bucket=bucket",
-    "s3.prefix.folder=prefix",
-    "snapshot.sender.export.date=2020-06-05",
-    "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.type=full",
-    "topic.name=db.a.b",
-    "trigger.snapshot.sender=false",
-])
+@SpringBootTest(classes = [SanitisationProcessor::class])
 class SanitisationProcessorTest {
 
     @Test
-    fun testSanitisationProcessor_RemovesDesiredCharsInCollections() {
+    fun shouldRemoveDesiredCharsInCollections() {
         val jsonWithRemovableChars = "{ \"fieldA\": \"a$\u0000\", \"_archivedDateTime\": \"b\", \"_archived\": \"c\" }"
         val input = DecryptedRecord(Gson().fromJson(jsonWithRemovableChars, JsonObject::class.java), ManifestRecord("", 0, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         val expectedOutput = """{"fieldA":"ad_","_removedDateTime":"b","_removed":"c"}"""
@@ -45,7 +27,7 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testSanitisationProcessor_WillNotRemoveMultiEscapedNewlines() {
+    fun shouldNotRemoveMultiEscapedNewlines() {
         val data = """{"message":{"db":"penalties-and-deductions","collection":"sanction"},"data":{"carriage":"\\r","newline":"\\n","superEscaped":"\\\r\\\n"}}"""
         val input = DecryptedRecord(Gson().fromJson(data, JsonObject::class.java), ManifestRecord("", 0, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         val actualOutput = sanitisationProcessor.process(input)?.dbObjectAsString
@@ -53,26 +35,29 @@ class SanitisationProcessorTest {
     }
 
     @Test
-    fun testSanitisationProcessor_RemovesDsesiredCharsFromSpecificCollections() {
-        var input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
+    fun shouldRemoveDesiredCharsFromSpecificCollections() {
+        var input = DecryptedRecord(getInputDBObject(), manifestRecord())
         var expected = getOutputDBObject()
         var actual = sanitisationProcessor.process(input)?.dbObjectAsString
 
         assertTrue(expected == actual)
 
-        input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
+        input = DecryptedRecord(getInputDBObject(), manifestRecord())
         expected = getOutputDBObject()
         actual = sanitisationProcessor.process(input)?.dbObjectAsString
         assertEquals(expected, actual)
 
-        input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
+        input = DecryptedRecord(getInputDBObject(), manifestRecord())
         expected = getOutputDBObject()
         actual = sanitisationProcessor.process(input)?.dbObjectAsString
         assertEquals(expected, actual)
     }
 
+    private fun manifestRecord() =
+        ManifestRecord("", 0, "penalties-and-deductions", "sanction", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID")
+
     @Test
-    fun testSanitisationProcessor_DoesNotRemoveCharsFromOtherCollections() {
+    fun shouldNotRemoveCharsFromOtherCollections() {
         val input = DecryptedRecord(getInputDBObject(), ManifestRecord("", 0, "db", "collection", "EXPORT", "OUTER_TYPE", "INNER_TYPE", "OID"))
         val expected = getOutputDBObject()
         val actual = sanitisationProcessor.process(input)
@@ -160,10 +145,4 @@ class SanitisationProcessorTest {
 
     @Autowired
     private lateinit var sanitisationProcessor: SanitisationProcessor
-
-    @MockBean
-    private lateinit var amazonDynamoDb: AmazonDynamoDB
-
-    @MockBean
-    private lateinit var amazonSQS: AmazonSQS
 }

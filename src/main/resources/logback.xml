@@ -20,4 +20,7 @@
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
+
+    <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender" />
+
 </configuration>

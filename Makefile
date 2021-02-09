@@ -68,7 +68,13 @@ service-aws: ## bring up aws and prepare the services.
 service-dks: # bring up the data key service
 	docker-compose up -d dks
 
-services: service-dks service-hbase service-aws ## bring up dks, hbase, aws.
+service-pushgateway:
+	docker-compose up -d pushgateway
+
+service-prometheus:
+	docker-compose up -d prometheus
+
+services: service-dks service-hbase service-aws service-pushgateway service-prometheus ## bring up dks, hbase, aws.
 
 exports: services  ## run all the exports.
 	docker-compose up export-s3 blocked-topic table-unavailable export-nothing

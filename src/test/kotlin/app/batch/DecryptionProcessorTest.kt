@@ -1,13 +1,12 @@
-package app.batch.processor
+package app.batch
 
 import app.domain.EncryptionBlock
 import app.domain.SourceRecord
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
+import app.services.CipherService
 import app.services.KeyService
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.sqs.AmazonSQS
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,25 +16,10 @@ import org.mockito.Mockito
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("decryptionTest", "aesCipherService", "unitTest")
-@SpringBootTest
-@TestPropertySource(properties = [
-    "hbase.zookeeper.quorum=hbase",
-    "s3.bucket=bucket",
-    "s3.prefix.folder=prefix",
-    "snapshot.sender.export.date=2020-06-05",
-    "snapshot.sender.reprocess.files=true",
-    "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
-    "snapshot.type=full",
-    "topic.name=db.a.b",
-    "trigger.snapshot.sender=false",
-])
+@SpringBootTest(classes = [DecryptionProcessor::class])
 class DecryptionProcessorTest {
 
     @Before
@@ -75,9 +59,9 @@ class DecryptionProcessorTest {
     private lateinit var decryptionProcessor: DecryptionProcessor
 
     @MockBean
-    private lateinit var amazonDynamoDb: AmazonDynamoDB
+    private lateinit var cipherService: CipherService
 
     @MockBean
-    private lateinit var amazonSQS: AmazonSQS
+    private lateinit var validator: Validator
 }
 

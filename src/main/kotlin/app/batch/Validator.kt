@@ -10,6 +10,7 @@ import app.utils.JsonUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import io.prometheus.client.Counter
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -19,7 +20,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Component
-class Validator {
+class Validator(private val failedValidationCounter: Counter) {
     private final val validIncomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
     private final val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
@@ -53,6 +54,7 @@ class Validator {
             }
         }
         catch (e: Exception) {
+            failedValidationCounter.inc()
             logger.error("Error decrypting record", e, "exceptionMessage" to (e.message ?: "No message"),
                     "is_blank" to "${StringUtils.isBlank(decrypted)}", "hbase_row_id" to printableKey(item.hbaseRowId), "db_name" to db, "collection_name" to collection)
             throw BadDecryptedDataException(hbaseRowId, db, collection, e.message ?: "No exception message")

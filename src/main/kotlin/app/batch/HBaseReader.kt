@@ -4,6 +4,7 @@ import app.exceptions.BlockedTopicException
 import app.exceptions.ScanRetriesExhaustedException
 import app.utils.FilterBlockedTopicsUtils
 import app.utils.TextUtils
+import io.prometheus.client.Counter
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
@@ -17,10 +18,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
+import kotlin.math.absoluteValue
 
 @Component
 @StepScope
-class HBaseReader(private val connection: Connection, private val textUtils: TextUtils, private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils) : ItemReader<Result> {
+class HBaseReader(private val connection: Connection,
+                  private val textUtils: TextUtils,
+                  private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
+                  private val scanRetriesCounter: Counter,
+                  private val failedScansCounter: Counter) : ItemReader<Result> {
 
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
@@ -68,6 +74,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
                 scanner?.close()
                 Thread.sleep(scanRetrySleepMs.toLong())
                 scanner = newScanner(lastKey)
+                scanRetriesCounter.labels(split()).inc()
                 read()
             }
             else {
@@ -76,6 +83,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
                         "attempt" to "$retryAttempts",
                         "max_attempts" to scanMaxRetries,
                         "latest_id" to printableKey(lastKey))
+                failedScansCounter.labels(split()).inc()
                 throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
             }
         } catch (e: Exception) {
@@ -84,15 +92,18 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
         }
     }
 
-
     private var latestId: ByteArray? = null
     private var retryAttempts = 0
     private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000Z"
+    private var absoluteStart: Int = Int.MIN_VALUE
+    private var absoluteStop: Int = Int.MAX_VALUE
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
         start = stepExecution.executionContext["start"] as Int
         stop = stepExecution.executionContext["stop"] as Int
+        absoluteStart = (stepExecution.executionContext["start"] as Int).absoluteValue
+        absoluteStop = (stepExecution.executionContext["stop"] as Int).absoluteValue
     }
 
     @AfterStep
@@ -189,6 +200,7 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
     private var scanner: ResultScanner? = null
 
+
     @Value("\${scan.time.range.start:}")
     private var scanTimeRangeStart: String = ""
 
@@ -221,6 +233,8 @@ class HBaseReader(private val connection: Connection, private val textUtils: Tex
 
     private var start: Int = Int.MIN_VALUE
     private var stop: Int = Int.MAX_VALUE
+
+    private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
     companion object {
         val logger = DataworksLogger.getLogger(HBaseReader::class)

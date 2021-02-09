@@ -66,7 +66,8 @@ class SnsServiceImplTest {
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
                 "correlation_id": "correlation.id",
-                "s3_prefix": "prefix"   
+                "s3_prefix": "prefix",
+                "snapshot_type": "full"
             }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)

@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.GetItemResult
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -40,6 +41,18 @@ class DynamoDBExportStatusServiceTest {
 
     @MockBean
     private lateinit var tableService: TableService
+
+    @MockBean(name = "successfulCollectionCounter")
+    private lateinit var successfulCollectionCounter: Counter
+
+    @MockBean(name = "successfulNonEmptyCollectionCounter")
+    private lateinit var successfulNonEmptyCollectionCounter: Counter
+
+    @MockBean(name = "emptyCollectionCounter")
+    private lateinit var emptyCollectionCounter: Counter
+
+    @MockBean(name = "failedCollectionCounter")
+    private lateinit var failedCollectionCounter: Counter
 
     @Before
     fun before()  {
@@ -90,10 +103,19 @@ class DynamoDBExportStatusServiceTest {
         val actual = argumentCaptor.firstValue.expressionAttributeValues
         val expected =  mapOf(":x" to AttributeValue().apply { s = "Export_Failed" })
         assertEquals(actual, expected)
+        verify(failedCollectionCounter, times(1)).inc()
+        verifyNoMoreInteractions(failedCollectionCounter)
+        verifyZeroInteractions(successfulCollectionCounter)
+        verifyZeroInteractions(successfulNonEmptyCollectionCounter)
+        verifyZeroInteractions(emptyCollectionCounter)
     }
 
     @Test
     fun setExportedSetsCorrectStatus() {
+        val result = mock<GetItemResult> {
+            on { item } doReturn mapOf("FilesExported" to AttributeValue().apply { n = "10" })
+        }
+        given(amazonDynamoDB.getItem(any())).willReturn(result)
         given(amazonDynamoDB.updateItem(any()))
                 .willReturn(mock())
         exportStatusService.setExportedStatus()
@@ -102,10 +124,44 @@ class DynamoDBExportStatusServiceTest {
         val actual = argumentCaptor.firstValue.expressionAttributeValues
         val expected =  mapOf(":x" to AttributeValue().apply { s = "Exported" })
         assertEquals(actual, expected)
+        verify(successfulCollectionCounter, times(1)).inc()
+        verifyNoMoreInteractions(successfulCollectionCounter)
+        verify(successfulNonEmptyCollectionCounter, times(1)).inc()
+        verifyNoMoreInteractions(successfulNonEmptyCollectionCounter)
+        verifyZeroInteractions(failedCollectionCounter)
+        verifyZeroInteractions(emptyCollectionCounter)
+    }
+
+    @Test
+    fun setExportedEmptyCollectionSetsCorrectStatus() {
+        val result = mock<GetItemResult> {
+            on { item } doReturn mapOf("FilesExported" to AttributeValue().apply { n = "0" })
+        }
+        given(amazonDynamoDB.getItem(any())).willReturn(result)
+        given(amazonDynamoDB.updateItem(any()))
+            .willReturn(mock())
+        exportStatusService.setExportedStatus()
+        val argumentCaptor = argumentCaptor<UpdateItemRequest>()
+        verify(amazonDynamoDB, times(1)).updateItem(argumentCaptor.capture())
+        val actual = argumentCaptor.firstValue.expressionAttributeValues
+        val expected =  mapOf(":x" to AttributeValue().apply { s = "Exported" })
+        assertEquals(actual, expected)
+        verify(successfulCollectionCounter, times(1)).inc()
+        verifyNoMoreInteractions(successfulCollectionCounter)
+        verify(emptyCollectionCounter, times(1)).inc()
+        verifyNoMoreInteractions(emptyCollectionCounter)
+        verifyZeroInteractions(failedCollectionCounter)
+        verifyZeroInteractions(successfulNonEmptyCollectionCounter)
     }
 
     @Test
     fun setExportedStatusRetries() {
+        val result = mock<GetItemResult> {
+            on { item } doReturn mapOf("FilesExported" to AttributeValue().apply { n = "10" })
+        }
+        given(amazonDynamoDB.getItem(any())).willReturn(result)
+        given(amazonDynamoDB.updateItem(any()))
+            .willReturn(mock())
         given(amazonDynamoDB.updateItem(any()))
                 .willThrow(SdkClientException(""))
                 .willThrow(SdkClientException(""))

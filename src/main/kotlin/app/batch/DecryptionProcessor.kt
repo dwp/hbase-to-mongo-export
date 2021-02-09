@@ -1,6 +1,5 @@
-package app.batch.processor
+package app.batch
 
-import app.batch.Validator
 import app.domain.DecryptedRecord
 import app.domain.SourceRecord
 import app.exceptions.DataKeyServiceUnavailableException
@@ -13,13 +12,13 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
-                          private val keyService: KeyService, private val validator: Validator) :
+                          private val keyService: KeyService,
+                          private val validator: Validator) :
     ItemProcessor<SourceRecord, DecryptedRecord> {
 
     @Throws(DataKeyServiceUnavailableException::class)
     override fun process(item: SourceRecord): DecryptedRecord? {
         try {
-            logger.debug("Processing next item", "item" to "$item")
             val decryptedKey = keyService.decryptKey(
                 item.encryption.keyEncryptionKeyId,
                 item.encryption.encryptedEncryptionKey)
@@ -32,8 +31,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
         } catch (e: DataKeyServiceUnavailableException) {
             throw e
         } catch (e: Exception) {
-            logger.error("Rejecting invalid item", e, "item" to "$item")
-            throw DecryptionFailureException(item.hbaseRowId, item.encryption.keyEncryptionKeyId,e)
+           throw DecryptionFailureException(item.hbaseRowId, item.encryption.keyEncryptionKeyId,e)
         }
     }
 

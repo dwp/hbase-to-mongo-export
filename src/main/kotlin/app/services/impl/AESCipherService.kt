@@ -4,7 +4,6 @@ import app.domain.EncryptionResult
 import app.services.CipherService
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.io.OutputStream
@@ -18,7 +17,6 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Service
-@Profile("aesCipherService")
 class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
 
     init {

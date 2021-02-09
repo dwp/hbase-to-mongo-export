@@ -5,6 +5,8 @@ import app.services.S3ObjectService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import io.prometheus.client.Counter
+import io.prometheus.client.spring.web.PrometheusTimeMethod
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -12,16 +14,22 @@ import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 
 @Service
-class S3ObjectServiceImpl(private val amazonS3: AmazonS3): S3ObjectService {
+class S3ObjectServiceImpl(private val amazonS3: AmazonS3, private val retriedBatchPutCounter: Counter): S3ObjectService {
 
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${s3.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${s3.retry.delay:1000}",
             multiplierExpression = "\${s3.retry.multiplier:2}"))
+    @PrometheusTimeMethod(name = "htme_s3_batch_put_operation_duration", help = "Duration of batch s3 puts")
     override fun putObject(objectKey: String, encryptingOutputStream: EncryptingOutputStream) {
-        ByteArrayInputStream(encryptingOutputStream.data()).use {
-            amazonS3.putObject(PutObjectRequest(exportBucket, objectKey, it,
-                objectMetadata(objectKey, encryptingOutputStream)))
+        try {
+            ByteArrayInputStream(encryptingOutputStream.data()).use {
+                amazonS3.putObject(PutObjectRequest(exportBucket, objectKey, it,
+                    objectMetadata(objectKey, encryptingOutputStream)))
+            }
+        } catch (e: Exception) {
+            retriedBatchPutCounter.inc()
+            throw e
         }
     }
 
