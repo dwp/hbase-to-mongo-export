@@ -68,6 +68,7 @@ class UberTestSpec: StringSpec() {
                 "htme_successful_collections",
                 "htme_successful_empty_collections",
                 "htme_successful_non_empty_collections",
+                "htme_running_applications",
                 "logback_appender_total",
                 "spring_batch_chunk_write_seconds",
                 "spring_batch_chunk_write_seconds_max",

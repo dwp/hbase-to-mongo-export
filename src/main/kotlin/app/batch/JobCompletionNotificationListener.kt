@@ -12,15 +12,19 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-
-
-
+import io.prometheus.client.Gauge
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
                                         private val messagingService: SnapshotSenderMessagingService,
                                         private val snsService: SnsService,
-                                        private val pushGatewayService: PushGatewayService): JobExecutionListenerSupport() {
+                                        private val pushGatewayService: PushGatewayService,
+                                        private val runningApplicationsGauge: Gauge): JobExecutionListenerSupport() {
+
+    override fun beforeJob(jobExecution: JobExecution) {
+        runningApplicationsGauge.inc()
+        pushGatewayService.pushMetrics()
+    }
 
     override fun afterJob(jobExecution: JobExecution) {
         try {
@@ -29,6 +33,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             sendSqsMessages(jobExecution)
             sendSnsMessages()
         } finally {
+            runningApplicationsGauge.dec()
             pushGatewayService.pushFinalMetrics()
         }
     }
