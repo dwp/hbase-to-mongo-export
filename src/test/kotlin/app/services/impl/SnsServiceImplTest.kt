@@ -67,7 +67,8 @@ class SnsServiceImplTest {
             assertEquals("""{
                 "correlation_id": "correlation.id",
                 "s3_prefix": "prefix",
-                "snapshot_type": "full"
+                "snapshot_type": "full",
+                "export_date": "2020-12-12"
             }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)

@@ -252,7 +252,8 @@ class UberTestSpec: StringSpec() {
             validateQueueMessage(adgQueueUrl, """{
                     "correlation_id": "s3-export",
                     "s3_prefix": "output",
-                    "snapshot_type": "full"
+                    "snapshot_type": "full",
+                    "export_date": "2020-07-06"
                 }""")
         }
 
