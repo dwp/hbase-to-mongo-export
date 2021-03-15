@@ -4,6 +4,7 @@ import app.configuration.CompressionInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.ManifestRecord
 import app.domain.Record
+import app.exceptions.DataKeyServiceUnavailableException
 import app.services.*
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.s3.AmazonS3
@@ -14,6 +15,7 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -35,39 +37,6 @@ import java.security.SecureRandom
     "topic.name=db.database.collection",
 ])
 class S3StreamingWriterTest {
-
-    @MockBean
-    private lateinit var compressionInstanceProvider: CompressionInstanceProvider
-
-    @MockBean
-    private lateinit var cipherService: CipherService
-
-    @MockBean
-    private lateinit var keyService: KeyService
-
-    @MockBean
-    private lateinit var s3ObjectService: S3ObjectService
-
-    @MockBean
-    private lateinit var secureRandom: SecureRandom
-
-    @MockBean
-    private lateinit var s3: AmazonS3
-
-    @MockBean
-    private lateinit var streamingManifestWriter: StreamingManifestWriter
-
-    @MockBean(name = "recordCounter")
-    private lateinit var recordCounter: Counter
-
-    @MockBean(name = "byteCounter")
-    private lateinit var byteCounter: Counter
-
-    @MockBean(name = "failedBatchPutCounter")
-    private lateinit var failedBatchPutCounter: Counter
-
-    @MockBean(name = "failedManifestPutCounter")
-    private lateinit var failedManifestPutCounter: Counter
 
     @Before
     fun before() {
@@ -105,6 +74,7 @@ class S3StreamingWriterTest {
         verify(snapshotSenderMessagingService, times(1)).notifySnapshotSender(key)
         verifyZeroInteractions(failedBatchPutCounter)
         verifyZeroInteractions(failedManifestPutCounter)
+        verifyZeroInteractions(dksNewDataKeyFailuresCounter)
     }
 
     @Test
@@ -134,6 +104,22 @@ class S3StreamingWriterTest {
         Assert.assertEquals(expected, actual)
         verifyZeroInteractions(failedBatchPutCounter)
         verifyZeroInteractions(failedManifestPutCounter)
+        verifyZeroInteractions(dksNewDataKeyFailuresCounter)
+    }
+
+    @Test
+    fun testDksFailuresAreRecorded() {
+        given(keyService.batchDataKey()).willThrow(DataKeyServiceUnavailableException("Error"))
+
+        assertThrows<DataKeyServiceUnavailableException> {
+            s3StreamingWriter.write(mutableListOf(Record("dbObject", manifestRecord())))
+            s3StreamingWriter.writeOutput()
+        }
+
+        verifyZeroInteractions(failedBatchPutCounter)
+        verifyZeroInteractions(failedManifestPutCounter)
+        verify(dksNewDataKeyFailuresCounter, times(1)).inc()
+        verifyNoMoreInteractions(dksNewDataKeyFailuresCounter)
     }
 
     @Test
@@ -177,6 +163,7 @@ class S3StreamingWriterTest {
         verify(streamingManifestWriter, times(4)).sendManifest(any(), any(), any(), any())
         verifyZeroInteractions(failedBatchPutCounter)
         verifyZeroInteractions(failedManifestPutCounter)
+        verifyZeroInteractions(dksNewDataKeyFailuresCounter)
    }
 
     @Test
@@ -207,6 +194,7 @@ class S3StreamingWriterTest {
         Assert.assertEquals("manifestprefix", prefixCaptor.firstValue)
         verifyZeroInteractions(failedBatchPutCounter)
         verifyZeroInteractions(failedManifestPutCounter)
+        verifyZeroInteractions(dksNewDataKeyFailuresCounter)
     }
 
     private fun dataKeyResult() = DataKeyResult("dataKeyEncryptionKeyId",
@@ -224,6 +212,42 @@ class S3StreamingWriterTest {
     private lateinit var s3StreamingWriter: S3StreamingWriter
 
     @MockBean
+    private lateinit var compressionInstanceProvider: CompressionInstanceProvider
+
+    @MockBean
+    private lateinit var cipherService: CipherService
+
+    @MockBean
+    private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var s3ObjectService: S3ObjectService
+
+    @MockBean
+    private lateinit var secureRandom: SecureRandom
+
+    @MockBean
+    private lateinit var s3: AmazonS3
+
+    @MockBean
+    private lateinit var streamingManifestWriter: StreamingManifestWriter
+
+    @MockBean(name = "recordCounter")
+    private lateinit var recordCounter: Counter
+
+    @MockBean(name = "byteCounter")
+    private lateinit var byteCounter: Counter
+
+    @MockBean(name = "failedBatchPutCounter")
+    private lateinit var failedBatchPutCounter: Counter
+
+    @MockBean(name = "failedManifestPutCounter")
+    private lateinit var failedManifestPutCounter: Counter
+
+    @MockBean(name = "dksNewDataKeyFailuresCounter")
+    private lateinit var dksNewDataKeyFailuresCounter: Counter
+
+    @MockBean
     private lateinit var amazonDynamoDb: AmazonDynamoDB
 
     @MockBean
@@ -234,4 +258,5 @@ class S3StreamingWriterTest {
 
     @MockBean
     private lateinit var snapshotSenderMessagingService: SnapshotSenderMessagingService
+
 }

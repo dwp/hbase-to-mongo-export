@@ -3,16 +3,17 @@ package app.batch
 import app.exceptions.BlockedTopicException
 import app.services.*
 import com.nhaarman.mockitokotlin2.*
+import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
 import org.junit.Before
 import org.junit.Test
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor
 import org.springframework.test.util.ReflectionTestUtils
-import io.prometheus.client.Gauge
 
 class JobCompletionNotificationListenerTest {
-
 
     @Before
     fun before() {
@@ -21,6 +22,9 @@ class JobCompletionNotificationListenerTest {
         reset(pushgatewayService)
         reset(postProcessor)
         reset(runningApplicationsGauge)
+        reset(topicsStartedCounter)
+        reset(topicsCompletedCounter)
+        reset(timer)
     }
 
     @Test
@@ -33,9 +37,13 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.beforeJob(jobExecution)
         verifyZeroInteractions(exportStatusService)
         verify(runningApplicationsGauge, times(1)).inc()
+        verify(topicsStartedCounter, times(1)).inc()
+        verifyNoMoreInteractions(topicsStartedCounter)
         verify(pushgatewayService, times(1)).pushMetrics()
         verifyNoMoreInteractions(pushgatewayService)
         verifyNoMoreInteractions(runningApplicationsGauge)
+        verify(durationSummary, times(1)).startTimer()
+        verifyNoMoreInteractions(durationSummary)
     }
 
     @Test
@@ -50,9 +58,13 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(exportStatusService, times(1)).setExportedStatus()
         verify(runningApplicationsGauge, times(1)).dec()
+        verify(topicsCompletedCounter, times(1)).inc()
+        verifyNoMoreInteractions(topicsCompletedCounter)
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(pushgatewayService)
         verifyNoMoreInteractions(runningApplicationsGauge)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
 
@@ -71,9 +83,13 @@ class JobCompletionNotificationListenerTest {
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(exportStatusService, times(1)).setFailedStatus()
         verify(runningApplicationsGauge, times(1)).dec()
+        verify(topicsCompletedCounter, times(1)).inc()
+        verifyNoMoreInteractions(topicsCompletedCounter)
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(pushgatewayService)
         verifyNoMoreInteractions(runningApplicationsGauge)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
     @Test
@@ -95,6 +111,8 @@ class JobCompletionNotificationListenerTest {
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(pushgatewayService)
         verifyNoMoreInteractions(runningApplicationsGauge)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
     @Test
@@ -115,6 +133,9 @@ class JobCompletionNotificationListenerTest {
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
             reset(pushgatewayService)
+            verify(timer, times(1)).observeDuration()
+            verifyNoMoreInteractions(timer)
+            reset(timer)
         }
     }
 
@@ -136,6 +157,9 @@ class JobCompletionNotificationListenerTest {
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
             reset(pushgatewayService)
+            verify(timer, times(1)).observeDuration()
+            verifyNoMoreInteractions(timer)
+            reset(timer)
         }
     }
 
@@ -157,6 +181,9 @@ class JobCompletionNotificationListenerTest {
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
             reset(pushgatewayService)
+            verify(timer, times(1)).observeDuration()
+            verifyNoMoreInteractions(timer)
+            reset(timer)
         }
     }
 
@@ -178,6 +205,8 @@ class JobCompletionNotificationListenerTest {
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
         verifyNoMoreInteractions(pushgatewayService)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
     @Test
@@ -197,6 +226,8 @@ class JobCompletionNotificationListenerTest {
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
         verifyNoMoreInteractions(pushgatewayService)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
     @Test
@@ -216,6 +247,8 @@ class JobCompletionNotificationListenerTest {
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
         verifyNoMoreInteractions(pushgatewayService)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
     @Test
@@ -234,12 +267,14 @@ class JobCompletionNotificationListenerTest {
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
         verifyNoMoreInteractions(pushgatewayService)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
     }
 
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
                                                   triggerAdg: String = "true"): JobCompletionNotificationListener =
         JobCompletionNotificationListener(exportStatusService, messagingService,
-            snsService, pushgatewayService, runningApplicationsGauge).apply {
+            snsService, pushgatewayService, durationSummary, runningApplicationsGauge, topicsStartedCounter, topicsCompletedCounter).apply {
                     ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
                 }
 
@@ -248,7 +283,12 @@ class JobCompletionNotificationListenerTest {
     private val pushgatewayService = mock<PushGatewayService>()
     private val postProcessor = mock<ScheduledAnnotationBeanPostProcessor>()
     private val runningApplicationsGauge = mock<Gauge>()
-
+    private val timer = mock<Summary.Timer>()
+    private val durationSummary = mock<Summary> {
+        on { startTimer() } doReturn timer
+    }
+    private val topicsStartedCounter = mock<Counter>()
+    private val topicsCompletedCounter = mock<Counter>()
     companion object {
         private const val TEST_TOPIC = "db.test.topic"
     }

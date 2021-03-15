@@ -6,6 +6,7 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
 import app.services.CipherService
 import app.services.KeyService
+import io.prometheus.client.Counter
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
@@ -13,7 +14,8 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 @Component
 class DecryptionProcessor(private val cipherService: CipherService,
                           private val keyService: KeyService,
-                          private val validator: Validator) :
+                          private val validator: Validator,
+                          private val dksNewDataKeyFailuresCounter: Counter) :
     ItemProcessor<SourceRecord, DecryptedRecord> {
 
     @Throws(DataKeyServiceUnavailableException::class)
@@ -29,6 +31,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
                     item.dbObject)
             return validator.skipBadDecryptedRecords(item, decrypted)
         } catch (e: DataKeyServiceUnavailableException) {
+            dksNewDataKeyFailuresCounter.inc()
             throw e
         } catch (e: Exception) {
            throw DecryptionFailureException(item.hbaseRowId, item.encryption.keyEncryptionKeyId,e)

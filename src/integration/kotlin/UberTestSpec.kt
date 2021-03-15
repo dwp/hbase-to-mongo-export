@@ -56,8 +56,10 @@ class UberTestSpec: StringSpec() {
             metricNames shouldContainAll listOf("htme_bytes_written",
                 "htme_dks_decrypt_key_duration",
                 "htme_dks_decrypt_retries",
+                "htme_dks_decrypt_failures",
                 "htme_dks_fetch_key_duration",
                 "htme_dks_new_key_retries",
+                "htme_dks_new_key_failures",
                 "htme_failed_collections",
                 "htme_records_failed_validation",
                 "htme_records_written",
@@ -69,6 +71,9 @@ class UberTestSpec: StringSpec() {
                 "htme_successful_empty_collections",
                 "htme_successful_non_empty_collections",
                 "htme_running_applications",
+                "htme_topic_duration",
+                "htme_topics_started",
+                "htme_topics_completed",
                 "logback_appender_total",
                 "spring_batch_chunk_write_seconds",
                 "spring_batch_chunk_write_seconds_max",
@@ -114,6 +119,14 @@ class UberTestSpec: StringSpec() {
 
         "It should have pushed correct successful non empty collection metrics " {
             validateMetric("""htme_successful_non_empty_collections{topic="db.database.collection"}""", "1")
+        }
+
+        "It should have pushed correct topics started metrics " {
+            validateMetric("""htme_topics_started{topic="db.database.collection"}""", "1")
+        }
+
+        "It should have pushed correct topics completed metrics " {
+            validateMetric("""htme_topics_completed{topic="db.database.collection"}""", "1")
         }
 
         "Writes the correct objects" {

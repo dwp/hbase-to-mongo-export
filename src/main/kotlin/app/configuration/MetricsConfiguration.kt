@@ -6,12 +6,13 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
 import io.prometheus.client.exporter.PushGateway
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import javax.annotation.PostConstruct
-import io.prometheus.client.Gauge
 
 @Configuration
 class MetricsConfiguration {
@@ -73,12 +74,32 @@ class MetricsConfiguration {
         counter("htme_dks_decrypt_retries", "The no. of dks decrypt key retries.")
 
     @Bean
+    fun dksDecryptKeyFailuresCounter(): Counter =
+        counter("htme_dks_decrypt_failures", "The no. of dks decrypt key failures.")
+
+    @Bean
     fun dksNewDataKeyRetriesCounter(): Counter =
         counter("htme_dks_new_key_retries", "The no. of dks new datakey request retries.")
 
     @Bean
+    fun dksNewDataKeyFailuresCounter(): Counter =
+        counter("htme_dks_new_key_failures", "The no. of dks new datakey request failures.")
+
+    @Bean
     fun runningApplicationsGauge(): Gauge =
         gauge("htme_running_applications", "Number of running applications.")
+
+    @Bean
+    fun topicsStartedCounter(): Counter =
+        counter("htme_topics_started", "The no. of topics started")
+
+    @Bean
+    fun topicsCompletedCounter(): Counter =
+        counter("htme_topics_completed", "The no. of topics completed")
+
+    @Bean
+    fun topicDurationSummary(): Summary =
+        summary("htme_topic_duration", "How long a topic took to export")
 
     @Bean
     fun pushGateway(): PushGateway = PushGateway("$pushgatewayHost:$pushgatewayPort")
@@ -101,6 +122,15 @@ class MetricsConfiguration {
     @Synchronized
     private fun gauge(name: String, help: String, vararg labels: String): Gauge =
             with (Gauge.build()) {
+                name(name)
+                labelNames(*labels)
+                help(help)
+                register()
+            }
+
+    @Synchronized
+    private fun summary(name: String, help: String, vararg labels: String): Summary =
+            with (Summary.build()) {
                 name(name)
                 labelNames(*labels)
                 help(help)

@@ -7,8 +7,12 @@ import app.exceptions.DataKeyServiceUnavailableException
 import app.exceptions.DecryptionFailureException
 import app.services.CipherService
 import app.services.KeyService
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
+import io.prometheus.client.Counter
 import org.junit.Before
 import org.junit.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
@@ -25,7 +29,7 @@ class DecryptionProcessorTest {
     @Before
     fun init() = Mockito.reset(dataKeyService)
 
-    @Test(expected = DataKeyServiceUnavailableException::class)
+    @Test
     fun testDataKeyServiceUnavailable() {
         given(dataKeyService.decryptKey(anyString(), anyString()))
             .willThrow(DataKeyServiceUnavailableException::class.java)
@@ -36,7 +40,13 @@ class DecryptionProcessorTest {
 
         val sourceRecord = SourceRecord("00001".toByteArray(), encryptionBlock,
                 "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE")
-        decryptionProcessor.process(sourceRecord)
+
+        assertThrows<DataKeyServiceUnavailableException> {
+            decryptionProcessor.process(sourceRecord)
+        }
+
+         verify(dksNewDataKeyFailuresCounter, times(1)).inc()
+
     }
 
     @Test(expected = DecryptionFailureException::class)
@@ -63,5 +73,8 @@ class DecryptionProcessorTest {
 
     @MockBean
     private lateinit var validator: Validator
+
+    @MockBean(name = "dksNewDataKeyFailuresCounter")
+    private lateinit var dksNewDataKeyFailuresCounter: Counter
 }
 

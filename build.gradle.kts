@@ -56,7 +56,6 @@ dependencies {
     implementation("io.prometheus:simpleclient_caffeine:0.9.0")
     implementation("io.prometheus:simpleclient_spring_web:0.9.0")
     implementation("org.apache.commons:commons-compress:1.20")
-    implementation("org.apache.commons:commons-compress:1.20")
     implementation("org.apache.commons:commons-text:1.9")
     implementation("org.apache.hbase:hbase-client:1.4.13")
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
