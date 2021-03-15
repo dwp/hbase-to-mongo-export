@@ -4,6 +4,9 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.services.*
+import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.springframework.batch.core.ExitStatus
@@ -12,16 +15,20 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
-import io.prometheus.client.Gauge
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
                                         private val messagingService: SnapshotSenderMessagingService,
                                         private val snsService: SnsService,
                                         private val pushGatewayService: PushGatewayService,
-                                        private val runningApplicationsGauge: Gauge): JobExecutionListenerSupport() {
+                                        private val topicDurationSummary: Summary,
+                                        private val runningApplicationsGauge: Gauge,
+                                        private val topicsStartedCounter: Counter,
+                                        private val topicsCompletedCounter: Counter): JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
+        timer
+        topicsStartedCounter.inc()
         runningApplicationsGauge.inc()
         pushGatewayService.pushMetrics()
     }
@@ -34,6 +41,9 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             sendSnsMessages()
         } finally {
             runningApplicationsGauge.dec()
+            topicsCompletedCounter.inc()
+            val timeTaken = timer.observeDuration()
+            logger.info("Time taken", "duration" to "$timeTaken")
             pushGatewayService.pushFinalMetrics()
         }
     }
@@ -93,6 +103,11 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${trigger.adg:false}")
     private lateinit var triggerAdg: String
+
+    private val timer: Summary.Timer by lazy {
+        topicDurationSummary.startTimer()
+    }
+
 
     companion object {
         val logger = DataworksLogger.getLogger(S3StreamingWriter::class)
