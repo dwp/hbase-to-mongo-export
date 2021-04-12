@@ -24,8 +24,9 @@ class SecureHttpClientProvider : HttpClientProvider {
 
     private fun requestConfig(): RequestConfig =
         RequestConfig.custom().run {
-            setConnectTimeout(5_000)
-            setConnectionRequestTimeout(5_000)
+            setConnectTimeout(connectTimeout.toInt())
+            setConnectionRequestTimeout(connectionRequestTimeout.toInt())
+            setSocketTimeout(socketTimeout.toInt())
             build()
         }
 
@@ -63,4 +64,13 @@ class SecureHttpClientProvider : HttpClientProvider {
 
     @Value("\${trust.store.password}")
     private lateinit var trustStorePassword: String
+
+    @Value("\${connect.timeout:300000}")
+    private lateinit var connectTimeout: String
+
+    @Value("\${connection.request.timeout:300000}")
+    private lateinit var connectionRequestTimeout: String
+
+    @Value("\${socket.timeout:300000}")
+    private lateinit var socketTimeout: String
 }
