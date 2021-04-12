@@ -98,7 +98,7 @@ class SnsServiceImplTest {
             assertEquals("""{
                 "severity": "Critical",
                 "notification_type": "Information",
-                "slack_username": "Crown Export Poller",
+                "slack_username": "HTME",
                 "title_text": "Full - Export finished - success",
                 "custom_elements": [
                     {
@@ -124,8 +124,8 @@ class SnsServiceImplTest {
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
                 "severity": "High",
-                "notification_type": "Error",
-                "slack_username": "Crown Export Poller",
+                "notification_type": "Warning",
+                "slack_username": "HTME",
                 "title_text": "Full - Export finished - failed",
                 "custom_elements": [
                     {

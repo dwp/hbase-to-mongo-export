@@ -51,7 +51,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
             """{
                 "severity": "${severity(exportCompletionStatus)}",
                 "notification_type": "${notificationType(exportCompletionStatus)}",
-                "slack_username": "Crown Export Poller",
+                "slack_username": "HTME",
                 "title_text": "${snapshotType.capitalize()} - Export finished - ${exportCompletionStatus.description}",
                 "custom_elements": [
                     {
@@ -78,7 +78,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     private fun notificationType(exportCompletionStatus: ExportCompletionStatus): String =
         when (exportCompletionStatus) {
             ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
-                "Error"
+                "Warning"
             }
             else -> {
                 "Information"
