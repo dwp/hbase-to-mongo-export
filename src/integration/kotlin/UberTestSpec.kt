@@ -261,7 +261,7 @@ class UberTestSpec: StringSpec() {
             validateQueueMessage(monitoringQueueUrl, """{
                     "severity": "Critical",
                     "notification_type": "Information",
-                    "slack_username": "Crown Export Poller",
+                    "slack_username": "HTME",
                     "title_text": "Full - Export finished - success",
                     "custom_elements":[
                         {
