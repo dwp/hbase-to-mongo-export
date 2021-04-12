@@ -4,8 +4,8 @@
 #
 version: 2.1
 
-orbs:
-  snyk: snyk/snyk@0.0.8
+#orbs:
+#  snyk: snyk/snyk@0.0.8
 
 jobs:
   build:
@@ -77,27 +77,27 @@ jobs:
             export PATH=$PATH:./bin
             make integration-all
 
-  snyk-pr:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - snyk/scan:
-          organization: dwp-dataworks
-          severity-threshold: high
-          target-file: build.gradle.kts
-          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
-
-  snyk-master:
-    docker:
-      - image: circleci/openjdk:8-jdk
-    steps:
-      - checkout
-      - snyk/scan:
-          organization: dwp-dataworks
-          severity-threshold: high
-          target-file: build.gradle.kts
-          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
+#  snyk-pr:
+#    docker:
+#      - image: circleci/openjdk:8-jdk
+#    steps:
+#      - checkout
+#      - snyk/scan:
+#          organization: dwp-dataworks
+#          severity-threshold: high
+#          target-file: build.gradle.kts
+#          project: '${CIRCLE_PROJECT_REPONAME}/pr-kotlin'
+#
+#  snyk-master:
+#    docker:
+#      - image: circleci/openjdk:8-jdk
+#    steps:
+#      - checkout
+#      - snyk/scan:
+#          organization: dwp-dataworks
+#          severity-threshold: high
+#          target-file: build.gradle.kts
+#          project: '${CIRCLE_PROJECT_REPONAME}/master-kotlin'
 
   publish-github-release:
     docker:
@@ -130,18 +130,18 @@ workflows:
       - integration-test:
           requires:
             - build
-      - snyk-pr:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: master
-      - snyk-master:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+#      - snyk-pr:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              ignore: master
+#      - snyk-master:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: master
       - publish-github-release:
           requires:
             - integration-test

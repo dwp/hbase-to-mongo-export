@@ -3,6 +3,7 @@ package app.batch
 import app.configuration.CompressionInstanceProvider
 import app.domain.EncryptingOutputStream
 import app.domain.Record
+import app.exceptions.DataKeyServiceUnavailableException
 import app.services.*
 import com.amazonaws.services.s3.AmazonS3
 import io.prometheus.client.Counter
@@ -41,7 +42,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val recordCounter: Counter,
                         private val byteCounter: Counter,
                         private val failedBatchPutCounter: Counter,
-                        private val failedManifestPutCounter: Counter):
+                        private val failedManifestPutCounter: Counter,
+                        private val dksNewDataKeyFailuresCounter: Counter):
 
     ItemWriter<Record> {
 
@@ -159,24 +161,29 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     private fun encryptingOutputStream(): EncryptingOutputStream {
-        val keyResponse = keyService.batchDataKey()
-        val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        val initialisationVector = ByteArray(16).apply {
-            secureRandom.nextBytes(this)
-        }
-        val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
-        val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
-        val filePrefix = filePrefix()
-        val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
-        val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
+        try {
+            val keyResponse = keyService.batchDataKey()
+            val key: Key = SecretKeySpec(Base64.getDecoder().decode(keyResponse.plaintextDataKey), "AES")
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            val initialisationVector = ByteArray(16).apply {
+                secureRandom.nextBytes(this)
+            }
+            val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
+            val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
+            val filePrefix = filePrefix()
+            val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
+            val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
-        return EncryptingOutputStream(BufferedOutputStream(compressingStream),
-                                        byteArrayOutputStream,
-                                        keyResponse,
-                                        Base64.getEncoder().encodeToString(initialisationVector),
-                                        manifestFile,
-                                        manifestWriter)
+            return EncryptingOutputStream(BufferedOutputStream(compressingStream),
+                                            byteArrayOutputStream,
+                                            keyResponse,
+                                            Base64.getEncoder().encodeToString(initialisationVector),
+                                            manifestFile,
+                                            manifestWriter)
+        } catch (e: DataKeyServiceUnavailableException) {
+            dksNewDataKeyFailuresCounter.inc()
+            throw e
+        }
     }
 
     private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
