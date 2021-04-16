@@ -126,6 +126,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         "max_batch_output_size_bytes" to "$maxBatchOutputSizeBytes",
                         "total_snapshot_files_already_written" to "$totalBatches",
                         "total_bytes_already_written" to "$totalBytes",
+                        "topic_name" to "$topicName",
                         "total_records_already_written" to "$totalRecords")
 
                     exportStatusService.incrementExportedCount(objectKey)
