@@ -65,13 +65,54 @@ class SnsServiceImplTest {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
-                "correlation_id": "correlation.id",
-                "s3_prefix": "prefix",
-                "snapshot_type": "full",
-                "export_date": "2020-12-12"
-            }""", firstValue.message)
+                    "correlation_id": "correlation.id",
+                    "s3_prefix": "prefix",
+                    "snapshot_type": "full",
+                    "export_date": "2020-12-12"
+                }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
+    }
+
+
+    @Test
+    fun triggersAdgButNotPdmWhenSkipTriggerSet() {
+        ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "true")
+        given(amazonSNS.publish(any())).willReturn(mock())
+        snsService.sendExportCompletedSuccessfullyMessage()
+        argumentCaptor<PublishRequest> {
+            verify(amazonSNS, times(1)).publish(capture())
+            assertEquals(TOPIC_ARN, firstValue.topicArn)
+            assertEquals("""{
+                    "correlation_id": "correlation.id",
+                    "s3_prefix": "prefix",
+                    "snapshot_type": "full",
+                    "export_date": "2020-12-12",
+                    "skip_pdm_trigger": "true"
+                }""", firstValue.message)
+        }
+        verifyNoMoreInteractions(amazonSNS)
+        ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "")
+    }
+
+
+    @Test
+    fun triggersAdgButDoesNotSendSkipPdmTriggerWhenIsIsNotSet() {
+        ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "NOT_SET")
+        given(amazonSNS.publish(any())).willReturn(mock())
+        snsService.sendExportCompletedSuccessfullyMessage()
+        argumentCaptor<PublishRequest> {
+            verify(amazonSNS, times(1)).publish(capture())
+            assertEquals(TOPIC_ARN, firstValue.topicArn)
+            assertEquals("""{
+                    "correlation_id": "correlation.id",
+                    "s3_prefix": "prefix",
+                    "snapshot_type": "full",
+                    "export_date": "2020-12-12"
+                }""", firstValue.message)
+        }
+        verifyNoMoreInteractions(amazonSNS)
+        ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "")
     }
 
 
