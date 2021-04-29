@@ -171,6 +171,77 @@ class ValidatorTest {
     }
 
     @Test
+    fun Should_Retrieve_RemovedDateTime_When_Present_And_LastModifiedDateTime_Is_Missing() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_removedDateTime": "$dateOne"
+                }"""
+        val jsonObject = parse(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject)
+        assertEquals(dateOne, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_RemovedDateTime_When_Present_And_LastModifiedDateTime_Is_Blank() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": "",
+                   "_removedDateTime": "$dateOne"
+                }"""
+        val jsonObject = parse(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject)
+        assertEquals(dateOne, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_RemovedDateTime_When_Present_And_LastModifiedDateTime_Is_Null() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_lastModifiedDateTime": null,
+                   "_removedDateTime": "$dateOne"
+                }"""
+        val jsonObject = parse(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject)
+        assertEquals(dateOne, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_RemovedDateTime_When_It_And_CreatedDateTime_Are_Present_And_LastModifiedDateTime_Is_Missing() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_removedDateTime": "$dateOne",
+                   "createdDateTime": "$dateTwo"
+                }"""
+        val jsonObject = parse(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject)
+        assertEquals(dateOne, actual)
+    }
+
+    @Test
+    fun Should_Retrieve_RemovedDateTime_When_It_And_CreatedDateTime_Are_Present_As_Objects_And_LastModifiedDateTime_Is_Missing() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val dateTwo = "2018-12-14T15:01:02.000+0000"
+
+        val decryptedDbObject = """{
+                   "_id":{"test_key_a":"test_value_a","test_key_b":"test_value_b"},
+                   "_removedDateTime": {"${"$"}date": "$dateOne"},
+                   "createdDateTime": {"${"$"}date": "$dateTwo"}
+                }"""
+        val jsonObject = parse(decryptedDbObject)
+        val actual = validator.retrieveLastModifiedDateTime(jsonObject)
+        assertEquals(dateOne, actual)
+    }
+
+    @Test
     fun Should_Retrieve_CreatedDateTime_When_Present_And_LastModifiedDateTime_Is_Missing() {
         val dateOne = "2019-12-14T15:01:02.000+0000"
 
