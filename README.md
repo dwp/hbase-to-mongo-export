@@ -81,6 +81,7 @@ communicate over 2-way https. To generate these:
   | `scan.time.range.end` | | For incremental feeds - any cells newer than this are omitted |
   | `scan.time.range.start` | | For incremental feeds - any cells older than this are omitted |
   | `scan.width` | 5 | How much of the keyspace each scanner should scan. |
+  | `skip.pdm.trigger` | true | If ADG is being triggered, this can pass a string value to it to either skip or not the PDM trigger, if not set at all then ADG defaults to using its own environment wide setting. |
   | `snapshot.sender.export.date` | | Passed on to snapshot sender  |
   | `snapshot.sender.reprocess.files` | | To be passed on to snapshot sender |
   | `snapshot.sender.shutdown.flag` | | Passed on to snapshot sender |
@@ -98,7 +99,6 @@ communicate over 2-way https. To generate these:
   | `topic.arn.monitoring` | | Where to send the monitoring message at the end of the run |
   | `topic.name` | | The topic that should be exported (uniquely identifies a table in HBase) |
   | `trigger.adg` | false | Whether to send the SNS message that kicks off ADG. |
-  | `trigger.pdm` | "true" | Whether to ask to trigger PDM as an override if triggering ADG. |
   | `trigger.snapshot.sender` | | Whether to send the messages that trigger snapshot sender |
   | `trust.keystore`              | resources/truststore.jks   | For mutual auth - the DKS CA certificate |
   | `trust.store.password`        | changeit                   | The truststore password. |
