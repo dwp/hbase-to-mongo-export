@@ -108,11 +108,15 @@ class Validator(private val failedValidationCounter: Counter) {
     fun retrieveLastModifiedDateTime(jsonObject: JsonObject): String {
         val epoch = "1980-01-01T00:00:00.000Z"
         val lastModifiedDateTime = retrieveDateTimeElement(LAST_MODIFIED_DATE_TIME_FIELD, jsonObject)
+        val removedDateTime = retrieveDateTimeElement(REMOVED_DATE_TIME_FIELD, jsonObject)
         val createdDateTime = retrieveDateTimeElement(CREATED_DATE_TIME_FIELD, jsonObject)
 
         return when {
-            !StringUtils.isEmpty(lastModifiedDateTime) -> {
+            StringUtils.isNotBlank(lastModifiedDateTime) -> {
                 lastModifiedDateTime
+            }
+            StringUtils.isNotBlank(removedDateTime) -> {
+                removedDateTime
             }
             StringUtils.isNotBlank(createdDateTime) -> {
                 createdDateTime
@@ -190,6 +194,7 @@ class Validator(private val failedValidationCounter: Counter) {
 
         const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
         const val CREATED_DATE_TIME_FIELD = "createdDateTime"
+        const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
         const val INNER_DATE_FIELD = "\$date"
     }
 }
