@@ -65,11 +65,11 @@ class SnsServiceImplTest {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
-                "correlation_id": "correlation.id",
-                "s3_prefix": "prefix",
-                "snapshot_type": "full",
-                "export_date": "2020-12-12"
-            }""".trimMargin(), firstValue.message)
+                    "correlation_id": "correlation.id",
+                    "s3_prefix": "prefix",
+                    "snapshot_type": "full",
+                    "export_date": "2020-12-12"
+            }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
     }
@@ -84,12 +84,12 @@ class SnsServiceImplTest {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
-                "correlation_id": "correlation.id",
-                "s3_prefix": "prefix",
-                "snapshot_type": "full",
-                "export_date": "2020-12-12",
-                "skip_pdm_trigger": "true"
-            }""".trimMargin(), firstValue.message)
+                    "correlation_id": "correlation.id",
+                    "s3_prefix": "prefix",
+                    "snapshot_type": "full",
+                    "export_date": "2020-12-12",
+                    "skip_pdm_trigger": "true"
+            }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
         ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "")
@@ -105,11 +105,11 @@ class SnsServiceImplTest {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
-                "correlation_id": "correlation.id",
-                "s3_prefix": "prefix",
-                "snapshot_type": "full",
-                "export_date": "2020-12-12"
-            }""".trimMargin(), firstValue.message)
+                    "correlation_id": "correlation.id",
+                    "s3_prefix": "prefix",
+                    "snapshot_type": "full",
+                    "export_date": "2020-12-12"
+            }""", firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
         ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "")

@@ -47,14 +47,14 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                     "snapshot_type": "$snapshotType",
                     "export_date": "$exportDate",
                     "skip_pdm_trigger": "$skipPdmTrigger"
-                }""".trimMargin()
+                }"""
             else
                 """{
                     "correlation_id": "${correlationId()}",
                     "s3_prefix": "$s3prefix",
                     "snapshot_type": "$snapshotType",
                     "export_date": "$exportDate"
-                }""".trimMargin()
+                }"""
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
             """{
