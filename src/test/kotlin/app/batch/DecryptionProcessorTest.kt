@@ -33,7 +33,7 @@ class DecryptionProcessorTest {
     fun testDataKeyServiceUnavailable() {
         given(dataKeyService.decryptKey(anyString(), anyString()))
             .willThrow(DataKeyServiceUnavailableException::class.java)
-        val encryptionBlock =
+        val encryptionBlock = 
             EncryptionBlock("keyEncryptionKeyId",
                 "initialisationVector",
                 "encryptedEncryptionKey")
