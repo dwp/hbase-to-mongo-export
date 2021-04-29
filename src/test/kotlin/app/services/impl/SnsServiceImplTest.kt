@@ -69,7 +69,7 @@ class SnsServiceImplTest {
                 "s3_prefix": "prefix",
                 "snapshot_type": "full",
                 "export_date": "2020-12-12"
-            }""", firstValue.message)
+            }""".trimMargin(), firstValue.message.trimMargin())
         }
         verifyNoMoreInteractions(amazonSNS)
     }
@@ -89,7 +89,7 @@ class SnsServiceImplTest {
                 "snapshot_type": "full",
                 "export_date": "2020-12-12",
                 "skip_pdm_trigger": "true"
-            }""", firstValue.message)
+            }""".trimMargin(), firstValue.message.trimMargin())
         }
         verifyNoMoreInteractions(amazonSNS)
         ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "")
@@ -109,7 +109,7 @@ class SnsServiceImplTest {
                 "s3_prefix": "prefix",
                 "snapshot_type": "full",
                 "export_date": "2020-12-12"
-            }""", firstValue.message)
+            }""".trimMargin(), firstValue.message.trimMargin())
         }
         verifyNoMoreInteractions(amazonSNS)
         ReflectionTestUtils.setField(snsService, "skipPdmTrigger", "")
