@@ -40,12 +40,21 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     }
 
     private fun exportCompletedPayload() =
-            """{
-                "correlation_id": "${correlationId()}",
-                "s3_prefix": "$s3prefix",
-                "snapshot_type": "$snapshotType",
-                "export_date": "$exportDate"
-            }"""
+            if (skipPdmTrigger.isNotBlank())
+                """{
+                    "correlation_id": "${correlationId()}",
+                    "s3_prefix": "$s3prefix",
+                    "snapshot_type": "$snapshotType",
+                    "export_date": "$exportDate"
+                }"""
+            else
+                """{
+                    "correlation_id": "${correlationId()}",
+                    "s3_prefix": "$s3prefix",
+                    "snapshot_type": "$snapshotType",
+                    "export_date": "$exportDate",
+                    "skip_pdm_trigger": "$skipPdmTrigger"
+                }"""
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
             """{
@@ -118,6 +127,9 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3prefix: String
+
+    @Value("\${skip.pdm.trigger}")
+    private lateinit var skipPdmTrigger: String
 
     companion object {
         private val logger = DataworksLogger.getLogger(SnsServiceImpl::class)

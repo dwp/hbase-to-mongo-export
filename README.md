@@ -98,6 +98,7 @@ communicate over 2-way https. To generate these:
   | `topic.arn.monitoring` | | Where to send the monitoring message at the end of the run |
   | `topic.name` | | The topic that should be exported (uniquely identifies a table in HBase) |
   | `trigger.adg` | false | Whether to send the SNS message that kicks off ADG. |
+  | `trigger.pdm` | "true" | Whether to ask to trigger PDM as an override if triggering ADG. |
   | `trigger.snapshot.sender` | | Whether to send the messages that trigger snapshot sender |
   | `trust.keystore`              | resources/truststore.jks   | For mutual auth - the DKS CA certificate |
   | `trust.store.password`        | changeit                   | The truststore password. |
