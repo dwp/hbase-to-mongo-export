@@ -81,7 +81,7 @@ communicate over 2-way https. To generate these:
   | `scan.time.range.end` | | For incremental feeds - any cells newer than this are omitted |
   | `scan.time.range.start` | | For incremental feeds - any cells older than this are omitted |
   | `scan.width` | 5 | How much of the keyspace each scanner should scan. |
-  | `skip.pdm.trigger` | true | If ADG is being triggered, this can pass a string value to it to either skip or not the PDM trigger, if not set at all then ADG defaults to using its own environment wide setting. |
+  | `skip.pdm.trigger` | true | If ADG is being triggered, this can pass a string value to it to either skip or not the PDM trigger, if not set at all then ADG defaults to using its own environment wide setting (if passed NOT_SET then it is not sent). |
   | `snapshot.sender.export.date` | | Passed on to snapshot sender  |
   | `snapshot.sender.reprocess.files` | | To be passed on to snapshot sender |
   | `snapshot.sender.shutdown.flag` | | Passed on to snapshot sender |

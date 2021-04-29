@@ -40,7 +40,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     }
 
     private fun exportCompletedPayload() =
-            if (skipPdmTrigger.isNotBlank())
+            if (skipPdmTrigger.isNotBlank() && skipPdmTrigger != "NOT_SET")
                 """{
                     "correlation_id": "${correlationId()}",
                     "s3_prefix": "$s3prefix",
