@@ -45,15 +45,15 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                     "correlation_id": "${correlationId()}",
                     "s3_prefix": "$s3prefix",
                     "snapshot_type": "$snapshotType",
-                    "export_date": "$exportDate"
+                    "export_date": "$exportDate",
+                    "skip_pdm_trigger": "$skipPdmTrigger"
                 }"""
             else
                 """{
                     "correlation_id": "${correlationId()}",
                     "s3_prefix": "$s3prefix",
                     "snapshot_type": "$snapshotType",
-                    "export_date": "$exportDate",
-                    "skip_pdm_trigger": "$skipPdmTrigger"
+                    "export_date": "$exportDate"
                 }"""
 
     private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
