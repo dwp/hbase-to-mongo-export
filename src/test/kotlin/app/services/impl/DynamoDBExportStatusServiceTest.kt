@@ -61,14 +61,14 @@ class DynamoDBExportStatusServiceTest {
     }
 
     @Test
-    fun textExportCompletionStatusSuccessful() {
+    fun testExportCompletionStatusSuccessful() {
         given(tableService.statuses()).willReturn(listOf("Exported", "Sent", "Received", "Success", "Table_Unavailable", "Blocked_Topic"))
         val actual = exportStatusService.exportCompletionStatus()
         assertEquals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY, actual)
     }
 
     @Test
-    fun textExportCompletionStatusUnsuccessful() {
+    fun testExportCompletionStatusUnsuccessful() {
         given(tableService.statuses()).willReturn(listOf("Exported", "Sent", "Received", "Success",
             "Table_Unavailable", "Blocked_Topic", "Export_Failed"))
         val actual = exportStatusService.exportCompletionStatus()
@@ -76,7 +76,7 @@ class DynamoDBExportStatusServiceTest {
     }
 
     @Test
-    fun textExportCompletionStatusInProgress() {
+    fun testExportCompletionStatusInProgress() {
         given(tableService.statuses()).willReturn(listOf("Exported", "Sent", "Received", "Success",
             "Table_Unavailable", "Blocked_Topic", "Exporting"))
         val actual = exportStatusService.exportCompletionStatus()

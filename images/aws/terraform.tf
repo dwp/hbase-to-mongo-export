@@ -47,6 +47,29 @@ resource "aws_dynamodb_table" "uc_export_to_crown_status_table" {
   }
 }
 
+resource "aws_dynamodb_table" "product_status_table" {
+
+  name         = "data_pipeline_metadata"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "Correlation_Id"
+  range_key    = "DataProduct"
+
+  attribute {
+    name = "Correlation_Id"
+    type = "S"
+  }
+
+  attribute {
+    name = "DataProduct"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "TimeToExist"
+    enabled        = true
+  }
+}
+
 resource "aws_s3_bucket" "export_bucket" {
   bucket = "exports"
   acl    = "public-read"

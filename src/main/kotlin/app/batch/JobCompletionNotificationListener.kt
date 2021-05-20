@@ -18,6 +18,7 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
+                                        private val productStatusService: ProductStatusService,
                                         private val messagingService: SnapshotSenderMessagingService,
                                         private val snsService: SnsService,
                                         private val pushGatewayService: PushGatewayService,
@@ -38,7 +39,10 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
             setExportStatus(jobExecution)
             sendSqsMessages(jobExecution)
-            sendSnsMessages()
+
+            val completionStatus = exportStatusService.exportCompletionStatus()
+            sendSnsMessages(completionStatus)
+            setProductStatus(completionStatus)
         } finally {
             runningApplicationsGauge.dec()
             topicsCompletedCounter.inc()
@@ -78,8 +82,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendSnsMessages() {
-        when (val completionStatus = exportStatusService.exportCompletionStatus()) {
+    private fun sendSnsMessages(completionStatus: ExportCompletionStatus) {
+        when (completionStatus) {
             ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
                 if (triggerAdg.toBoolean()) {
                     snsService.sendExportCompletedSuccessfullyMessage()
@@ -88,6 +92,17 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             }
             ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
                 snsService.sendMonitoringMessage(completionStatus)
+            }
+        }
+    }
+
+    private fun setProductStatus(completionStatus: ExportCompletionStatus) {
+        when (completionStatus) {
+            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                productStatusService.setCompletedStatus()
+            }
+            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
+                productStatusService.setFailedStatus()
             }
         }
     }
