@@ -82,7 +82,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendSnsMessages(completionStatus) {
+    private fun sendSnsMessages(completionStatus: ExportCompletionStatus) {
         when (completionStatus) {
             ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
                 if (triggerAdg.toBoolean()) {
@@ -96,7 +96,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun setProductStatus(completionStatus) {
+    private fun setProductStatus(completionStatus: ExportCompletionStatus) {
         when (completionStatus) {
             ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
                 productStatusService.setCompletedStatus()

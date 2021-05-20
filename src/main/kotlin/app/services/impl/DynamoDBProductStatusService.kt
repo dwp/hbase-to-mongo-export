@@ -1,14 +1,11 @@
 package app.services.impl
 
 import app.services.ExportCompletionStatus
-import app.services.ExportStatusService
-import app.services.TableService
+import app.services.ProductStatusService
 import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.services.dynamodbv2.model.GetItemRequest
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
-import io.prometheus.client.Counter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -16,7 +13,7 @@ import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
-class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): ProductStatusService {
+class DynamoDBProductStatusService(private val dynamoDB: AmazonDynamoDB): ProductStatusService {
 
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
@@ -57,7 +54,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB): Product
     private lateinit var productTableName: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(DynamoDBExportStatusService::class)
+        val logger = DataworksLogger.getLogger(DynamoDBProductStatusService::class)
         private const val DATA_PRODUCT_VALUE = "HTME"
     }
 }
