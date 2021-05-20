@@ -39,7 +39,8 @@ class DynamoDBProductStatusService(private val dynamoDB: AmazonDynamoDB): Produc
         UpdateItemRequest().apply {
             tableName = productTableName
             key = primaryKey
-            updateExpression = "SET Status = :x"
+            updateExpression = "SET #y = :x"
+            expressionAttributeNames = mapOf("#y" to "Status")
             expressionAttributeValues = mapOf(":x" to AttributeValue().apply { s = status })
             returnValues = "ALL_NEW"
         }
