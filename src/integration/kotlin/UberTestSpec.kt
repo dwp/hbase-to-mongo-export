@@ -221,6 +221,22 @@ class UberTestSpec: StringSpec() {
             filesSent?.n shouldBe "0"
         }
 
+        "Product status updated correctly" {
+            val correlationIdAttributeValue = AttributeValue().apply { s = "s3-export" }
+            val dataProductAttributeValue = AttributeValue().apply { s = "HTME" }
+            val primaryKey = mapOf("Correlation_Id" to correlationIdAttributeValue,
+                "DataProduct" to dataProductAttributeValue)
+
+            val getItemRequest = GetItemRequest().apply {
+                tableName = "data_pipeline_metadata"
+                key = primaryKey
+            }
+            val result = amazonDynamoDB.getItem(getItemRequest)
+            val item = result.item
+            val status = item["Status"]
+            status?.s shouldBe "Completed"
+        }
+
         "Correct messages sent" {
             val received = queueMessages(snapshotSenderQueueUrl)
                 .map(Message::getBody)
