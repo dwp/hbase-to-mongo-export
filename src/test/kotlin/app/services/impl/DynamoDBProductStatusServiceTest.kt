@@ -58,7 +58,7 @@ class DynamoDBProductStatusServiceTest {
     }
 
     @Test
-    fun setFailedSetsCorrectStatus() {
+    fun setCompletedSetsCorrectStatus() {
         given(amazonDynamoDB.updateItem(any()))
                 .willReturn(mock())
         productStatusService.setCompletedStatus()
