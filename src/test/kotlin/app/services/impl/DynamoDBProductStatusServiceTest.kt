@@ -86,7 +86,7 @@ class DynamoDBProductStatusServiceTest {
                 .willThrow(SdkClientException(""))
                 .willReturn(mock())
         productStatusService.setCompletedStatus()
-        verify(amazonDynamoDB, times(3)).getItem(any())
+        verify(amazonDynamoDB, times(3)).updateItem(any())
         verifyNoMoreInteractions(amazonDynamoDB)
     }
 }
