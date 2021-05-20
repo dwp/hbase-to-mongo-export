@@ -46,6 +46,7 @@ communicate over 2-way https. To generate these:
   | `dynamodb.retry.maxAttempts`  |    5                       | The number of retries to attempt before giving up |
   | `dynamodb.retry.multiplier`   |    2                       | The backoff multiplier (the retry delay is this multiple of the previous delay) |
   | `dynamodb.status.table.name` |UCExportToCrownStatus | The export stats table name |
+  | `dynamodb.status.product.table.name` |data_pipeline_metadata | The product stats table name |
   | `hbase.client.timeout.ms` | 3600000 | See [hbase.client.operation.timeout](https://hbase.apache.org/1.4/book.html#hbase.client.operation.timeout)  in the HBase manual |
   | `hbase.rpc.timeout.ms` | 1800000 | See [hbase.rpc.timeout](https://hbase.apache.org/1.4/book.html#hbase.rpc.timeout) in the HBase manual |
   | `hbase.scanner.timeout.ms` | 1800000 | See [hbase.client.scanner.timeout.period](https://hbase.apache.org/1.4/book.html#hbase.client.scanner.timeout.period) in the HBase manual |
