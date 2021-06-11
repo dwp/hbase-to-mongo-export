@@ -10,6 +10,7 @@ import app.services.KeyService
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import io.prometheus.client.Counter
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
@@ -61,6 +62,38 @@ class DecryptionProcessorTest {
         decryptionProcessor.process(SourceRecord("00001".toByteArray(), encryptionBlock,
                 "dbObject", 100, "db", "collection","OUTER_TYPE", "INNER_TYPE"))
     }
+
+    fun testTransform() {
+        val decrypted_record = """
+            {
+              "context": {
+                "AUDIT_ID": "12.0.0.1"
+              },
+              "auditType": "audit_type"
+            }
+            """
+        val transformed_expected = """
+            {
+              "context": {
+                "AUDIT_ID": "12.0.0.1",
+                "AUDIT_EVENT": "audit_type",
+                "TIME_STAMP": "100",
+                "TIME_STAMP_ORIG": "100"
+                
+              }
+            }
+            """
+        val encryptionBlock =
+                EncryptionBlock("keyEncryptionKeyId",
+                        "initialisationVector",
+                        "encryptedEncryptionKey")
+        val transformed_actual = decryptionProcessor.transform(
+                SourceRecord("00001".toByteArray(), encryptionBlock,
+                        "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE"),
+        decrypted_record)
+        Assert.assertEquals(transformed_expected, transformed_actual)
+    }
+
 
     @MockBean
     private lateinit var dataKeyService: KeyService
