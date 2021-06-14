@@ -61,7 +61,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
         val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
         val contextElement: JsonObject = dbObject[KEY_CONTEXT] as JsonObject
         val auditType = dbObject[KEY_AUDIT_TYPE]
-        if ((auditType != null && !auditType.isJsonNull) ||
+        if ((auditType != null && !auditType.isJsonNull) &&
                 contextElement != null && !contextElement.isJsonNull) {
             contextElement.addProperty(KEY_AUDIT_EVENT, auditType.asString)
             contextElement.addProperty(KEY_TIME_STAMP, item.messageLastModifiedDateTime)
