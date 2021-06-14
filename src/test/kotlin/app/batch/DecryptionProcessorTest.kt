@@ -40,7 +40,7 @@ class DecryptionProcessorTest {
                 "encryptedEncryptionKey")
 
         val sourceRecord = SourceRecord("00001".toByteArray(), encryptionBlock,
-                "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE")
+                "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE", "")
 
         assertThrows<DataKeyServiceUnavailableException> {
             decryptionProcessor.process(sourceRecord)
@@ -60,7 +60,7 @@ class DecryptionProcessorTest {
                 "initialisationVector",
                 "encryptedEncryptionKey")
         decryptionProcessor.process(SourceRecord("00001".toByteArray(), encryptionBlock,
-                "dbObject", 100, "db", "collection","OUTER_TYPE", "INNER_TYPE"))
+                "dbObject", 100, "db", "collection","OUTER_TYPE", "INNER_TYPE", ""))
     }
 
     @Test
@@ -73,14 +73,14 @@ class DecryptionProcessorTest {
               "auditType": "audit_type"
             }
             """
-        val transformed_expected = """{"AUDIT_ID":"12.0.0.1","AUDIT_EVENT":"audit_type","TIME_STAMP":100,"TIME_STAMP_ORIG":100}"""
+        val transformed_expected = """{"AUDIT_ID":"12.0.0.1","AUDIT_EVENT":"audit_type","TIME_STAMP":"2019-07-04T07:27:35.104+0000","TIME_STAMP_ORIG":"2019-07-04T07:27:35.104+0000"}"""
         val encryptionBlock =
                 EncryptionBlock("keyEncryptionKeyId",
                         "initialisationVector",
                         "encryptedEncryptionKey")
         val transformed_actual = decryptionProcessor.transform(
                 SourceRecord("00001".toByteArray(), encryptionBlock,
-                        "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE"),
+                        "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE", "2019-07-04T07:27:35.104+0000"),
         decrypted_record)
         System.out.println(transformed_actual)
         Assert.assertEquals(transformed_expected, transformed_actual)

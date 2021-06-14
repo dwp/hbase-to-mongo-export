@@ -64,8 +64,8 @@ class DecryptionProcessor(private val cipherService: CipherService,
         if ((auditType != null && !auditType.isJsonNull) ||
                 contextElement != null && !contextElement.isJsonNull) {
             contextElement.addProperty(KEY_AUDIT_EVENT, auditType.asString)
-            contextElement.addProperty(KEY_TIME_STAMP, item.timestamp)
-            contextElement.addProperty(KEY_TIME_STAMP_ORIG, item.timestamp)
+            contextElement.addProperty(KEY_TIME_STAMP, item.messageLastModifiedDateTime)
+            contextElement.addProperty(KEY_TIME_STAMP_ORIG, item.messageLastModifiedDateTime)
             return gson.toJson(contextElement)
         } else {
             throw Exception("auditType or context for business audit record is null")

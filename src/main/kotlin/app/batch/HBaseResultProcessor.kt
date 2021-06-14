@@ -6,6 +6,7 @@ import app.exceptions.MissingFieldException
 import app.utils.TextUtils
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.util.Bytes
@@ -29,6 +30,12 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
             val innerType = messageInfo.getAsJsonPrimitive("@type")?.asString ?: ""
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val encryptionInfo = messageInfo.getAsJsonObject("encryption")
+            val _lastModifiedDateTime = messageInfo["_lastModifiedDateTime"]
+            val lastModifiedDateTime = if (_lastModifiedDateTime != null && !_lastModifiedDateTime.isJsonNull && _lastModifiedDateTime is JsonPrimitive) {
+                messageInfo.getAsJsonPrimitive("_lastModifiedDateTime").asString
+            } else {
+                ""
+            }
             val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
             val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
             val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
@@ -42,7 +49,7 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
             return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db!!, collection!!,
                     if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
-                    if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET")
+                    if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET", lastModifiedDateTime)
         } catch (e: Exception) {
             logger.error("Error in result processing", e)
             throw e
