@@ -61,14 +61,14 @@ class DecryptionProcessor(private val cipherService: CipherService,
         val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
         val contextElement: JsonObject = dbObject[KEY_CONTEXT] as JsonObject
         val auditType = dbObject[KEY_AUDIT_TYPE]
-        if ((auditType != null && !auditType.isJsonNull) &&
-                contextElement != null && !contextElement.isJsonNull) {
+        if ((auditType == null || auditType.isJsonNull) ||
+                contextElement == null || contextElement.isJsonNull) {
+            throw Exception("auditType or context for business audit record is null")
+        } else {
             contextElement.addProperty(KEY_AUDIT_EVENT, auditType.asString)
             contextElement.addProperty(KEY_TIME_STAMP, item.messageLastModifiedDateTime)
             contextElement.addProperty(KEY_TIME_STAMP_ORIG, item.messageLastModifiedDateTime)
             return gson.toJson(contextElement)
-        } else {
-            throw Exception("auditType or context for business audit record is null")
         }
     }
 
