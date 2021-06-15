@@ -234,7 +234,7 @@ class UberTestSpec: StringSpec() {
             val result = amazonDynamoDB.getItem(getItemRequest)
             val item = result.item
             val status = item["Status"]
-            status?.s shouldBe "Completed"
+            status?.s shouldBe "COMPLETED"
         }
 
         "Correct messages sent" {
@@ -290,7 +290,7 @@ class UberTestSpec: StringSpec() {
             validateQueueMessage(monitoringQueueUrl, """{
                     "severity": "Critical",
                     "notification_type": "Information",
-                    "slack_username": "Crown Export Poller",
+                    "slack_username": "HTME",
                     "title_text": "Full - Export finished - success",
                     "custom_elements":[
                         {
