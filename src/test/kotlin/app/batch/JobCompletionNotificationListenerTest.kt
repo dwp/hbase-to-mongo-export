@@ -2,10 +2,12 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.services.*
+import app.utils.TextUtils
 import com.nhaarman.mockitokotlin2.*
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
+import org.apache.hadoop.hbase.client.Connection
 import org.junit.Before
 import org.junit.Test
 import org.springframework.batch.core.ExitStatus
@@ -319,7 +321,8 @@ class JobCompletionNotificationListenerTest {
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
                                                   triggerAdg: String = "true"): JobCompletionNotificationListener =
         JobCompletionNotificationListener(exportStatusService, productStatusService, messagingService,
-            snsService, pushgatewayService, durationSummary, runningApplicationsGauge, topicsStartedCounter, topicsCompletedCounter).apply {
+            snsService, pushgatewayService, durationSummary, runningApplicationsGauge,
+            topicsStartedCounter, topicsCompletedCounter, connection, textUtils).apply {
                     ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
                 }
 
@@ -335,6 +338,8 @@ class JobCompletionNotificationListenerTest {
     }
     private val topicsStartedCounter = mock<Counter>()
     private val topicsCompletedCounter = mock<Counter>()
+    private val connection = mock<Connection>()
+    private val textUtils = TextUtils()
     companion object {
         private const val TEST_TOPIC = "db.test.topic"
     }
