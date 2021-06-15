@@ -36,7 +36,7 @@ class DecryptionProcessor(private val cipherService: CipherService,
             val decryptedKey = keyService.decryptKey(
                 item.encryption.keyEncryptionKeyId,
                 item.encryption.encryptedEncryptionKey)
-            val decrypted =
+            var decrypted =
                 cipherService.decrypt(
                     decryptedKey,
                     item.encryption.initializationVector,
@@ -44,8 +44,8 @@ class DecryptionProcessor(private val cipherService: CipherService,
             val db = item.db
             val collection = item.collection
             logger.debug("db: $db, collection: $collection")
-            if(db == BUSINESS_AUDIT_DB && collection == BUSINESS_AUDIT_COLLECTION) {
-                transform(item, decrypted)
+            if (db == BUSINESS_AUDIT_DB && collection == BUSINESS_AUDIT_COLLECTION) {
+                decrypted = transform(item, decrypted)
             }
             return validator.skipBadDecryptedRecords(item, decrypted)
         } catch (e: DataKeyServiceUnavailableException) {
