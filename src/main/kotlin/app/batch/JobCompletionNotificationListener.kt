@@ -33,26 +33,10 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                                         private val textUtils: TextUtils,): JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
-        flushTable()
         timer
         topicsStartedCounter.inc()
         runningApplicationsGauge.inc()
         pushGatewayService.pushMetrics()
-    }
-
-    private fun flushTable() {
-        try {
-            val matcher = textUtils.topicNameTableMatcher(topicName)
-            val namespace = matcher?.groupValues?.get(1)
-            val tableName = matcher?.groupValues?.get(2)
-            val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
-            val table = TableName.valueOf(qualifiedTableName)
-            logger.info("Flushing table", "table" to qualifiedTableName)
-            connection.admin.flush(table)
-            logger.info("Flushed table", "table" to qualifiedTableName)
-        } catch (e: Exception) {
-            logger.error("Failed to flush table", e)
-        }
     }
 
     override fun afterJob(jobExecution: JobExecution) {
@@ -143,7 +127,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
     }
-
 
     companion object {
         val logger = DataworksLogger.getLogger(S3StreamingWriter::class)
