@@ -17,7 +17,7 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.nio.charset.Charset
 
 @Component
-class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Result, SourceRecord> {
+class HBaseResultProcessor(private val textUtils: TextUtils): ItemProcessor<Result, SourceRecord> {
 
     override fun process(result: Result): SourceRecord? {
         try {
@@ -31,11 +31,12 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
             val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
             val encryptionInfo = messageInfo.getAsJsonObject("encryption")
             val _lastModifiedDateTime = messageInfo["_lastModifiedDateTime"]
-            val lastModifiedDateTime = if (_lastModifiedDateTime != null && !_lastModifiedDateTime.isJsonNull && _lastModifiedDateTime is JsonPrimitive) {
-                messageInfo.getAsJsonPrimitive("_lastModifiedDateTime").asString
-            } else {
-                ""
-            }
+            val lastModifiedDateTime =
+                if (_lastModifiedDateTime != null && !_lastModifiedDateTime.isJsonNull && _lastModifiedDateTime is JsonPrimitive) {
+                    messageInfo.getAsJsonPrimitive("_lastModifiedDateTime").asString
+                } else {
+                    ""
+                }
             val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
             val keyEncryptionKeyId = encryptionInfo.getAsJsonPrimitive("keyEncryptionKeyId").asString
             val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
@@ -47,9 +48,18 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
             validateMandatoryField(db, idBytes, "db")
             validateMandatoryField(collection, idBytes, "collection")
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
+            if (snapshotType == "incremental") {
+                try {
+                    logger.info("Read record", "key" to printableKey(idBytes))
+
+                } catch (e: Exception) {
+                    logger.error("Failed to log read record")
+                }
+            }
+
             return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db!!, collection!!,
-                    if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
-                    if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET", lastModifiedDateTime)
+                if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
+                if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET", lastModifiedDateTime)
         } catch (e: Exception) {
             logger.error("Error in result processing", e)
             throw e
@@ -88,8 +98,17 @@ class HBaseResultProcessor(private val textUtils: TextUtils) : ItemProcessor<Res
         private val logger = DataworksLogger.getLogger(HBaseResultProcessor::class)
         private val columnFamily = Bytes.toBytes("cf")
         private val columnQualifier = Bytes.toBytes("record")
+        fun printableKey(key: ByteArray): String {
+            val hash = key.slice(IntRange(0, 3))
+            val hex = hash.joinToString("") { String.format("\\x%02x", it) }
+            val renderable = key.slice(IntRange(4, key.size - 1)).map { it.toChar() }.joinToString("")
+            return "${hex}${renderable}"
+        }
     }
 
     @Value("\${topic.name}")
     private var topicName: String = ""
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 }

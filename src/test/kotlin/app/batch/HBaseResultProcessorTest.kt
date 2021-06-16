@@ -203,6 +203,7 @@ class HBaseResultProcessorTest {
     private fun actualResult(): SourceRecord? {
         val processor = HBaseResultProcessor(textUtils)
         ReflectionTestUtils.setField(processor, "topicName", "db.a.b")
+        ReflectionTestUtils.setField(processor, "snapshotType", "incremental")
         return processor.process(result)
     }
 

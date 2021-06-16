@@ -4,11 +4,14 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.services.*
+import app.utils.TextUtils
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
+import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
+import org.apache.hadoop.hbase.client.Connection
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
@@ -25,13 +28,31 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                                         private val topicDurationSummary: Summary,
                                         private val runningApplicationsGauge: Gauge,
                                         private val topicsStartedCounter: Counter,
-                                        private val topicsCompletedCounter: Counter): JobExecutionListenerSupport() {
+                                        private val topicsCompletedCounter: Counter,
+                                        private val connection: Connection,
+                                        private val textUtils: TextUtils,): JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
+        flushTable()
         timer
         topicsStartedCounter.inc()
         runningApplicationsGauge.inc()
         pushGatewayService.pushMetrics()
+    }
+
+    private fun flushTable() {
+        try {
+            val matcher = textUtils.topicNameTableMatcher(topicName)
+            val namespace = matcher?.groupValues?.get(1)
+            val tableName = matcher?.groupValues?.get(2)
+            val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
+            val table = TableName.valueOf(qualifiedTableName)
+            logger.info("Flushing table", "table" to qualifiedTableName)
+            connection.admin.flush(table)
+            logger.info("Flushed table", "table" to qualifiedTableName)
+        } catch (e: Exception) {
+            logger.error("Failed to flush table", e)
+        }
     }
 
     override fun afterJob(jobExecution: JobExecution) {
@@ -39,7 +60,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
             setExportStatus(jobExecution)
             sendSqsMessages(jobExecution)
-
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendSnsMessages(completionStatus)
             setProductStatus(completionStatus)
@@ -118,6 +138,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${trigger.adg:false}")
     private lateinit var triggerAdg: String
+
 
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
