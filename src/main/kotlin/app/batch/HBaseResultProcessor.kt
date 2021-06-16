@@ -48,14 +48,6 @@ class HBaseResultProcessor(private val textUtils: TextUtils): ItemProcessor<Resu
             validateMandatoryField(db, idBytes, "db")
             validateMandatoryField(collection, idBytes, "collection")
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
-            if (snapshotType == "incremental") {
-                try {
-                    logger.info("Read record", "key" to printableKey(idBytes))
-
-                } catch (e: Exception) {
-                    logger.error("Failed to log read record")
-                }
-            }
 
             return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db!!, collection!!,
                 if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
