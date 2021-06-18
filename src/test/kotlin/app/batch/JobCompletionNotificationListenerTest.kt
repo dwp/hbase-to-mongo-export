@@ -324,7 +324,9 @@ class JobCompletionNotificationListenerTest {
             snsService, pushgatewayService, durationSummary, runningApplicationsGauge,
             topicsStartedCounter, topicsCompletedCounter, connection, textUtils).apply {
                     ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
-                }
+                    ReflectionTestUtils.setField(this, "snapshotType", "drift_testing_incremental")
+                    ReflectionTestUtils.setField(this, "topicName", TEST_TOPIC)
+        }
 
     private val productStatusService = mock<ProductStatusService>()
     private val messagingService = mock<SnapshotSenderMessagingService>()

@@ -49,6 +49,10 @@ class HBaseResultProcessor(private val textUtils: TextUtils): ItemProcessor<Resu
             validateMandatoryField(collection, idBytes, "collection")
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
 
+            if (snapshotType == "drift_testing_incremental") {
+                logger.info("Record read from hbase", "key" to printableKey(idBytes))
+            }
+
             return SourceRecord(idBytes, encryptionBlock, encryptedDbObject!!, timestamp(result), db!!, collection!!,
                 if (StringUtils.isNotBlank(outerType)) outerType else "TYPE_NOT_SET",
                 if (StringUtils.isNotBlank(innerType)) innerType else "TYPE_NOT_SET", lastModifiedDateTime)
@@ -56,6 +60,13 @@ class HBaseResultProcessor(private val textUtils: TextUtils): ItemProcessor<Resu
             logger.error("Error in result processing", e)
             throw e
         }
+    }
+
+    fun printableKey(key: ByteArray): String {
+        val hash = key.slice(IntRange(0, 3))
+        val hex = hash.joinToString("") { String.format("\\x%02x", it) }
+        val renderable = key.slice(IntRange(4, key.size - 1)).map{ it.toChar() }.joinToString("")
+        return "${hex}${renderable}"
     }
 
     private fun timestamp(result: Result): Long =
