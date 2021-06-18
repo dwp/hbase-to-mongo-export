@@ -18,6 +18,7 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import uk.gov.dwp.dataworks.logging.LogFields
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
@@ -33,6 +34,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                                         private val textUtils: TextUtils,): JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
+        LogFields.put("SNAPSHOT_TYPE", "snapshot_type", snapshotType)
+        LogFields.put("TOPIC_NAME", "topic_name", topicName)
         timer
         topicsStartedCounter.inc()
         runningApplicationsGauge.inc()
@@ -122,6 +125,9 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${trigger.adg:false}")
     private lateinit var triggerAdg: String
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
 
 
     private val timer: Summary.Timer by lazy {
