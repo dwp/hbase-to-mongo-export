@@ -38,7 +38,6 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.EXECUTING
         }
         jobCompletionNotificationListener.beforeJob(jobExecution)
-        verify(snsService, times(1)).sendTopicFailedMonitoringMessage()
         verifyZeroInteractions(exportStatusService)
         verify(runningApplicationsGauge, times(1)).inc()
         verify(topicsStartedCounter, times(1)).inc()
@@ -182,7 +181,6 @@ class JobCompletionNotificationListenerTest {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verify(snsService, times(1)).sendTopicFailedMonitoringMessage()
             verifyZeroInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
