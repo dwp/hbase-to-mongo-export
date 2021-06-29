@@ -10,6 +10,7 @@ import app.services.KeyService
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import io.prometheus.client.Counter
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
@@ -39,7 +40,7 @@ class DecryptionProcessorTest {
                 "encryptedEncryptionKey")
 
         val sourceRecord = SourceRecord("00001".toByteArray(), encryptionBlock,
-                "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE")
+                "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE", "")
 
         assertThrows<DataKeyServiceUnavailableException> {
             decryptionProcessor.process(sourceRecord)
@@ -59,8 +60,67 @@ class DecryptionProcessorTest {
                 "initialisationVector",
                 "encryptedEncryptionKey")
         decryptionProcessor.process(SourceRecord("00001".toByteArray(), encryptionBlock,
-                "dbObject", 100, "db", "collection","OUTER_TYPE", "INNER_TYPE"))
+                "dbObject", 100, "db", "collection","OUTER_TYPE", "INNER_TYPE", ""))
     }
+
+    @Test
+    fun testTransform() {
+        val decrypted_record = """
+            {
+              "context": {
+                "AUDIT_ID": "12.0.0.1"
+              },
+              "auditType": "audit_type"
+            }
+            """
+        val transformed_expected = """{"AUDIT_ID":"12.0.0.1","AUDIT_EVENT":"audit_type","TIME_STAMP":"2019-07-04T07:27:35.104+0000","TIME_STAMP_ORIG":"2019-07-04T07:27:35.104+0000"}"""
+        val encryptionBlock =
+                EncryptionBlock("keyEncryptionKeyId",
+                        "initialisationVector",
+                        "encryptedEncryptionKey")
+        val transformed_actual = decryptionProcessor.transform(
+                SourceRecord("00001".toByteArray(), encryptionBlock,
+                        "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE", "2019-07-04T07:27:35.104+0000"),
+        decrypted_record)
+        Assert.assertEquals(transformed_expected, transformed_actual)
+    }
+
+    @Test(expected = Exception::class)
+    fun testTransformExceptionWithoutAuditType() {
+        val decrypted_record = """
+            {
+              "context": {
+                "AUDIT_ID": "12.0.0.1"
+              }
+            }
+            """
+        val encryptionBlock =
+                EncryptionBlock("keyEncryptionKeyId",
+                        "initialisationVector",
+                        "encryptedEncryptionKey")
+        decryptionProcessor.transform(
+                SourceRecord("00001".toByteArray(), encryptionBlock,
+                        "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE", "2019-07-04T07:27:35.104+0000"),
+                decrypted_record)
+    }
+
+    @Test(expected = Exception::class)
+    fun testTransformExceptionWithoutContext() {
+        val decrypted_record = """
+            {
+              "auditType": "audit_type"
+            }
+            """
+        val encryptionBlock =
+                EncryptionBlock("keyEncryptionKeyId",
+                        "initialisationVector",
+                        "encryptedEncryptionKey")
+        decryptionProcessor.transform(
+                SourceRecord("00001".toByteArray(), encryptionBlock,
+                        "dbObject", 100, "db", "collection", "OUTER_TYPE", "INNER_TYPE", "2019-07-04T07:27:35.104+0000"),
+                decrypted_record)
+    }
+
 
     @MockBean
     private lateinit var dataKeyService: KeyService

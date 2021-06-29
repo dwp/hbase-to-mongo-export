@@ -39,7 +39,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection", "2019-07-04T07:27:35.104+0000"), actualResult())
     }
 
     @Test
@@ -56,7 +56,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "a", "collection"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "a", "collection", "2019-07-04T07:27:35.104+0000"), actualResult())
     }
 
     @Test
@@ -73,7 +73,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "b"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "b", "2019-07-04T07:27:35.104+0000"), actualResult())
     }
 
     @Test
@@ -90,7 +90,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "a", "b"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "a", "b", "2019-07-04T07:27:35.104+0000"), actualResult())
     }
 
     @Test
@@ -107,7 +107,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE", "database", "collection"), actualResult())
+        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE", "database", "collection", "2019-07-04T07:27:35.104+0000"), actualResult())
     }
 
     @Test
@@ -124,7 +124,7 @@ class HBaseResultProcessorTest {
             |  }
             |}""".trimMargin()
         init(cellData)
-        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE", "database", "collection"), actualResult())
+        assertResult(expectedResult("TYPE_NOT_SET", "INNER_TYPE", "database", "collection", "2019-07-04T07:27:35.104+0000"), actualResult())
     }
 
     @Test
@@ -147,7 +147,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection", ""), actualResult())
     }
 
     @Test
@@ -164,7 +164,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection"), actualResult())
+        assertResult(expectedResult("OUTER_TYPE", "INNER_TYPE", "database", "collection", ""), actualResult())
     }
 
     @Test
@@ -179,7 +179,7 @@ class HBaseResultProcessorTest {
             |}""".trimMargin()
 
         init(cellData)
-        assertResult(expectedResult("TYPE_NOT_SET","TYPE_NOT_SET", "database", "collection"), actualResult())
+        assertResult(expectedResult("TYPE_NOT_SET","TYPE_NOT_SET", "database", "collection", ""), actualResult())
     }
 
     @Test(expected = MissingFieldException::class)
@@ -203,6 +203,7 @@ class HBaseResultProcessorTest {
     private fun actualResult(): SourceRecord? {
         val processor = HBaseResultProcessor(textUtils)
         ReflectionTestUtils.setField(processor, "topicName", "db.a.b")
+        ReflectionTestUtils.setField(processor, "snapshotType", "incremental")
         return processor.process(result)
     }
 
@@ -222,9 +223,10 @@ class HBaseResultProcessorTest {
         given(result.getColumnLatestCell(Bytes.toBytes("cf"), Bytes.toBytes("record"))).willReturn(cell)
     }
 
-    private fun expectedResult(outerType: String, innerType: String, database: String, collection: String) =
+    private fun expectedResult
+            (outerType: String, innerType: String, database: String, collection: String, lastModifiedDateTime: String) =
             SourceRecord(rowId.toByteArray(), expectedEncryptionBlock, dbObject, 100L,
-                database, collection, outerType, innerType)
+                database, collection, outerType, innerType, lastModifiedDateTime)
 
     private fun commonBlock(database: String, collection: String): String {
         val topicBlock = """

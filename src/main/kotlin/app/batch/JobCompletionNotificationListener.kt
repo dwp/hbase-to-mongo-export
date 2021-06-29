@@ -4,17 +4,21 @@ package app.batch
 
 import app.exceptions.BlockedTopicException
 import app.services.*
+import app.utils.TextUtils
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
+import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
+import org.apache.hadoop.hbase.client.Connection
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import uk.gov.dwp.dataworks.logging.LogFields
 
 @Component
 class JobCompletionNotificationListener(private val exportStatusService: ExportStatusService,
@@ -25,9 +29,13 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
                                         private val topicDurationSummary: Summary,
                                         private val runningApplicationsGauge: Gauge,
                                         private val topicsStartedCounter: Counter,
-                                        private val topicsCompletedCounter: Counter): JobExecutionListenerSupport() {
+                                        private val topicsCompletedCounter: Counter,
+                                        private val connection: Connection,
+                                        private val textUtils: TextUtils,): JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
+        LogFields.put("SNAPSHOT_TYPE", "snapshot_type", snapshotType)
+        LogFields.put("TOPIC_NAME", "topic_name", topicName)
         timer
         topicsStartedCounter.inc()
         runningApplicationsGauge.inc()
@@ -120,10 +128,13 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     @Value("\${trigger.adg:false}")
     private lateinit var triggerAdg: String
 
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
+
+
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
     }
-
 
     companion object {
         val logger = DataworksLogger.getLogger(S3StreamingWriter::class)
