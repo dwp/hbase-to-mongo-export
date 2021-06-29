@@ -100,8 +100,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     }
 
     private fun sendTopicFailedMonitoringMessage(jobExecution: JobExecution) {
-        if (!jobExecution.exitStatus.equals(ExitStatus.COMPLETED) {
-            snsService.sendTopicFailedMonitoringMessage(jobExecution.exitStatus)
+        if (!jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
+            snsService.sendTopicFailedMonitoringMessage()
         }
     }
 
@@ -117,13 +117,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     }
 
     private fun sendCompletionMonitoringMessage(completionStatus: ExportCompletionStatus) {
-        when (completionStatus) {
-            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
-                snsService.sendCompletionMonitoringMessage(completionStatus)
-            }
-            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
-                snsService.sendCompletionMonitoringMessage(completionStatus)
-            }
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+            snsService.sendCompletionMonitoringMessage(completionStatus)
         }
     }
 
@@ -141,7 +136,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
-
 
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
