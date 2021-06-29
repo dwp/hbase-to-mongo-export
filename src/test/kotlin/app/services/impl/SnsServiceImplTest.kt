@@ -1,6 +1,5 @@
 package app.services.impl
 
-import app.services.ExportCompletionStatus
 import app.services.SnsService
 import com.amazonaws.services.sns.AmazonSNS
 import com.amazonaws.services.sns.model.PublishRequest
@@ -17,6 +16,7 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.batch.core.ExitStatus
 
 @RunWith(SpringRunner::class)
 @EnableRetry
@@ -56,7 +56,6 @@ class SnsServiceImplTest {
         verify(amazonSNS, times(3)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
-
 
     @Test
     fun triggersAdg() {
@@ -133,7 +132,7 @@ class SnsServiceImplTest {
     @Test
     fun sendsTheCorrectMonitoringMessageOnSuccess() {
         given(amazonSNS.publish(any())).willReturn(mock())
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
+        snsService.sendMonitoringMessage(ExitStatus.COMPLETED)
         argumentCaptor<PublishRequest> {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
@@ -141,7 +140,7 @@ class SnsServiceImplTest {
                 "severity": "Critical",
                 "notification_type": "Information",
                 "slack_username": "HTME",
-                "title_text": "Full - Export finished - success",
+                "title_text": "Full - Export finished - COMPLETED",
                 "custom_elements": [
                     {
                         "key": "Export date",
@@ -164,7 +163,7 @@ class SnsServiceImplTest {
     @Test
     fun sendsTheCorrectMonitoringMessageOnFailure() {
         given(amazonSNS.publish(any())).willReturn(mock())
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)
+        snsService.sendMonitoringMessage(ExitStatus.FAILED)
         argumentCaptor<PublishRequest> {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
@@ -172,7 +171,7 @@ class SnsServiceImplTest {
                 "severity": "High",
                 "notification_type": "Warning",
                 "slack_username": "HTME",
-                "title_text": "Full - Export finished - failed",
+                "title_text": "Full - Export finished - FAILED",
                 "custom_elements": [
                     {
                         "key": "Export date",
@@ -195,7 +194,7 @@ class SnsServiceImplTest {
     @Test
     fun doesNotSendMonitoringIfNoTopicConfigured() {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", "")
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
+        snsService.sendMonitoringMessage(ExitStatus.COMPLETED)
         verifyZeroInteractions(amazonSNS)
     }
 
@@ -204,7 +203,7 @@ class SnsServiceImplTest {
         given(amazonSNS.publish(any()))
             .willThrow(RuntimeException("Error"))
             .willThrow(RuntimeException("Error")).willReturn(mock())
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
+        snsService.sendMonitoringMessage(ExitStatus.COMPLETED)
         verify(amazonSNS, times(3)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
@@ -213,7 +212,7 @@ class SnsServiceImplTest {
     fun givesUpMonitoringAfterMaxTriesUntilSuccessful() {
         given(amazonSNS.publish(any())).willThrow(RuntimeException("Error"))
         try {
-            snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY                              )
+            snsService.sendMonitoringMessage(ExitStatus.COMPLETED)
             fail("Expected exception")
         } catch (e: Exception) {
             // expected

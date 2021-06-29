@@ -1,6 +1,5 @@
 package app.services.impl
 
-import app.services.ExportCompletionStatus
 import app.services.SnsService
 import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.sns.AmazonSNS
@@ -10,6 +9,7 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import org.springframework.batch.core.ExitStatus
 
 @Component
 class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
@@ -25,8 +25,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
         maxAttemptsExpression = "\${sns.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${sns.retry.delay:1000}",
             multiplierExpression = "\${sns.retry.multiplier:2}"))
-    override fun sendMonitoringMessage(completionStatus: ExportCompletionStatus) =
-        sendMessage(monitoringTopicArn, monitoringPayload(completionStatus))
+    override fun sendMonitoringMessage(exitStatus: ExitStatus) =
+        sendMessage(monitoringTopicArn, monitoringPayload(exitStatus))
 
     private fun sendMessage(topicArn: String, payload: String) {
         topicArn.takeIf(String::isNotBlank)?.let { arn ->
@@ -56,12 +56,12 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                     "export_date": "$exportDate"
                 }"""
 
-    private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
+    private fun monitoringPayload(exitStatus: ExitStatus) =
             """{
-                "severity": "${severity(exportCompletionStatus)}",
-                "notification_type": "${notificationType(exportCompletionStatus)}",
+                "severity": "${severity(exitStatus)}",
+                "notification_type": "${notificationType(exitStatus)}",
                 "slack_username": "HTME",
-                "title_text": "${snapshotType.capitalize()} - Export finished - ${exportCompletionStatus.description}",
+                "title_text": "${snapshotType.capitalize()} - Export finished - ${exitStatus.toString()}",
                 "custom_elements": [
                     {
                         "key": "Export date",
@@ -78,9 +78,9 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                 ]
             }"""
 
-    private fun severity(exportCompletionStatus: ExportCompletionStatus): String =
-        when (exportCompletionStatus) {
-            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+    private fun severity(exitStatus: ExitStatus): String =
+        when (exitStatus) {
+            ExitStatus.COMPLETED -> {
                 "Critical"
             }
             else -> {
@@ -88,13 +88,13 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
             }
         }
 
-    private fun notificationType(exportCompletionStatus: ExportCompletionStatus): String =
-        when (exportCompletionStatus) {
-            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
-                "Warning"
+    private fun notificationType(exitStatus: ExitStatus): String =
+        when (exitStatus) {
+            ExitStatus.COMPLETED -> {
+                "Information"
             }
             else -> {
-                "Information"
+                "Warning"
             }
         }
 
