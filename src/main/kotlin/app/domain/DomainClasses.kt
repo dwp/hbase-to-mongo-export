@@ -23,7 +23,8 @@ data class SourceRecord(val hbaseRowId: ByteArray,
                         var db: String,
                         var collection: String,
                         val outerType: String,
-                        val innerType: String) {
+                        val innerType: String,
+                        val messageLastModifiedDateTime: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

@@ -8,6 +8,8 @@ import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.scheduling.annotation.EnableScheduling
+import uk.gov.dwp.dataworks.logging.DataworksLogger
+import uk.gov.dwp.dataworks.logging.LogFields
 import kotlin.system.exitProcess
 
 @SpringBootApplication(exclude = [DataSourceAutoConfiguration::class])
