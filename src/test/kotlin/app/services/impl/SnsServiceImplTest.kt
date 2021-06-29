@@ -26,6 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
     "sns.retry.multiplier=1",
+    "topic.name=test_topic",
 ])
 class SnsServiceImplTest {
 
@@ -149,6 +150,10 @@ class SnsServiceImplTest {
                     {
                         "key": "Correlation Id",
                         "value": "correlation.id"
+                    },
+                    {
+                        "key": "Topic",
+                        "value": "test_topic"
                     }
                 ]
             }""", firstValue.message)
@@ -176,6 +181,10 @@ class SnsServiceImplTest {
                     {
                         "key": "Correlation Id",
                         "value": "correlation.id"
+                    },
+                    {
+                        "key": "Topic",
+                        "value": "test_topic"
                     }
                 ]
             }""", firstValue.message)

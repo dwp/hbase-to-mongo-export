@@ -70,6 +70,10 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                     {
                         "key": "Correlation Id",
                         "value": "${correlationId()}"
+                    },
+                    {
+                        "key": "Topic",
+                        "value": "$topicName"
                     }
                 ]
             }"""
@@ -130,6 +134,9 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     @Value("\${skip.pdm.trigger}")
     private lateinit var skipPdmTrigger: String
+
+    @Value("\${topic.name}")
+    private lateinit var topicName: String
 
     companion object {
         private val logger = DataworksLogger.getLogger(SnsServiceImpl::class)

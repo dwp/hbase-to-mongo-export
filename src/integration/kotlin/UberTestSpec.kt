@@ -300,6 +300,10 @@ class UberTestSpec: StringSpec() {
                         {
                             "key":"Correlation Id",
                             "value":"s3-export"
+                        },
+                        {
+                            "key": "Topic",
+                            "value": "db.database.collection"
                         }
                     ]
                 }""")
