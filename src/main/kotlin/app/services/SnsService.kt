@@ -2,5 +2,5 @@ package app.services
 
 interface SnsService {
     fun sendExportCompletedSuccessfullyMessage()
-    fun sendMonitoringMessage(completionStatus: ExportCompletionStatus)
+    fun sendMonitoringMessage(exitStatus: ExitStatus
 }
