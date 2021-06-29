@@ -92,11 +92,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     }
 
     private fun sendAdgMessage(completionStatus: ExportCompletionStatus) {
-        when (completionStatus) {
-            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
-                if (triggerAdg.toBoolean()) {
-                    snsService.sendExportCompletedSuccessfullyMessage()
-                }
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && triggerAdg.toBoolean()) {
+                snsService.sendExportCompletedSuccessfullyMessage()
             }
         }
     }
