@@ -1,8 +1,9 @@
 package app.services
 
-import org.springframework.batch.core.ExitStatus
+import app.services.ExportCompletionStatus
 
 interface SnsService {
     fun sendExportCompletedSuccessfullyMessage()
-    fun sendMonitoringMessage(exitStatus: ExitStatus)
+    fun sendTopicFailedMonitoringMessage()
+    fun sendCompletionMonitoringMessage(completionStatus: ExportCompletionStatus)
 }

@@ -47,11 +47,12 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
             setExportStatus(jobExecution)
             sendSqsMessages(jobExecution)
-            sendMonitoringMessage(jobExecution)
+            sendTopicFailedMonitoringMessage(jobExecution)
 
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendAdgMessage(completionStatus)
             setProductStatus(completionStatus)
+            sendCompletionMonitoringMessage(completionStatus)
         } finally {
             runningApplicationsGauge.dec()
             topicsCompletedCounter.inc()
@@ -98,8 +99,10 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendMonitoringMessage(jobExecution: JobExecution) {
-        snsService.sendMonitoringMessage(jobExecution.exitStatus)
+    private fun sendTopicFailedMonitoringMessage(jobExecution: JobExecution) {
+        if (!jobExecution.exitStatus.equals(ExitStatus.COMPLETED) {
+            snsService.sendTopicFailedMonitoringMessage(jobExecution.exitStatus)
+        }
     }
 
     private fun setProductStatus(completionStatus: ExportCompletionStatus) {
@@ -109,6 +112,17 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             }
             ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
                 productStatusService.setFailedStatus()
+            }
+        }
+    }
+
+    private fun sendCompletionMonitoringMessage(completionStatus: ExportCompletionStatus) {
+        when (completionStatus) {
+            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                snsService.sendCompletionMonitoringMessage(completionStatus)
+            }
+            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
+                snsService.sendCompletionMonitoringMessage(completionStatus)
             }
         }
     }

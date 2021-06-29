@@ -291,7 +291,7 @@ class UberTestSpec: StringSpec() {
                     "severity": "Critical",
                     "notification_type": "Information",
                     "slack_username": "HTME",
-                    "title_text": "Full - Export finished - COMPLETED",
+                    "title_text": "Full - Export finished - success",
                     "custom_elements":[
                         {
                             "key":"Export date",
@@ -300,10 +300,6 @@ class UberTestSpec: StringSpec() {
                         {
                             "key":"Correlation Id",
                             "value":"s3-export"
-                        },
-                        {
-                            "key": "Topic",
-                            "value": "db.database.collection"
                         }
                     ]
                 }""")
