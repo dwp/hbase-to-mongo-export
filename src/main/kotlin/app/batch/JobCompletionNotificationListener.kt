@@ -95,7 +95,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     private fun sendAdgMessage(completionStatus: ExportCompletionStatus) {
         if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && triggerAdg.toBoolean()) {
                 snsService.sendExportCompletedSuccessfullyMessage()
-            }
         }
     }
 
@@ -136,6 +135,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
+
 
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
