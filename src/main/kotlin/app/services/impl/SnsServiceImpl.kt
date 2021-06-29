@@ -10,6 +10,7 @@ import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
+import org.springframework.batch.core.ExitStatus
 
 @Component
 class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
@@ -25,8 +26,15 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
         maxAttemptsExpression = "\${sns.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${sns.retry.delay:1000}",
             multiplierExpression = "\${sns.retry.multiplier:2}"))
-    override fun sendMonitoringMessage(completionStatus: ExportCompletionStatus) =
-        sendMessage(monitoringTopicArn, monitoringPayload(completionStatus))
+    override fun sendTopicFailedMonitoringMessage() =
+        sendMessage(monitoringTopicArn, failedTopicMonitoringPayload())
+
+    @Retryable(value = [Exception::class],
+        maxAttemptsExpression = "\${sns.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${sns.retry.delay:1000}",
+            multiplierExpression = "\${sns.retry.multiplier:2}"))
+    override fun sendCompletionMonitoringMessage(completionStatus: ExportCompletionStatus) =
+        sendMessage(monitoringTopicArn, completionMonitoringPayload(completionStatus))
 
     private fun sendMessage(topicArn: String, payload: String) {
         topicArn.takeIf(String::isNotBlank)?.let { arn ->
@@ -56,12 +64,34 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                     "export_date": "$exportDate"
                 }"""
 
-    private fun monitoringPayload(exportCompletionStatus: ExportCompletionStatus) =
+    private fun failedTopicMonitoringPayload() =
             """{
-                "severity": "${severity(exportCompletionStatus)}",
-                "notification_type": "${notificationType(exportCompletionStatus)}",
+                "severity": "High",
+                "notification_type": "Warning",
                 "slack_username": "HTME",
-                "title_text": "${snapshotType.capitalize()} - Export finished - ${exportCompletionStatus.description}",
+                "title_text": "${snapshotType.capitalize()} - Collection failed",
+                "custom_elements": [
+                    {
+                        "key": "Export date",
+                        "value": "$exportDate"
+                    },
+                    {
+                        "key": "Correlation Id",
+                        "value": "${correlationId()}"
+                    },
+                    {
+                        "key": "Topic",
+                        "value": "$topicName"
+                    }
+                ]
+            }"""
+
+    private fun completionMonitoringPayload(completionStatus: ExportCompletionStatus) =
+            """{
+                "severity": "${severity(completionStatus)}",
+                "notification_type": "${notificationType(completionStatus)}",
+                "slack_username": "HTME",
+                "title_text": "${snapshotType.capitalize()} - Export finished - ${completionStatus.description}",
                 "custom_elements": [
                     {
                         "key": "Export date",
@@ -74,8 +104,8 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                 ]
             }"""
 
-    private fun severity(exportCompletionStatus: ExportCompletionStatus): String =
-        when (exportCompletionStatus) {
+    private fun severity(completionStatus: ExportCompletionStatus): String =
+        when (completionStatus) {
             ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
                 "Critical"
             }
@@ -84,13 +114,13 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
             }
         }
 
-    private fun notificationType(exportCompletionStatus: ExportCompletionStatus): String =
-        when (exportCompletionStatus) {
-            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
-                "Warning"
+    private fun notificationType(completionStatus: ExportCompletionStatus): String =
+        when (completionStatus) {
+            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
+                "Information"
             }
             else -> {
-                "Information"
+                "Warning"
             }
         }
 
@@ -130,6 +160,9 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     @Value("\${skip.pdm.trigger}")
     private lateinit var skipPdmTrigger: String
+
+    @Value("\${topic.name}")
+    private lateinit var topicName: String
 
     companion object {
         private val logger = DataworksLogger.getLogger(SnsServiceImpl::class)

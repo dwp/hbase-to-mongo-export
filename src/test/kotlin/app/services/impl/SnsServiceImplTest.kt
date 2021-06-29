@@ -17,6 +17,7 @@ import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.util.ReflectionTestUtils
+import org.springframework.batch.core.ExitStatus
 
 @RunWith(SpringRunner::class)
 @EnableRetry
@@ -26,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils
     "sns.retry.maxAttempts=10",
     "sns.retry.delay=1",
     "sns.retry.multiplier=1",
+    "topic.name=test_topic",
 ])
 class SnsServiceImplTest {
 
@@ -55,7 +57,6 @@ class SnsServiceImplTest {
         verify(amazonSNS, times(3)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
-
 
     @Test
     fun triggersAdg() {
@@ -130,9 +131,40 @@ class SnsServiceImplTest {
     }
 
     @Test
-    fun sendsTheCorrectMonitoringMessageOnSuccess() {
+    fun sendsTheCorrectTopicMonitoringMessageOnSuccess() {
         given(amazonSNS.publish(any())).willReturn(mock())
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
+        snsService.sendTopicFailedMonitoringMessage()
+        argumentCaptor<PublishRequest> {
+            verify(amazonSNS, times(1)).publish(capture())
+            assertEquals(TOPIC_ARN, firstValue.topicArn)
+            assertEquals("""{
+                "severity": "High",
+                "notification_type": "Warning",
+                "slack_username": "HTME",
+                "title_text": "Full - Collection failed",
+                "custom_elements": [
+                    {
+                        "key": "Export date",
+                        "value": "2020-12-12"
+                    },
+                    {
+                        "key": "Correlation Id",
+                        "value": "correlation.id"
+                    },
+                    {
+                        "key": "Topic",
+                        "value": "test_topic"
+                    }
+                ]
+            }""", firstValue.message)
+        }
+        verifyNoMoreInteractions(amazonSNS)
+    }
+
+    @Test
+    fun sendsTheCorrectCompletionMonitoringMessageOnSuccess() {
+        given(amazonSNS.publish(any())).willReturn(mock())
+        snsService.sendCompletionMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
         argumentCaptor<PublishRequest> {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
@@ -159,7 +191,7 @@ class SnsServiceImplTest {
     @Test
     fun sendsTheCorrectMonitoringMessageOnFailure() {
         given(amazonSNS.publish(any())).willReturn(mock())
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)
+        snsService.sendCompletionMonitoringMessage(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)
         argumentCaptor<PublishRequest> {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
@@ -186,7 +218,7 @@ class SnsServiceImplTest {
     @Test
     fun doesNotSendMonitoringIfNoTopicConfigured() {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", "")
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
+        snsService.sendTopicFailedMonitoringMessage()
         verifyZeroInteractions(amazonSNS)
     }
 
@@ -195,7 +227,7 @@ class SnsServiceImplTest {
         given(amazonSNS.publish(any()))
             .willThrow(RuntimeException("Error"))
             .willThrow(RuntimeException("Error")).willReturn(mock())
-        snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY)
+        snsService.sendTopicFailedMonitoringMessage()
         verify(amazonSNS, times(3)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
@@ -204,7 +236,7 @@ class SnsServiceImplTest {
     fun givesUpMonitoringAfterMaxTriesUntilSuccessful() {
         given(amazonSNS.publish(any())).willThrow(RuntimeException("Error"))
         try {
-            snsService.sendMonitoringMessage(ExportCompletionStatus.COMPLETED_SUCCESSFULLY                              )
+            snsService.sendTopicFailedMonitoringMessage()
             fail("Expected exception")
         } catch (e: Exception) {
             // expected

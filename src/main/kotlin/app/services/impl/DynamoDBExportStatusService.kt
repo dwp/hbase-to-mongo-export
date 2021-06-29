@@ -33,6 +33,9 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB,
                 all(::completedSuccessfully) -> {
                     ExportCompletionStatus.COMPLETED_SUCCESSFULLY
                 }
+                any(::inProgress) -> {
+                    ExportCompletionStatus.IN_PROGRESS
+                }
                 any(::completedUnsuccessfully) -> {
                     ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY
                 }
@@ -138,6 +141,9 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB,
     private fun completedUnsuccessfully(status: Any): Boolean =
         unsuccessfulCompletionStatuses.contains(status)
 
+    private fun inProgress(status: Any): Boolean =
+        inProgressCompletionStatuses.contains(status)
+
     private val primaryKey by lazy {
         val correlationIdAttributeValue = AttributeValue().apply { s = correlationId() }
         val collectionNameAttributeValue = AttributeValue().apply { s = topicName }
@@ -156,5 +162,6 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB,
         private val successfulCompletionStatuses =
             listOf("Exported", "Sent", "Received", "Success", "Table_Unavailable", "Blocked_Topic")
         private val unsuccessfulCompletionStatuses = listOf("Export_Failed")
+        private val inProgressCompletionStatuses = listOf("Exporting")
     }
 }

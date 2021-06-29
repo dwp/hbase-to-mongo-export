@@ -84,6 +84,7 @@ class JobCompletionNotificationListenerTest {
             on { allFailureExceptions } doReturn listOf(Exception(Exception("Failed")))
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
+        verify(snsService, times(1)).sendTopicFailedMonitoringMessage()
         verify(exportStatusService, times(1)).setFailedStatus()
         verify(runningApplicationsGauge, times(1)).dec()
         verify(topicsCompletedCounter, times(1)).inc()
@@ -109,6 +110,7 @@ class JobCompletionNotificationListenerTest {
         }
 
         jobCompletionNotificationListener.afterJob(jobExecution)
+        verify(snsService, times(1)).sendTopicFailedMonitoringMessage()
         verify(exportStatusService, times(1)).setBlockedTopicStatus()
         verify(runningApplicationsGauge, times(1)).dec()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
@@ -221,9 +223,23 @@ class JobCompletionNotificationListenerTest {
     }
 
     @Test
-    fun setsNoProductStatusWhenInProgress() {
+    fun setsNoProductStatusWhenNotCompleted() {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.NOT_COMPLETED
+        }
+        val jobCompletionNotificationListener =
+            jobCompletionNotificationListener(exportStatusService)
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verifyZeroInteractions(productStatusService)
+    }
+
+    @Test
+    fun setsNoProductStatusWhenInProgress() {
+        val exportStatusService = mock<ExportStatusService> {
+            on { exportCompletionStatus() } doReturn ExportCompletionStatus.IN_PROGRESS
         }
         val jobCompletionNotificationListener =
             jobCompletionNotificationListener(exportStatusService)
@@ -246,7 +262,7 @@ class JobCompletionNotificationListenerTest {
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(snsService, times(1)).sendExportCompletedSuccessfullyMessage()
-        verify(snsService, times(1)).sendMonitoringMessage(any())
+        verify(snsService, times(1)).sendCompletionMonitoringMessage(any())
         verifyNoMoreInteractions(snsService)
         verify(runningApplicationsGauge, times(1)).dec()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
@@ -267,7 +283,7 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
-        verify(snsService, times(1)).sendMonitoringMessage(any())
+        verify(snsService, times(1)).sendCompletionMonitoringMessage(any())
         verifyNoMoreInteractions(snsService)
         verify(runningApplicationsGauge, times(1)).dec()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
@@ -288,7 +304,7 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
-        verify(snsService, times(1)).sendMonitoringMessage(any())
+        verify(snsService, times(1)).sendCompletionMonitoringMessage(any())
         verifyNoMoreInteractions(snsService)
         verify(runningApplicationsGauge, times(1)).dec()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
@@ -299,7 +315,7 @@ class JobCompletionNotificationListenerTest {
     }
 
     @Test
-    fun doesNotSendAnyMessagesWhileInProgress() {
+    fun doesNotSendAnyMessagesWhileNotCompleted() {
         val exportStatusService = mock<ExportStatusService> {
             on { exportCompletionStatus() } doReturn ExportCompletionStatus.NOT_COMPLETED
         }
@@ -309,13 +325,33 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
-        verifyZeroInteractions(snsService)
         verify(runningApplicationsGauge, times(1)).dec()
         verify(pushgatewayService, times(1)).pushFinalMetrics()
         verifyNoMoreInteractions(runningApplicationsGauge)
         verifyNoMoreInteractions(pushgatewayService)
         verify(timer, times(1)).observeDuration()
         verifyNoMoreInteractions(timer)
+        verifyZeroInteractions(snsService)
+    }
+
+    @Test
+    fun doesNotSendAnyMessagesWhileInProgress() {
+        val exportStatusService = mock<ExportStatusService> {
+            on { exportCompletionStatus() } doReturn ExportCompletionStatus.IN_PROGRESS
+        }
+        val jobCompletionNotificationListener =
+            jobCompletionNotificationListener(exportStatusService)
+        val jobExecution = mock<JobExecution> {
+            on { exitStatus } doReturn ExitStatus.COMPLETED
+        }
+        jobCompletionNotificationListener.afterJob(jobExecution)
+        verify(runningApplicationsGauge, times(1)).dec()
+        verify(pushgatewayService, times(1)).pushFinalMetrics()
+        verifyNoMoreInteractions(runningApplicationsGauge)
+        verifyNoMoreInteractions(pushgatewayService)
+        verify(timer, times(1)).observeDuration()
+        verifyNoMoreInteractions(timer)
+        verifyZeroInteractions(snsService)
     }
 
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,

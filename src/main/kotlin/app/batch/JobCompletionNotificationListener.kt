@@ -47,9 +47,12 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
             setExportStatus(jobExecution)
             sendSqsMessages(jobExecution)
+            sendTopicFailedMonitoringMessage(jobExecution)
+
             val completionStatus = exportStatusService.exportCompletionStatus()
-            sendSnsMessages(completionStatus)
+            sendAdgMessage(completionStatus)
             setProductStatus(completionStatus)
+            sendCompletionMonitoringMessage(completionStatus)
         } finally {
             runningApplicationsGauge.dec()
             topicsCompletedCounter.inc()
@@ -89,17 +92,15 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendSnsMessages(completionStatus: ExportCompletionStatus) {
-        when (completionStatus) {
-            ExportCompletionStatus.COMPLETED_SUCCESSFULLY -> {
-                if (triggerAdg.toBoolean()) {
-                    snsService.sendExportCompletedSuccessfullyMessage()
-                }
-                snsService.sendMonitoringMessage(completionStatus)
-            }
-            ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
-                snsService.sendMonitoringMessage(completionStatus)
-            }
+    private fun sendAdgMessage(completionStatus: ExportCompletionStatus) {
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && triggerAdg.toBoolean()) {
+                snsService.sendExportCompletedSuccessfullyMessage()
+        }
+    }
+
+    private fun sendTopicFailedMonitoringMessage(jobExecution: JobExecution) {
+        if (!jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
+            snsService.sendTopicFailedMonitoringMessage()
         }
     }
 
@@ -111,6 +112,12 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
             ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY -> {
                 productStatusService.setFailedStatus()
             }
+        }
+    }
+
+    private fun sendCompletionMonitoringMessage(completionStatus: ExportCompletionStatus) {
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+            snsService.sendCompletionMonitoringMessage(completionStatus)
         }
     }
 
