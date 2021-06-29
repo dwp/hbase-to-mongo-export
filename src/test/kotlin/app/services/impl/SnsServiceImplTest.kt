@@ -218,7 +218,7 @@ class SnsServiceImplTest {
     @Test
     fun doesNotSendMonitoringIfNoTopicConfigured() {
         ReflectionTestUtils.setField(snsService, "monitoringTopicArn", "")
-        snsService.sendTopicFailedMonitoringMessage(ExitStatus.COMPLETED)
+        snsService.sendTopicFailedMonitoringMessage()
         verifyZeroInteractions(amazonSNS)
     }
 
@@ -227,7 +227,7 @@ class SnsServiceImplTest {
         given(amazonSNS.publish(any()))
             .willThrow(RuntimeException("Error"))
             .willThrow(RuntimeException("Error")).willReturn(mock())
-        snsService.sendTopicFailedMonitoringMessage(ExitStatus.COMPLETED)
+        snsService.sendTopicFailedMonitoringMessage()
         verify(amazonSNS, times(3)).publish(any())
         verifyNoMoreInteractions(amazonSNS)
     }
@@ -236,7 +236,7 @@ class SnsServiceImplTest {
     fun givesUpMonitoringAfterMaxTriesUntilSuccessful() {
         given(amazonSNS.publish(any())).willThrow(RuntimeException("Error"))
         try {
-            snsService.sendTopicFailedMonitoringMessage(ExitStatus.COMPLETED)
+            snsService.sendTopicFailedMonitoringMessage()
             fail("Expected exception")
         } catch (e: Exception) {
             // expected
