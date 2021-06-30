@@ -48,21 +48,12 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
     }
 
     private fun exportCompletedPayload() =
-            if (skipPdmTrigger.isNotBlank() && skipPdmTrigger != "NOT_SET")
-                """{
-                    "correlation_id": "${correlationId()}",
-                    "s3_prefix": "$s3prefix",
-                    "snapshot_type": "$snapshotType",
-                    "export_date": "$exportDate",
-                    "skip_pdm_trigger": "$skipPdmTrigger"
-                }"""
-            else
-                """{
-                    "correlation_id": "${correlationId()}",
-                    "s3_prefix": "$s3prefix",
-                    "snapshot_type": "$snapshotType",
-                    "export_date": "$exportDate"
-                }"""
+            """{
+                "correlation_id": "${correlationId()}",
+                "s3_prefix": "$s3prefix",
+                "snapshot_type": "$snapshotType",
+                "export_date": "$exportDate"
+            }"""
 
     private fun failedTopicMonitoringPayload() =
             """{
@@ -157,9 +148,6 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     @Value("\${s3.prefix.folder}")
     private lateinit var s3prefix: String
-
-    @Value("\${skip.pdm.trigger}")
-    private lateinit var skipPdmTrigger: String
 
     @Value("\${topic.name}")
     private lateinit var topicName: String
