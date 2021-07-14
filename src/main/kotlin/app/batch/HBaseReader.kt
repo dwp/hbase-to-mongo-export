@@ -34,6 +34,8 @@ class HBaseReader(private val connection: Connection,
             val result = scanner().next()
             if (result != null) {
                 latestId = result.row
+                isStale = result.IsStale()
+                logger.info("Scanner next result", "isStale" to "$isStale", "latestId" to "$latestId")
             }
             retryAttempts = 0
             result
