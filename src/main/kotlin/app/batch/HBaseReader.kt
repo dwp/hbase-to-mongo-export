@@ -34,6 +34,10 @@ class HBaseReader(private val connection: Connection,
             val result = scanner().next()
             if (result != null) {
                 latestId = result.row
+                val lastId = latestId ?: byteArrayOf(start.toByte())
+                val printableId = printableKey(lastId)
+                val isStaleResult = result.isStale()
+                logger.info("Scanner next result", "isStale" to "$isStaleResult", "latestId" to "$printableId")
             }
             retryAttempts = 0
             result
@@ -94,6 +98,7 @@ class HBaseReader(private val connection: Connection,
 
     private var latestId: ByteArray? = null
     private var retryAttempts = 0
+    private var isStale = false
     private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000Z"
     private var absoluteStart: Int = Int.MIN_VALUE
     private var absoluteStop: Int = Int.MAX_VALUE
