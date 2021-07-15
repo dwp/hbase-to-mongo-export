@@ -19,6 +19,7 @@ class HbaseConfiguration {
             setInt("hbase.zookeeper.port", 2181)
             setInt(HConstants.HBASE_CLIENT_SCANNER_TIMEOUT_PERIOD, hbaseTimeoutMs.toInt())
             setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, hbaseRpcTimeoutMs.toInt())
+            setInt(HConstants.HBASE_RPC_READ_TIMEOUT_KEY, hbaseReadRpcTimeoutMs.toInt())
             setInt(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, hbaseClientTimeoutMs.toInt())
         }
 
@@ -47,6 +48,9 @@ class HbaseConfiguration {
 
     @Value("\${hbase.rpc.timeout.ms:1800000}")
     private lateinit var hbaseRpcTimeoutMs: String
+
+    @Value("\${hbase.rpc.read.timeout.ms:1800000}")
+    private lateinit var hbaseReadRpcTimeoutMs: String
 
     @Value("\${hbase.scanner.timeout.ms:1800000}")
     private lateinit var hbaseTimeoutMs: String
