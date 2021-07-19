@@ -78,7 +78,6 @@ class SnapshotSenderSQSMessagingServiceTest {
         snapshotSenderMessagingService.notifySnapshotSender("db.collection")
         val expected = SendMessageRequest().apply {
             queueUrl = "http://aws:4566"
-            delaySeconds = 30
             messageBody = """
             |{
             |   "shutdown_flag": "true",
@@ -90,6 +89,7 @@ class SnapshotSenderSQSMessagingServiceTest {
             |   "snapshot_type": "incremental"
             |}
             """.trimMargin()
+            messageGroupId = "daily_export"
         }
         verify(amazonSQS, times(1)).sendMessage(expected)
         verifyNoMoreInteractions(amazonSQS)
@@ -102,7 +102,6 @@ class SnapshotSenderSQSMessagingServiceTest {
         snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
         val expected = SendMessageRequest().apply {
             queueUrl = "http://aws:4566"
-            delaySeconds = 30
             messageBody = """
             |{
             |   "shutdown_flag": "true",
@@ -114,6 +113,7 @@ class SnapshotSenderSQSMessagingServiceTest {
             |   "files_exported": 0
             |}
             """.trimMargin()
+            messageGroupId = "daily_export"
         }
 
         verify(amazonSQS, times(1)).sendMessage(expected)
