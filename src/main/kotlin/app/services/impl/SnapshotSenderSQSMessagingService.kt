@@ -39,7 +39,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
                 messageBody = message
-                delaySeconds = messageDelaySeconds.toInt()
+                messageGroupId = sqsMessageGroupId
             }
 
     private fun message(prefix: String)= """
@@ -75,6 +75,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     @Value("\${snapshot.sender.sqs.queue.url}")
     private lateinit var sqsQueueUrl: String
 
+    @Value("\${snapshot.sender.sqs.message.groud.id:daily_export}")
+    private lateinit var sqsMessageGroupId: String
+
     @Value("\${snapshot.sender.reprocess.files}")
     private lateinit var reprocessFiles: String
 
@@ -86,9 +89,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     @Value("\${trigger.snapshot.sender}")
     private lateinit var triggerSnapshotSender: String
-
-    @Value("\${message.delay.seconds:30}")
-    private lateinit var messageDelaySeconds: String
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
