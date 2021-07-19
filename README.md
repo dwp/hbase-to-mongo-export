@@ -85,7 +85,7 @@ communicate over 2-way https. To generate these:
   | `snapshot.sender.reprocess.files` | | To be passed on to snapshot sender |
   | `snapshot.sender.shutdown.flag` | | Passed on to snapshot sender |
   | `snapshot.sender.sqs.queue.url` | | The queue to which notifications of exported files are sent |
-  | `snapshot.sender.sqs.message.groud.id` | `daily_export` | A string representing the group for SQS that the message will go in to |
+  | `snapshot.sender.sqs.message.group.id` | `daily_export` | A string representing the group for SQS that the message will go in to |
   | `snapshot.type` | | `full` or `incremental` |
   | `sns.retry.delay`             | 1000                       | Initial delay of the first sns retry (ms) |
   | `sns.retry.maxAttempts`       |    5                       | The number of retries to attempt before giving up |
