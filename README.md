@@ -63,7 +63,6 @@ communicate over 2-way https. To generate these:
   | `manifest.retry.delay`        | 1000                       | Initial delay of the first manifest write retry (ms) |
   | `manifest.retry.maxAttempts`  |    5                       | The number of retries to attempt before giving up |
   | `manifest.retry.multiplier`   |    2                       | The backoff multiplier (the retry delay is this multiple of the previous delay) |
-  | `message.delay.seconds` | 30 | Instruct the SQS client to wait this long before placing sent messages on the queue |
   | `output.batch.size.max.bytes` | | The maximum amount of uncompressed data to place in each snapshot |
   | `prometheus.scrape.interval` | 70000 | How long to wait before deleting matrics from the pushgateway |
   | `pushgateway.host` | | The name of the pushgateway instance to which metrics must be pushed |
@@ -86,6 +85,7 @@ communicate over 2-way https. To generate these:
   | `snapshot.sender.reprocess.files` | | To be passed on to snapshot sender |
   | `snapshot.sender.shutdown.flag` | | Passed on to snapshot sender |
   | `snapshot.sender.sqs.queue.url` | | The queue to which notifications of exported files are sent |
+  | `snapshot.sender.sqs.message.groud.id` | `daily_export` | A string representing the group for SQS that the message will go in to |
   | `snapshot.type` | | `full` or `incremental` |
   | `sns.retry.delay`             | 1000                       | Initial delay of the first sns retry (ms) |
   | `sns.retry.maxAttempts`       |    5                       | The number of retries to attempt before giving up |
