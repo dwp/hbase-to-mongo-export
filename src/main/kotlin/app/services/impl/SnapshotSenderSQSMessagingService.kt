@@ -75,7 +75,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     @Value("\${snapshot.sender.sqs.queue.url}")
     private lateinit var sqsQueueUrl: String
 
-    @Value("\${snapshot.sender.sqs.message.groud.id:daily_export}")
+    @Value("\${snapshot.sender.sqs.message.group.id:daily_export}")
     private lateinit var sqsMessageGroupId: String
 
     @Value("\${snapshot.sender.reprocess.files}")
