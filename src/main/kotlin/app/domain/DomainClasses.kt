@@ -61,7 +61,7 @@ data class ManifestRecord(val id: String, val timestamp: Long, val db: String, v
 
 data class Record(val dbObjectAsString: String, val manifestRecord: ManifestRecord)
 
-data class EncryptingOutputStream(private val outputStream: BufferedOutputStream,
+data class EncryptingOutputStream(val outputStream: BufferedOutputStream,
                                   val target: ByteArrayOutputStream,
                                   val dataKeyResult: DataKeyResult,
                                   val initialisationVector: String,

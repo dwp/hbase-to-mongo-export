@@ -115,6 +115,8 @@ tasks.register<Test>("integration") {
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL
         events = setOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.STANDARD_OUT)
+        outputs.upToDateWhen {false}
+        showStandardStreams = true
     }
 }
 

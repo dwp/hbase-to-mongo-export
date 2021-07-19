@@ -73,8 +73,13 @@ class S3StreamingWriter(private val cipherService: CipherService,
     override fun write(items: MutableList<out Record>) {
         try {
             items.forEach { record ->
-
-                val item = "${record.dbObjectAsString}\n"
+                var item: String
+                if(isFirstRecordInTheBatch){
+                    item = "${record.dbObjectAsString}"
+                    isFirstRecordInTheBatch = false
+                } else {
+                    item = "\n${record.dbObjectAsString}"
+                }
 
                 if (batchSizeBytes + item.length > maxBatchOutputSizeBytes || batchSizeBytes == 0) {
                     writeOutput()
@@ -158,6 +163,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             batchSizeBytes = 0
             recordsInBatch = 0
             currentBatch++
+            isFirstRecordInTheBatch = true
         }
     }
 
@@ -200,6 +206,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     private var totalRecords = 0
     private var totalManifestFiles = 0
     private var totalManifestRecords: Long = 0
+    private var isFirstRecordInTheBatch: Boolean = true
 
     @Value("\${output.batch.size.max.bytes}")
     protected var maxBatchOutputSizeBytes: Int = 0

@@ -69,7 +69,7 @@ class S3StreamingWriterTest {
         s3StreamingWriter.writeOutput()
         verify(exportStatusService, times(1)).incrementExportedCount(any())
         verify(recordCounterChild, times(1)).inc(1.toDouble())
-        verify(byteCounterChild, times(1)).inc("dbObject\n".length.toDouble())
+        verify(byteCounterChild, times(1)).inc("dbObject".length.toDouble())
         val key = "prefix/db.database.collection-${Int.MIN_VALUE}-${Int.MAX_VALUE}-000001.txt.bz2.enc"
         verify(snapshotSenderMessagingService, times(1)).notifySnapshotSender(key)
         verifyZeroInteractions(failedBatchPutCounter)
@@ -97,10 +97,10 @@ class S3StreamingWriterTest {
         s3StreamingWriter.writeOutput()
         val written = byteArrayOutputStream.toByteArray()
         val decompress = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, ByteArrayInputStream(written))
-        val sink = ByteArray(9)
+        val sink = ByteArray(8)
         BufferedInputStream(decompress).read(sink)
         val actual = String(sink)
-        val expected = "$dbObject\n"
+        val expected = "$dbObject"
         Assert.assertEquals(expected, actual)
         verifyZeroInteractions(failedBatchPutCounter)
         verifyZeroInteractions(failedManifestPutCounter)
