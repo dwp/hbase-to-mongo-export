@@ -89,7 +89,7 @@ class SnapshotSenderSQSMessagingServiceTest {
             |   "snapshot_type": "incremental"
             |}
             """.trimMargin()
-            messageGroupId = "daily_export"
+            messageGroupId = "db_database_collection"
         }
         verify(amazonSQS, times(1)).sendMessage(expected)
         verifyNoMoreInteractions(amazonSQS)
@@ -113,7 +113,7 @@ class SnapshotSenderSQSMessagingServiceTest {
             |   "files_exported": 0
             |}
             """.trimMargin()
-            messageGroupId = "daily_export"
+            messageGroupId = "db_database_collection"
         }
 
         verify(amazonSQS, times(1)).sendMessage(expected)
