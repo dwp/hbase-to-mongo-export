@@ -39,7 +39,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
                 messageBody = message
-                messageGroupId = sqsMessageGroupId
+                messageGroupId = topicName.replace(".", "_")
             }
 
     private fun message(prefix: String)= """
@@ -74,9 +74,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     @Value("\${snapshot.sender.sqs.queue.url}")
     private lateinit var sqsQueueUrl: String
-
-    @Value("\${snapshot.sender.sqs.message.group.id:daily_export}")
-    private lateinit var sqsMessageGroupId: String
 
     @Value("\${snapshot.sender.reprocess.files}")
     private lateinit var reprocessFiles: String
