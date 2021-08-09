@@ -41,9 +41,17 @@ class S3ObjectServiceImpl(private val amazonS3: AmazonS3, private val retriedBat
                addUserMetadata("iv", encryptingOutputStream.initialisationVector)
                addUserMetadata("cipherText", encryptingOutputStream.dataKeyResult.ciphertextDataKey)
                addUserMetadata("dataKeyEncryptionKeyId", encryptingOutputStream.dataKeyResult.dataKeyEncryptionKeyId)
+               addUserMetadata("data_product", topicName)
+               addUserMetadata("data_product_type", snapshotType)
                contentLength = encryptingOutputStream.data().size.toLong()
            }
 
     @Value("\${s3.bucket}")
     private lateinit var exportBucket: String
+
+    @Value("\${snapshot.type}")
+    private lateinit var snapshotType: String
+
+    @Value("\${topic.name}")
+    private lateinit var topicName: String
 }
