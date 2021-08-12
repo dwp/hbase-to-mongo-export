@@ -33,7 +33,13 @@ import javax.crypto.CipherInputStream
 import javax.crypto.spec.SecretKeySpec
 
 
+/**
+ * Integration tests.
+ *
+ * Validate files written, the contents therein, messages sent, tables updated etc. etc.
+ */
 class UberTestSpec: StringSpec() {
+
     init {
 
         "It should have pushed metrics " {
@@ -133,7 +139,7 @@ class UberTestSpec: StringSpec() {
             s3BucketKeys("exports") shouldContainExactly expectedExports()
         }
 
-        "Should use a single datakey" {
+        "Should use a single datakey for each collection" {
             s3BucketObjects("exports").mapNotNull {
                 with(it.objectMetadata.userMetadata) {
                     get("datakeyencryptionkeyid")?.let { masterKeyId ->
@@ -142,7 +148,7 @@ class UberTestSpec: StringSpec() {
                         }
                     }
                 }
-            }.toSet() shouldHaveSize 1
+            }.toSet() shouldHaveSize 2
         }
 
         "Writes the manifests" {
@@ -154,7 +160,7 @@ class UberTestSpec: StringSpec() {
                 .map(S3Object::getObjectContent)
                 .map { it.copyToByteArrayOutputStream() }.lines().toList()
 
-            entries shouldHaveSize 10_000
+            entries shouldHaveSize 20_000
 
             entries.map { it.split(Regex("""\|""")) }.map { it[1] }.forEach {
                 it shouldBe "1000"
@@ -165,12 +171,12 @@ class UberTestSpec: StringSpec() {
                 data[0].contains("\$oid")
             }
 
-            modified shouldHaveSize 5_000
-            unmodified shouldHaveSize 5_000
+            modified shouldHaveSize 10_000
+            unmodified shouldHaveSize 10_000
         }
 
         "Writes the correct records" {
-            val ids = s3BucketObjects("exports")
+            val (equalityRecords, regularRecords) = s3BucketObjects("exports")
                 .mapNotNull {
                     with(it.objectMetadata.userMetadata) {
                         get("datakeyencryptionkeyid")?.let { masterKeyId ->
@@ -191,18 +197,14 @@ class UberTestSpec: StringSpec() {
                 .map { it.copyToByteArrayOutputStream() }
                 .lines()
                 .map { Gson().fromJson(it, JsonObject::class.java) }
-                .map { it["_id"].asJsonObject }
-                .map { if (it["record_id"] != null) it["record_id"] else it["d_oid"] }
-                .map(JsonElement::getAsJsonPrimitive)
-                .map(JsonPrimitive::getAsString).sorted()
-                .toList()
+                .partition { it.has("message") }
 
-            ids.size shouldBe 10_000
-            ids.forEachIndexed { index, id -> id shouldBe String.format("%05d", index) }
+            validateIds(regularRecords) { x -> x["_id"].asJsonObject }
+            validateIds(equalityRecords) { x -> x["message"].asJsonObject["_id"].asJsonObject }
         }
 
         "Export status updated correctly" {
-            val correlationIdAttributeValue = AttributeValue().apply { s = "s3-export" }
+            val correlationIdAttributeValue = AttributeValue().apply { s = S3_EXPORT_CORRELATION_ID }
             val collectionNameAttributeValue = AttributeValue().apply { s = "db.database.collection" }
             val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
                 "CollectionName" to collectionNameAttributeValue)
@@ -222,7 +224,7 @@ class UberTestSpec: StringSpec() {
         }
 
         "Product status updated correctly" {
-            val correlationIdAttributeValue = AttributeValue().apply { s = "s3-export" }
+            val correlationIdAttributeValue = AttributeValue().apply { s = S3_EXPORT_CORRELATION_ID }
             val dataProductAttributeValue = AttributeValue().apply { s = "HTME" }
             val primaryKey = mapOf("Correlation_Id" to correlationIdAttributeValue,
                 "DataProduct" to dataProductAttributeValue)
@@ -241,7 +243,7 @@ class UberTestSpec: StringSpec() {
             val received = queueMessages(snapshotSenderQueueUrl)
                 .map(Message::getBody)
                 .map { Gson().fromJson(it, JsonObject::class.java) }
-            received shouldHaveSize 21
+            received shouldHaveSize 39
             val pathValues = received.mapNotNull { it.remove("s3_full_folder") }.map(JsonElement::getAsString).sorted()
 
             val expected = expectedExports()
@@ -252,12 +254,28 @@ class UberTestSpec: StringSpec() {
                 it.contains("files_exported")
             }
 
-            filesExportedMessages shouldHaveSize 20
-            filesExportedMessages.forEach {
+            filesExportedMessages shouldHaveSize 38
+
+            filesExportedMessages.filter {
+                it.contains(S3_EXPORT_CORRELATION_ID)
+            }.forEach {
                 it shouldMatchJson """{
                         "shutdown_flag":"false",
                         "correlation_id":"s3-export",
                         "topic_name":"db.database.collection",
+                        "export_date":"2020-07-06",
+                        "reprocess_files":"true",
+                        "snapshot_type":"full"
+                    }"""
+            }
+
+            filesExportedMessages.filter {
+                it.contains("equality-export")
+            }.forEach {
+                it shouldMatchJson """{
+                        "shutdown_flag":"false",
+                        "correlation_id":"equality-export",
+                        "topic_name":"data.equality",
                         "export_date":"2020-07-06",
                         "reprocess_files":"true",
                         "snapshot_type":"full"
@@ -306,11 +324,10 @@ class UberTestSpec: StringSpec() {
         }
 
         "dynamoDB should have no files record" {
-            val tableName = "UCExportToCrownStatus"
             val correlationIdAttributeValue = AttributeValue().apply { s = "empty-export" }
             val collectionNameAttributeValue = AttributeValue().apply { s = "db.database.empty" }
             val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
-            val getItemRequest = getItemRequest(tableName, primaryKey)
+            val getItemRequest = getItemRequest(primaryKey)
             val result = amazonDynamoDB.getItem(getItemRequest)
             val item = result.item
             item.shouldNotBeNull()
@@ -319,11 +336,10 @@ class UberTestSpec: StringSpec() {
         }
 
         "dynamoDB should have blocked topic record" {
-            val tableName = "UCExportToCrownStatus"
             val correlationIdAttributeValue = AttributeValue().apply { s = "blocked_topic" }
             val collectionNameAttributeValue = AttributeValue().apply { s = "db.blocked.topic" }
             val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
-            val getItemRequest = getItemRequest(tableName, primaryKey)
+            val getItemRequest = getItemRequest(primaryKey)
             val result = amazonDynamoDB.getItem(getItemRequest)
             val item = result.item
             item shouldNotBe null
@@ -333,11 +349,10 @@ class UberTestSpec: StringSpec() {
         }
 
         "dynamoDB has table unavailable record" {
-            val tableName = "UCExportToCrownStatus"
             val correlationIdAttributeValue = AttributeValue().apply { s = "table-unavailable" }
             val collectionNameAttributeValue = AttributeValue().apply { s = "does.not.exist" }
             val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
-            val getItemRequest = getItemRequest(tableName, primaryKey)
+            val getItemRequest = getItemRequest(primaryKey)
             val result = amazonDynamoDB.getItem(getItemRequest)
             val item = result.item
             val status = item["CollectionStatus"]?.s
@@ -345,6 +360,27 @@ class UberTestSpec: StringSpec() {
             status shouldBe expectedCollectionStatus
         }
 
+        "dynamoDB has equality record" {
+            val correlationIdAttributeValue = AttributeValue().apply { s = "equality-export" }
+            val collectionNameAttributeValue = AttributeValue().apply { s = "data.equality" }
+            val primaryKey = primaryKeyMap(correlationIdAttributeValue, collectionNameAttributeValue)
+            val getItemRequest = getItemRequest(primaryKey)
+            val result = amazonDynamoDB.getItem(getItemRequest)
+            val item = result.item
+            val status = item["CollectionStatus"]?.s
+            val expectedCollectionStatus = "Exported"
+            status shouldBe expectedCollectionStatus
+        }
+
+    }
+
+    private fun validateIds(records: List<JsonObject>, idExtractor: (JsonObject) -> JsonObject) {
+        records.size shouldBe 10_000
+        records.asSequence().map(idExtractor)
+            .map { if (it["record_id"] != null) it["record_id"] else it["d_oid"] }
+            .map(JsonElement::getAsJsonPrimitive)
+            .map(JsonPrimitive::getAsString).sorted()
+            .forEachIndexed { index, id -> id shouldBe String.format("%05d", index) }
     }
 
     private suspend fun validateMetric(resource: String, expected: String) {
@@ -366,13 +402,15 @@ class UberTestSpec: StringSpec() {
     }
 
     companion object {
-        val client = HttpClient {
+        private val client = HttpClient {
             install(JsonFeature) {
                 serializer = GsonSerializer {
                     setPrettyPrinting()
                 }
             }
         }
+
+        private const val S3_EXPORT_CORRELATION_ID = "s3-export"
 
         private val applicationContext by lazy { AnnotationConfigApplicationContext(TestConfiguration::class.java) }
         private val amazonS3 by lazy { applicationContext.getBean(AmazonS3::class.java) }
@@ -381,16 +419,16 @@ class UberTestSpec: StringSpec() {
         private val keyService by lazy { applicationContext.getBean(KeyService::class.java) }
         private val cipherService by lazy { applicationContext.getBean(CipherService::class.java) }
 
-        private const val snapshotSenderQueueUrl = "http://aws:4566/000000000000/integration-queue"
+        private const val snapshotSenderQueueUrl = "http://aws:4566/000000000000/integration-queue.fifo"
         private const val adgQueueUrl = "http://aws:4566/000000000000/trigger-adg-subscriber"
         private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-subscriber"
 
-        fun InputStream.copyToByteArray(): ByteArray = this.copyToByteArrayOutputStream().toByteArray()
+        private fun InputStream.copyToByteArray(): ByteArray = this.copyToByteArrayOutputStream().toByteArray()
 
-        fun InputStream.copyToByteArrayOutputStream() =
+        private fun InputStream.copyToByteArrayOutputStream() =
             use { inputStream -> ByteArrayOutputStream().also { inputStream.copyTo(it) } }
 
-        fun List<ByteArrayOutputStream>.lines() =
+        private fun List<ByteArrayOutputStream>.lines() =
             this.map(ByteArrayOutputStream::toByteArray)
                 .map(ByteArray::decodeToString)
                 .toList()
@@ -415,8 +453,8 @@ class UberTestSpec: StringSpec() {
                     }
             }
 
-        fun getItemRequest(table: String, primaryKey: Map<String, AttributeValue>) = GetItemRequest().apply {
-            tableName = table
+        private fun getItemRequest(primaryKey: Map<String, AttributeValue>) = GetItemRequest().apply {
+            tableName = "UCExportToCrownStatus"
             key = primaryKey
         }
 
@@ -433,7 +471,26 @@ class UberTestSpec: StringSpec() {
         private fun deleteMessage(queueUrl: String, it: Message) = amazonSqs.deleteMessage(queueUrl, it.receiptHandle)
 
         private fun expectedExports(): List<String> =
-            listOf("output/db.database.collection-000-040-000001.txt.bz2.enc",
+            listOf(
+                "equality/data.equality-000-128-000001.txt.bz2.enc",
+                "equality/data.equality-000-128-000002.txt.bz2.enc",
+                "equality/data.equality-000-128-000003.txt.bz2.enc",
+                "equality/data.equality-000-128-000004.txt.bz2.enc",
+                "equality/data.equality-000-128-000005.txt.bz2.enc",
+                "equality/data.equality-000-128-000006.txt.bz2.enc",
+                "equality/data.equality-000-128-000007.txt.bz2.enc",
+                "equality/data.equality-000-128-000008.txt.bz2.enc",
+                "equality/data.equality-000-128-000009.txt.bz2.enc",
+                "equality/data.equality-128-000-000001.txt.bz2.enc",
+                "equality/data.equality-128-000-000002.txt.bz2.enc",
+                "equality/data.equality-128-000-000003.txt.bz2.enc",
+                "equality/data.equality-128-000-000004.txt.bz2.enc",
+                "equality/data.equality-128-000-000005.txt.bz2.enc",
+                "equality/data.equality-128-000-000006.txt.bz2.enc",
+                "equality/data.equality-128-000-000007.txt.bz2.enc",
+                "equality/data.equality-128-000-000008.txt.bz2.enc",
+                "equality/data.equality-128-000-000009.txt.bz2.enc",
+                "output/db.database.collection-000-040-000001.txt.bz2.enc",
                 "output/db.database.collection-000-040-000002.txt.bz2.enc",
                 "output/db.database.collection-000-040-000003.txt.bz2.enc",
                 "output/db.database.collection-008-000-000001.txt.bz2.enc",
@@ -455,7 +512,25 @@ class UberTestSpec: StringSpec() {
                 "output/db.database.collection-128-088-000003.txt.bz2.enc")
 
         private fun expectedManifests(): List<String> =
-            listOf("output/db.database.collection-000-040-000000.csv",
+            listOf("equality/data.equality-000-128-000000.csv",
+                "equality/data.equality-000-128-000001.csv",
+                "equality/data.equality-000-128-000002.csv",
+                "equality/data.equality-000-128-000003.csv",
+                "equality/data.equality-000-128-000004.csv",
+                "equality/data.equality-000-128-000005.csv",
+                "equality/data.equality-000-128-000006.csv",
+                "equality/data.equality-000-128-000007.csv",
+                "equality/data.equality-000-128-000008.csv",
+                "equality/data.equality-128-000-000000.csv",
+                "equality/data.equality-128-000-000001.csv",
+                "equality/data.equality-128-000-000002.csv",
+                "equality/data.equality-128-000-000003.csv",
+                "equality/data.equality-128-000-000004.csv",
+                "equality/data.equality-128-000-000005.csv",
+                "equality/data.equality-128-000-000006.csv",
+                "equality/data.equality-128-000-000007.csv",
+                "equality/data.equality-128-000-000008.csv",
+                "output/db.database.collection-000-040-000000.csv",
                 "output/db.database.collection-000-040-000001.csv",
                 "output/db.database.collection-000-040-000002.csv",
                 "output/db.database.collection-008-000-000000.csv",

@@ -56,6 +56,20 @@ services:
     environment:
       - CORRELATION_ID=s3-export
 
+  export-equality:
+    image: hbase-to-mongo-export
+    build:
+      context: images/htme
+    container_name: export-equality
+    command: >-
+      --send.success.indicator=false
+      --scan.width=256
+      --topic.name=data.equality
+      --s3.manifest.prefix.folder=equality
+      --s3.prefix.folder=equality
+    environment:
+      - CORRELATION_ID=equality-export
+
   export-nothing:
     image: hbase-to-mongo-export
     build:

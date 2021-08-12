@@ -4,8 +4,8 @@ import argparse
 import base64
 import binascii
 import json
+import regex
 import sys
-
 import happybase
 import requests
 from Crypto import Random
@@ -33,10 +33,14 @@ def main():
         print(f"Created table '{table_name}'.")
 
     table = connection.table(table_name)
+    table_re = regex.compile(r"^(\w+):(\w+)$")
+    match = table_re.search(table_name)
+    database = match.group(1)
+    collection = match.group(2)
     batch = table.batch(timestamp=1000)
     print("Creating batch.")
     for i in range(int(10000)):
-        wrapper = kafka_message(i)
+        wrapper = kafka_message(i, database, collection)
         record = decrypted_db_object(i)
         record_string = json.dumps(record)
         [iv, encrypted_record] = encrypt(encryption_key, record_string)
@@ -65,19 +69,19 @@ def encrypt(key, plaintext):
             base64.b64encode(ciphertext))
 
 
-def kafka_message(i: int):
+def kafka_message(i: int, database: str, collection: str) -> dict:
     return {
         "traceId": f"{i:05d}",
         "unitOfWorkId": f"{i:05d}",
-        "@type": "V4",
+        "@type": "OUTER_TYPE",
         "message": {
-            "db": "database",
-            "collection": "collection",
+            "db": database,
+            "collection": collection,
             "_id": {
                 "record_id": f"{i:05d}"
             },
             "_timeBasedHash": "hash",
-            "@type": "MONGO_INSERT",
+            "@type": "INNER_TYPE",
             "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000",
             "encryption": {
                 "encryptionKeyId": "",

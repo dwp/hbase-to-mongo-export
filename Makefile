@@ -53,6 +53,7 @@ service-hbase: ## bring up hbase, populate it.
 			echo HBase ready.; \
 	}
 	docker exec -i hbase hbase shell <<< "create_namespace 'database'"; \
+	docker exec -i hbase hbase shell <<< "create_namespace 'data'"; \
 	docker-compose up hbase-init
 
 service-aws: ## bring up aws and prepare the services.
@@ -77,9 +78,9 @@ service-prometheus:
 services: service-dks service-hbase service-aws service-pushgateway service-prometheus ## bring up dks, hbase, aws.
 
 exports: services  ## run all the exports.
-	docker-compose up export-s3 blocked-topic table-unavailable export-nothing
+	docker-compose up export-s3 export-equality blocked-topic table-unavailable export-nothing
 
 integration-tests: exports ## run the integration tests
-	docker-compose up integration-tests
+	docker-compose run integration-tests
 
 integration-all: images integration-tests
