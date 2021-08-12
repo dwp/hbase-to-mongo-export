@@ -39,6 +39,7 @@ import javax.crypto.spec.SecretKeySpec
  * Validate files written, the contents therein, messages sent, tables updated etc. etc.
  */
 class UberTestSpec: StringSpec() {
+
     init {
 
         "It should have pushed metrics " {
@@ -203,7 +204,7 @@ class UberTestSpec: StringSpec() {
         }
 
         "Export status updated correctly" {
-            val correlationIdAttributeValue = AttributeValue().apply { s = "s3-export" }
+            val correlationIdAttributeValue = AttributeValue().apply { s = S3_EXPORT_CORRELATION_ID }
             val collectionNameAttributeValue = AttributeValue().apply { s = "db.database.collection" }
             val primaryKey = mapOf("CorrelationId" to correlationIdAttributeValue,
                 "CollectionName" to collectionNameAttributeValue)
@@ -223,7 +224,7 @@ class UberTestSpec: StringSpec() {
         }
 
         "Product status updated correctly" {
-            val correlationIdAttributeValue = AttributeValue().apply { s = "s3-export" }
+            val correlationIdAttributeValue = AttributeValue().apply { s = S3_EXPORT_CORRELATION_ID }
             val dataProductAttributeValue = AttributeValue().apply { s = "HTME" }
             val primaryKey = mapOf("Correlation_Id" to correlationIdAttributeValue,
                 "DataProduct" to dataProductAttributeValue)
@@ -256,7 +257,7 @@ class UberTestSpec: StringSpec() {
             filesExportedMessages shouldHaveSize 38
 
             filesExportedMessages.filter {
-                it.contains("s3-export")
+                it.contains(S3_EXPORT_CORRELATION_ID)
             }.forEach {
                 it shouldMatchJson """{
                         "shutdown_flag":"false",
@@ -408,6 +409,8 @@ class UberTestSpec: StringSpec() {
                 }
             }
         }
+
+        private const val S3_EXPORT_CORRELATION_ID = "s3-export"
 
         private val applicationContext by lazy { AnnotationConfigApplicationContext(TestConfiguration::class.java) }
         private val amazonS3 by lazy { applicationContext.getBean(AmazonS3::class.java) }

@@ -81,6 +81,6 @@ exports: services  ## run all the exports.
 	docker-compose up export-s3 export-equality blocked-topic table-unavailable export-nothing
 
 integration-tests: exports ## run the integration tests
-	docker-compose up integration-tests
+	docker-compose run integration-tests
 
 integration-all: images integration-tests
