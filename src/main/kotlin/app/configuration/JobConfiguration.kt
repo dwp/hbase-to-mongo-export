@@ -26,42 +26,42 @@ import java.io.IOException
 
 @Configuration
 @EnableBatchProcessing
-class JobConfiguration : DefaultBatchConfigurer() {
+class JobConfiguration: DefaultBatchConfigurer() {
 
     @Bean
     fun importUserJob(jobCompletionNotificationListener: JobCompletionNotificationListener) =
-            jobBuilderFactory.get("nightlyExportBatchJob")
-                    .incrementer(RunIdIncrementer())
-                    .listener(jobCompletionNotificationListener)
-                    .flow(step1())
-                    .end()
-                    .build()
+        jobBuilderFactory.get("nightlyExportBatchJob")
+            .incrementer(RunIdIncrementer())
+            .listener(jobCompletionNotificationListener)
+            .flow(step1())
+            .end()
+            .build()
 
     @Bean
     fun step1() = stepBuilderFactory["step1"]
-                .partitioner(slaveStep().name, partitioner)
-                .step(slaveStep())
-                .gridSize(256 / scanWidth.toInt())
-                .taskExecutor(taskExecutor())
-                .build()
+        .partitioner(slaveStep().name, partitioner)
+        .step(slaveStep())
+        .gridSize(256 / scanWidth.toInt())
+        .taskExecutor(taskExecutor())
+        .build()
 
     @Bean
     fun slaveStep() = stepBuilderFactory["slaveStep"]
-            .chunk<Result, Record>(chunkSize.toInt())
-                .reader(itemReader)
-                .faultTolerant()
-                .retry(IOException::class.java)
-                .retryPolicy(SimpleRetryPolicy().apply {
-                    maxAttempts = maxRetries.toInt()
-                })
-                .noSkip(TableNotFoundException::class.java)
-                .skip(MissingFieldException::class.java)
-                .skip(DecryptionFailureException::class.java)
-                .skip(BadDecryptedDataException::class.java)
-                .skipLimit(Integer.MAX_VALUE)
-                .processor(itemProcessor())
-                .writer(itemWriter)
-                .build()
+        .chunk<Result, Record>(chunkSize.toInt())
+        .reader(itemReader)
+        .faultTolerant()
+        .retry(IOException::class.java)
+        .retryPolicy(SimpleRetryPolicy().apply {
+            maxAttempts = maxRetries.toInt()
+        })
+        .noSkip(TableNotFoundException::class.java)
+        .skip(MissingFieldException::class.java)
+        .skip(DecryptionFailureException::class.java)
+        .skip(BadDecryptedDataException::class.java)
+        .skipLimit(Integer.MAX_VALUE)
+        .processor(itemProcessor())
+        .writer(itemWriter)
+        .build()
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("htme").apply {
@@ -71,9 +71,9 @@ class JobConfiguration : DefaultBatchConfigurer() {
     @Bean
     @StepScope
     fun itemProcessor(): ItemProcessor<Result, Record> =
-            CompositeItemProcessor<Result, Record>().apply {
-                setDelegates(listOf(resultProcessor, decryptionProcessor, sanitisationProcessor))
-            }
+        CompositeItemProcessor<Result, Record>().apply {
+            setDelegates(listOf(resultProcessor, decryptionProcessor, sanitisationProcessor, transformationProcessor))
+        }
 
     @Autowired
     lateinit var partitioner: Partitioner
@@ -89,6 +89,9 @@ class JobConfiguration : DefaultBatchConfigurer() {
 
     @Autowired
     lateinit var sanitisationProcessor: ItemProcessor<DecryptedRecord, Record>
+
+    @Autowired
+    lateinit var transformationProcessor: ItemProcessor<Record, Record>
 
     @Autowired
     lateinit var itemWriter: ItemWriter<Record>

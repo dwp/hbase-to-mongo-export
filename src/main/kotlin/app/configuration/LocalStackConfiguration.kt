@@ -41,7 +41,10 @@ class LocalStackConfiguration {
     fun <B: AwsClientBuilder<B, C>, C> AwsClientBuilder<B, C>.localstack(): C =
         run {
             withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndPoint,signingRegion))
-            withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
+            withClientConfiguration(ClientConfiguration().apply {
+                withProtocol(Protocol.HTTP)
+                maxConnections = 1000
+            })
             withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
             build()
         }

@@ -9,6 +9,10 @@ add_status_item() {
   add_item $(status_item_id)
 }
 
+add_equality_item() {
+  add_item $(equality_item_id)
+}
+
 add_completed_product_status_item() {
   add_product_item $(product_status_item_id) "Completed"
 }
@@ -109,6 +113,10 @@ completed_item_id() {
 
 status_item_id() {
   echo '"CorrelationId":{"S":"s3-export"},"CollectionName":{"S":"db.database.collection"}'
+}
+
+equality_item_id() {
+  echo '"CorrelationId":{"S":"equality-export"},"CollectionName":{"S":"data.equality"}'
 }
 
 product_status_item_id() {

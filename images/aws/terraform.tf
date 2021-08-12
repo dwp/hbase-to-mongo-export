@@ -86,7 +86,7 @@ resource "aws_s3_bucket" "crl_bucket" {
 }
 
 resource "aws_sqs_queue" "integration_queue" {
-  name                          = "integration-queue"
+  name                          = "integration-queue.fifo"
   fifo_queue                    = true
   content_based_deduplication   = true
 }
