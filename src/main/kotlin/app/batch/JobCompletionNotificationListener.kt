@@ -101,7 +101,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     private fun sendDataEgressRisMessage(completionStatus: ExportCompletionStatus) {
         if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && sendToRis.toBoolean()) {
-            messagingService.sendDataEgressMessage()
+            messagingService.sendDataEgressMessage("$exportPrefix/$topicName-")
         }
     }
 
@@ -146,6 +146,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
 
+    @Value("\${s3.prefix.folder}")
+    private lateinit var exportPrefix: String
 
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
