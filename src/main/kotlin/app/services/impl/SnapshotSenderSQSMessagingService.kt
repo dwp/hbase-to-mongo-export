@@ -35,6 +35,10 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
         }
     }
 
+    override fun sendDataEgressMessage() {
+        TODO("Not yet implemented")
+    }
+
     private fun sendMessageRequest(message: String) =
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
