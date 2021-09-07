@@ -51,7 +51,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendAdgMessage(completionStatus)
-            sendDataEgressRisMessage(completionStatus)
             setProductStatus(completionStatus)
             sendCompletionMonitoringMessage(completionStatus)
         } finally {
@@ -99,12 +98,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendDataEgressRisMessage(completionStatus: ExportCompletionStatus) {
-        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && sendToRis.toBoolean()) {
-            messagingService.sendDataEgressMessage()
-        }
-    }
-
     private fun sendTopicFailedMonitoringMessage(jobExecution: JobExecution) {
         if (!jobExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
             snsService.sendTopicFailedMonitoringMessage()
@@ -139,9 +132,6 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
     @Value("\${trigger.adg:false}")
     private lateinit var triggerAdg: String
-
-    @Value("\${send.to.ris:false}")
-    private lateinit var sendToRis: String
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String

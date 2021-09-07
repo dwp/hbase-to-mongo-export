@@ -3,5 +3,5 @@ package app.services
 interface SnapshotSenderMessagingService {
     fun notifySnapshotSender(prefix: String)
     fun notifySnapshotSenderNoFilesExported()
-    fun sendDataEgressMessage()
+    fun sendDataEgressMessage(prefix: String)
 }
