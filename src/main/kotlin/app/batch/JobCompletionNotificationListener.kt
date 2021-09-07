@@ -8,7 +8,6 @@ import app.utils.TextUtils
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
-import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.Connection
@@ -46,7 +45,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         try {
             logger.info("Job completed", "exit_status" to jobExecution.exitStatus.exitCode)
             setExportStatus(jobExecution)
-            sendSqsMessages(jobExecution)
+            sendSnapshotSenderMessages(jobExecution)
             sendTopicFailedMonitoringMessage(jobExecution)
 
             val completionStatus = exportStatusService.exportCompletionStatus()
@@ -87,7 +86,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendSqsMessages(jobExecution: JobExecution) {
+    private fun sendSnapshotSenderMessages(jobExecution: JobExecution) {
         if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED) && exportStatusService.exportedFilesCount() == 0) {
             messagingService.notifySnapshotSenderNoFilesExported()
         }
@@ -100,7 +99,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
     }
 
     private fun sendDataEgressRisMessage(completionStatus: ExportCompletionStatus) {
-        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && sendToRis.toBoolean()) {
+        if (completionStatus.equals(ExitStatus.COMPLETED) && sendToRis.toBoolean()) {
             messagingService.sendDataEgressMessage("$exportPrefix/$topicName-")
         }
     }
