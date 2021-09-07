@@ -50,7 +50,7 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
 
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendAdgMessage(completionStatus)
-            sendDataEgressRisMessage(completionStatus)
+            sendDataEgressRisMessage(jobExecution)
             setProductStatus(completionStatus)
             sendCompletionMonitoringMessage(completionStatus)
         } finally {
@@ -98,8 +98,8 @@ class JobCompletionNotificationListener(private val exportStatusService: ExportS
         }
     }
 
-    private fun sendDataEgressRisMessage(completionStatus: ExportCompletionStatus) {
-        if (completionStatus.equals(ExitStatus.COMPLETED) && sendToRis.toBoolean()) {
+    private fun sendDataEgressRisMessage(jobExecution: JobExecution) {
+        if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED) && sendToRis.toBoolean()) {
             messagingService.sendDataEgressMessage("$exportPrefix/$topicName-")
         }
     }
