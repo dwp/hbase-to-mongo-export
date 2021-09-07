@@ -130,7 +130,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
                     exportStatusService.incrementExportedCount(objectKey)
                     snapshotSenderMessagingService.notifySnapshotSender(objectKey)
-                    snapshotSenderMessagingService.sendDataEgressMessage(objectKey)
                     totalBatches++
                     totalBytes += batchSizeBytes
                     totalRecords += recordsInBatch

@@ -19,7 +19,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
                     multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun notifySnapshotSender(prefix: String) {
         if (triggerSnapshotSender.toBoolean()) {
-            amazonSQS.sendMessage(sendMessageRequest(message(prefix), snapshotSendersqsQueueUrl))
+            amazonSQS.sendMessage(sendMessageRequest(message(prefix)))
             logger.info("Sent message to snapshot sender queue", "prefix" to prefix)
         }
     }
@@ -30,23 +30,16 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun notifySnapshotSenderNoFilesExported() {
         if (triggerSnapshotSender.toBoolean()) {
-            amazonSQS.sendMessage(sendMessageRequest(noFilesExportedMessage(), snapshotSendersqsQueueUrl))
+            amazonSQS.sendMessage(sendMessageRequest(noFilesExportedMessage()))
             logger.info("Sent no files exported message to snapshot sender queue")
         }
     }
 
-    @Retryable(value = [Exception::class],
-            maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
-            backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
-                    multiplierExpression = "\${sqs.retry.multiplier:2}"))
-    override fun sendDataEgressMessage(prefix: String) {
-        if (sendToRis.toBoolean()) {
-            amazonSQS.sendMessage(sendMessageRequest(dataEgressRisMessage(prefix), dataEgressSqsQueueUrl) )
-            logger.info("Sent message to data egress queue")
-        }
+    override fun sendDataEgressMessage() {
+        TODO("Not yet implemented")
     }
 
-    private fun sendMessageRequest(message: String, sqsQueueUrl: String) =
+    private fun sendMessageRequest(message: String) =
             SendMessageRequest().apply {
                 queueUrl = sqsQueueUrl
                 messageBody = message
@@ -77,17 +70,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             |}
             """.trimMargin()
 
-
-    private fun dataEgressRisMessage(key: String) = """
-            |{
-            |   "s3": {
-            |       "object": {
-            |           "key": "$key/pipeline_success.flag"
-            |       }
-            |   }
-            |}
-            """.trimMargin()
-
     private val reprocess by lazy { reprocessFiles.toBoolean() }
     private val shutdown by lazy { shutdownOnCompletion.toBoolean() }
 
@@ -95,10 +77,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     private lateinit var topicName: String
 
     @Value("\${snapshot.sender.sqs.queue.url}")
-    private lateinit var snapshotSendersqsQueueUrl: String
-
-    @Value("\${data.egress.sqs.queue.url}")
-    private lateinit var dataEgressSqsQueueUrl: String
+    private lateinit var sqsQueueUrl: String
 
     @Value("\${snapshot.sender.reprocess.files}")
     private lateinit var reprocessFiles: String
@@ -114,9 +93,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
-
-    @Value("\${send.to.ris:false}")
-    private lateinit var sendToRis: String
 
     companion object {
         val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class)
