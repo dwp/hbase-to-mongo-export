@@ -355,11 +355,12 @@ class JobCompletionNotificationListenerTest {
     }
 
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
-                                                  triggerAdg: String = "true"): JobCompletionNotificationListener =
+                                                  triggerAdg: String = "true", sendToRis: String = "false"): JobCompletionNotificationListener =
         JobCompletionNotificationListener(exportStatusService, productStatusService, messagingService,
             snsService, pushgatewayService, durationSummary, runningApplicationsGauge,
             topicsStartedCounter, topicsCompletedCounter, connection, textUtils).apply {
                     ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
+                    ReflectionTestUtils.setField(this, "sendToRis", sendToRis)
                     ReflectionTestUtils.setField(this, "snapshotType", "drift_testing_incremental")
                     ReflectionTestUtils.setField(this, "topicName", TEST_TOPIC)
         }
