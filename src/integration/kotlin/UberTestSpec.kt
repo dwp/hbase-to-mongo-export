@@ -305,16 +305,15 @@ class UberTestSpec: StringSpec() {
                 }""")
         }
 
+        "Correct data egress messages sent" {
+            val received = queueMessages(dataEgressQueueUrl)
+                    .map(Message::getBody)
+                    .map { Gson().fromJson(it, JsonObject::class.java) }
+            received shouldHaveSize 2
 
-        "It should send the send to ris message" {
-            validateQueueMessage(dataEgressQueueUrl, """{
-               "s3": {
-                   "object": {
-                       "key": "output/pipeline_success.flag"
-                   }
-               }
-            }""")
+
         }
+
 
         "It should send the monitoring message" {
             validateQueueMessage(monitoringQueueUrl, """{
