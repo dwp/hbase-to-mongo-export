@@ -236,7 +236,8 @@ class UberTestSpec: StringSpec() {
             val result = amazonDynamoDB.getItem(getItemRequest)
             val item = result.item
             val status = item["Status"]
-            status?.s shouldBe "COMPLETED"
+            status.shouldNotBeNull()
+            status.s shouldBe "COMPLETED"
         }
 
         "Correct messages sent" {
