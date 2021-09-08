@@ -41,8 +41,9 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
                     multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun sendDataEgressMessage(prefix: String) {
         logger.info("Sending message to data egress queue")
-            amazonSQS.sendMessage(sendMessageRequest(dataEgressRisMessage(prefix), dataEgressSqsQueueUrl) )
-            logger.info("Sent message to data egress queue")
+        val message = dataEgressRisMessage(prefix)
+        amazonSQS.sendMessage(sendMessageRequest(message, dataEgressSqsQueueUrl) )
+        logger.info("Sent message to data egress queue", "message" to message)
     }
 
     private fun sendMessageRequest(message: String, sqsQueueUrl: String) =

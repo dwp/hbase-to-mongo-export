@@ -14,6 +14,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import io.kotest.assertions.json.shouldMatchJson
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -310,6 +311,8 @@ class UberTestSpec: StringSpec() {
                     .map(Message::getBody)
                     .map { Gson().fromJson(it, JsonObject::class.java) }
             received shouldHaveSize 2
+
+
             val firstExpected = """{
                "s3": {
                    "object": {
@@ -317,8 +320,6 @@ class UberTestSpec: StringSpec() {
                    }
                }
             }"""
-
-            received.first().asString shouldMatchJson firstExpected
 
             val secondExpected = """{
                "s3": {
@@ -328,7 +329,9 @@ class UberTestSpec: StringSpec() {
                }
             }"""
 
-            received.elementAt(2).asString shouldMatchJson secondExpected
+            firstExpected shouldBeIn received
+            secondExpected shouldBeIn received
+
 
 
         }
