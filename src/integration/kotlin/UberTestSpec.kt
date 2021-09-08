@@ -24,6 +24,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
 import io.ktor.client.features.json.*
 import io.ktor.client.request.*
+import io.mockk.InternalPlatformDsl.toStr
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import java.io.ByteArrayInputStream
@@ -310,6 +311,8 @@ class UberTestSpec: StringSpec() {
             val received = queueMessages(dataEgressQueueUrl)
                     .map(Message::getBody)
                     .map { Gson().fromJson(it, JsonObject::class.java) }
+                    .mapNotNull { it["Message"] }
+
             received shouldHaveSize 2
 
 
