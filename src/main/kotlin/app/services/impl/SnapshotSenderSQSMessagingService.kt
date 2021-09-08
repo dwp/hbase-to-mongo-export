@@ -40,6 +40,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
                     multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun sendDataEgressMessage(prefix: String) {
+        logger.info("Sending message to data egress queue")
             amazonSQS.sendMessage(sendMessageRequest(dataEgressRisMessage(prefix), dataEgressSqsQueueUrl) )
             logger.info("Sent message to data egress queue")
     }
