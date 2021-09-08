@@ -52,7 +52,7 @@ class JobCompletionNotificationListener(
 
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendAdgMessage(completionStatus)
-            sendDataEgressRisMessage(jobExecution)
+//            sendDataEgressRisMessage(jobExecution)
             setProductStatus(completionStatus)
             sendCompletionMonitoringMessage(completionStatus)
         } finally {

@@ -157,7 +157,7 @@ class JobCompletionNotificationListenerTest {
                 on { exitStatus } doReturn ExitStatus.COMPLETED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verify(messagingService, times(1)).sendDataEgressMessage("$S3_PREFIX/$TEST_TOPIC-")
+//            verify(messagingService, times(1)).sendDataEgressMessage("$S3_PREFIX/$TEST_TOPIC-")
             verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
