@@ -311,6 +311,22 @@ class UberTestSpec: StringSpec() {
                     .map { Gson().fromJson(it, JsonObject::class.java) }
             received shouldHaveSize 2
 
+            received.first().asString shouldMatchJson """{
+               "s3": {
+                   "object": {
+                       "key": "output/pipeline_success.flag"
+                   }
+               }
+            }"""
+
+            received.elementAt(2).asString shouldMatchJson """{
+               "s3": {
+                   "object": {
+                       "key": "equality/pipeline_success.flag"
+                   }
+               }
+            }"""
+
 
         }
 
