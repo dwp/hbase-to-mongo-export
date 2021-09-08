@@ -311,7 +311,6 @@ class UberTestSpec: StringSpec() {
             val received = queueMessages(dataEgressQueueUrl)
                     .map(Message::getBody)
                     .map { Gson().fromJson(it, JsonObject::class.java) }
-                    .mapNotNull { it["Message"] }
 
             received shouldHaveSize 2
 
@@ -332,11 +331,8 @@ class UberTestSpec: StringSpec() {
                }
             }"""
 
-            firstExpected shouldBeIn received
-            secondExpected shouldBeIn received
-
-
-
+            received[0].asString shouldMatchJson firstExpected
+            received[1].asString shouldMatchJson secondExpected
         }
 
 
