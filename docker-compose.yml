@@ -50,8 +50,8 @@ services:
     command: >-
       --send.success.indicator=true
       --scan.width=40
-      --topic.arn.completion.full=arn:aws:sns:us-east-1:000000000000:full-completion-topic
-      --topic.arn.monitoring=arn:aws:sns:us-east-1:000000000000:monitoring-topic
+      --topic.arn.completion.full=arn:aws:sns:eu-west-2:000000000000:full-completion-topic
+      --topic.arn.monitoring=arn:aws:sns:eu-west-2:000000000000:monitoring-topic
       --topic.name=db.database.collection
     environment:
       - CORRELATION_ID=s3-export
