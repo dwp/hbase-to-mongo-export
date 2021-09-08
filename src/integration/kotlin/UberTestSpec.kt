@@ -310,22 +310,25 @@ class UberTestSpec: StringSpec() {
                     .map(Message::getBody)
                     .map { Gson().fromJson(it, JsonObject::class.java) }
             received shouldHaveSize 2
-
-            received.first().asString shouldMatchJson """{
+            val firstExpected = """{
                "s3": {
                    "object": {
-                       "key": "output/pipeline_success.flag"
+                       "key": "output/db.database.collection-/pipeline_success.flag"
                    }
                }
             }"""
 
-            received.elementAt(2).asString shouldMatchJson """{
+            received.first().asString shouldMatchJson firstExpected
+
+            val secondExpected = """{
                "s3": {
                    "object": {
-                       "key": "equality/pipeline_success.flag"
+                       "key": "equality/data.equality-/pipeline_success.flag"
                    }
                }
             }"""
+
+            received.elementAt(2).asString shouldMatchJson secondExpected
 
 
         }
