@@ -315,14 +315,11 @@ class UberTestSpec: StringSpec() {
 
             received shouldHaveSize 2
 
-            val firstExpected = """"{"s3":{"object":{"key":"equality/data.equality-/pipeline_success.flag"}}}""""
-            val secondExpected = """"{"s3":{"object":{"key":"output/db.database.collection-/pipeline_success.flag"}}}""""
+            val firstExpected = """{"s3":{"object":{"key":"equality/data.equality-/pipeline_success.flag"}}}"""
+            val secondExpected = """{"s3":{"object":{"key":"output/db.database.collection-/pipeline_success.flag"}}}"""
 
             firstExpected shouldBeIn received
             secondExpected shouldBeIn received
-
-
-
         }
 
 
