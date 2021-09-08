@@ -439,7 +439,7 @@ class UberTestSpec: StringSpec() {
         private val cipherService by lazy { applicationContext.getBean(CipherService::class.java) }
 
         private const val snapshotSenderQueueUrl = "http://aws:4566/000000000000/integration-queue.fifo"
-        private const val dataEgressQueueUrl = "http://aws:4566/000000000000/egress-queue.fifo"
+        private const val dataEgressQueueUrl = "http://aws:4566/000000000000/egress-queue"
         private const val adgQueueUrl = "http://aws:4566/000000000000/trigger-adg-subscriber"
         private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-subscriber"
 
