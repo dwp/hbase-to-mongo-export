@@ -80,7 +80,7 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     private fun dataEgressRisMessage(key: String) = """
             |{
-            |   "Records: [
+            |   "Records": [
             |   {
             |       "s3": {
             |           "object": {
