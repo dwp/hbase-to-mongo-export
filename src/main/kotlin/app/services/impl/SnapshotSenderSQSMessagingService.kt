@@ -80,11 +80,15 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     private fun dataEgressRisMessage(key: String) = """
             |{
-            |   "s3": {
-            |       "object": {
-            |           "key": "$key/pipeline_success.flag"
+            |   "Records": [
+            |   {
+            |       "s3": {
+            |           "object": {
+            |               "key": "$key"
+            |           }
             |       }
             |   }
+            |  ]
             |}
             """.trimMargin()
 
