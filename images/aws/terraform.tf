@@ -91,6 +91,10 @@ resource "aws_sqs_queue" "integration_queue" {
   content_based_deduplication   = true
 }
 
+resource "aws_sqs_queue" "sqs_queue" {
+  name = "egress-queue"
+}
+
 resource "aws_sns_topic" "full_completion_topic" {
   name = "full-completion-topic"
 }

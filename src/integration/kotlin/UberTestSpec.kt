@@ -14,6 +14,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import io.kotest.assertions.json.shouldMatchJson
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -23,6 +24,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
 import io.ktor.client.features.json.*
 import io.ktor.client.request.*
+import io.mockk.InternalPlatformDsl.toStr
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import java.io.ByteArrayInputStream
@@ -236,7 +238,8 @@ class UberTestSpec: StringSpec() {
             val result = amazonDynamoDB.getItem(getItemRequest)
             val item = result.item
             val status = item["Status"]
-            status?.s shouldBe "COMPLETED"
+            status.shouldNotBeNull()
+            status.s shouldBe "COMPLETED"
         }
 
         "Correct messages sent" {
@@ -303,6 +306,22 @@ class UberTestSpec: StringSpec() {
                     "export_date": "2020-07-06"
                 }""")
         }
+
+        "Correct data egress messages sent" {
+            val received = queueMessages(dataEgressQueueUrl)
+                    .map(Message::getBody)
+                    .map { Gson().fromJson(it, JsonObject::class.java) }
+                    .map(JsonObject::toString)
+
+            received shouldHaveSize 2
+
+            val firstExpected = """{"s3":{"object":{"key":"equality/data.equality-/pipeline_success.flag"}}}"""
+            val secondExpected = """{"s3":{"object":{"key":"output/db.database.collection-/pipeline_success.flag"}}}"""
+
+            firstExpected shouldBeIn received
+            secondExpected shouldBeIn received
+        }
+
 
         "It should send the monitoring message" {
             validateQueueMessage(monitoringQueueUrl, """{
@@ -420,6 +439,7 @@ class UberTestSpec: StringSpec() {
         private val cipherService by lazy { applicationContext.getBean(CipherService::class.java) }
 
         private const val snapshotSenderQueueUrl = "http://aws:4566/000000000000/integration-queue.fifo"
+        private const val dataEgressQueueUrl = "http://aws:4566/000000000000/egress-queue"
         private const val adgQueueUrl = "http://aws:4566/000000000000/trigger-adg-subscriber"
         private const val monitoringQueueUrl = "http://aws:4566/000000000000/monitoring-subscriber"
 

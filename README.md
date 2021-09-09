@@ -103,6 +103,8 @@ communicate over 2-way https. To generate these:
   | `trust.keystore`              | resources/truststore.jks   | For mutual auth - the DKS CA certificate |
   | `trust.store.password`        | changeit                   | The truststore password. |
   | `use.timeline.consistency` | true | Whether to scan the region replicas or only the master |
+  | `data.egress.sqs.queue.url` | | The queue to which notifications of exported RIS files are sent |
+  | `send.to.ris` | false | Whether to send the Sqs message to Data egress. |
 
 
 ## Run locally containerized

@@ -157,7 +157,8 @@ class JobCompletionNotificationListenerTest {
                 on { exitStatus } doReturn ExitStatus.COMPLETED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verifyZeroInteractions(messagingService)
+            verify(messagingService, times(1)).sendDataEgressMessage("$S3_PREFIX/$TEST_TOPIC-")
+            verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
@@ -355,13 +356,16 @@ class JobCompletionNotificationListenerTest {
     }
 
     private fun jobCompletionNotificationListener(exportStatusService: ExportStatusService,
-                                                  triggerAdg: String = "true"): JobCompletionNotificationListener =
+                                                  triggerAdg: String = "true",
+                                                  sendToRis: String = "true"): JobCompletionNotificationListener =
         JobCompletionNotificationListener(exportStatusService, productStatusService, messagingService,
             snsService, pushgatewayService, durationSummary, runningApplicationsGauge,
             topicsStartedCounter, topicsCompletedCounter, connection, textUtils).apply {
                     ReflectionTestUtils.setField(this, "triggerAdg", triggerAdg)
+                    ReflectionTestUtils.setField(this, "sendToRis", sendToRis)
                     ReflectionTestUtils.setField(this, "snapshotType", "drift_testing_incremental")
                     ReflectionTestUtils.setField(this, "topicName", TEST_TOPIC)
+                    ReflectionTestUtils.setField(this, "exportPrefix", S3_PREFIX)
         }
 
     private val productStatusService = mock<ProductStatusService>()
@@ -380,5 +384,6 @@ class JobCompletionNotificationListenerTest {
     private val textUtils = TextUtils()
     companion object {
         private const val TEST_TOPIC = "db.test.topic"
+        private const val S3_PREFIX = "data/2021-08-01/type"
     }
 }
