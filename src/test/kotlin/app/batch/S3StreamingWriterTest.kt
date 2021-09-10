@@ -257,6 +257,6 @@ class S3StreamingWriterTest {
     private lateinit var exportStatusService: ExportStatusService
 
     @MockBean
-    private lateinit var snapshotSenderMessagingService: SnapshotSenderMessagingService
+    private lateinit var snapshotSenderMessagingService: MessagingService
 
 }

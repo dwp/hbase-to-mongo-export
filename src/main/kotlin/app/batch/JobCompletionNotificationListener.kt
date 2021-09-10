@@ -21,17 +21,17 @@ import uk.gov.dwp.dataworks.logging.LogFields
 
 @Component
 class JobCompletionNotificationListener(
-        private val exportStatusService: ExportStatusService,
-        private val productStatusService: ProductStatusService,
-        private val messagingService: SnapshotSenderMessagingService,
-        private val snsService: SnsService,
-        private val pushGatewayService: PushGatewayService,
-        private val topicDurationSummary: Summary,
-        private val runningApplicationsGauge: Gauge,
-        private val topicsStartedCounter: Counter,
-        private val topicsCompletedCounter: Counter,
-        private val connection: Connection,
-        private val textUtils: TextUtils,
+    private val exportStatusService: ExportStatusService,
+    private val productStatusService: ProductStatusService,
+    private val messagingService: MessagingService,
+    private val snsService: SnsService,
+    private val pushGatewayService: PushGatewayService,
+    private val topicDurationSummary: Summary,
+    private val runningApplicationsGauge: Gauge,
+    private val topicsStartedCounter: Counter,
+    private val topicsCompletedCounter: Counter,
+    private val connection: Connection,
+    private val textUtils: TextUtils,
 ) : JobExecutionListenerSupport() {
 
     override fun beforeJob(jobExecution: JobExecution) {
