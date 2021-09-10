@@ -1,6 +1,6 @@
 package app.services.impl
 
-import app.services.SnapshotSenderMessagingService
+import app.services.MessagingService
 import app.utils.PropertyUtility.correlationId
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.SendMessageRequest
@@ -11,15 +11,15 @@ import org.springframework.stereotype.Service
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 
 @Service
-class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : SnapshotSenderMessagingService {
+class SQSMessagingService(private val amazonSQS: AmazonSQS): MessagingService {
 
     @Retryable(value = [Exception::class],
-            maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
-            backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
-                    multiplierExpression = "\${sqs.retry.multiplier:2}"))
+        maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
+            multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun notifySnapshotSender(prefix: String) {
         if (triggerSnapshotSender.toBoolean()) {
-            amazonSQS.sendMessage(sendMessageRequest(message(prefix), snapshotSenderSqsQueueUrl))
+            amazonSQS.sendMessage(fifoQueueMessageRequest(message(prefix), snapshotSenderSqsQueueUrl))
             logger.info("Sent message to snapshot sender queue", "prefix" to prefix)
         }
     }
@@ -30,30 +30,36 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
             multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun notifySnapshotSenderNoFilesExported() {
         if (triggerSnapshotSender.toBoolean()) {
-            amazonSQS.sendMessage(sendMessageRequest(noFilesExportedMessage(), snapshotSenderSqsQueueUrl))
+            amazonSQS.sendMessage(fifoQueueMessageRequest(noFilesExportedMessage(), snapshotSenderSqsQueueUrl))
             logger.info("Sent no files exported message to snapshot sender queue")
         }
     }
 
     @Retryable(value = [Exception::class],
-            maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
-            backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
-                    multiplierExpression = "\${sqs.retry.multiplier:2}"))
+        maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
+        backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
+            multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun sendDataEgressMessage(prefix: String) {
         logger.info("Sending message to data egress queue")
         val message = dataEgressRisMessage(prefix)
-        amazonSQS.sendMessage(sendMessageRequest(message, dataEgressSqsQueueUrl) )
+        amazonSQS.sendMessage(notFifoQueueMessageRequest(message, dataEgressSqsQueueUrl))
         logger.info("Sent message to data egress queue", "message" to message)
     }
 
-    private fun sendMessageRequest(message: String, sqsQueueUrl: String) =
-            SendMessageRequest().apply {
-                queueUrl = sqsQueueUrl
-                messageBody = message
-                messageGroupId = topicName.replace(".", "_")
-            }
+    private fun fifoQueueMessageRequest(message: String, sqsQueueUrl: String) =
+        SendMessageRequest().apply {
+            queueUrl = sqsQueueUrl
+            messageBody = message
+            messageGroupId = topicName.replace(".", "_")
+        }
 
-    private fun message(prefix: String)= """
+    private fun notFifoQueueMessageRequest(message: String, sqsQueueUrl: String) =
+        SendMessageRequest().apply {
+            queueUrl = sqsQueueUrl
+            messageBody = message
+        }
+
+    private fun message(prefix: String) = """
             |{
             |   "shutdown_flag": "$shutdown",
             |   "correlation_id": "${correlationId()}",
@@ -80,15 +86,15 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
 
     private fun dataEgressRisMessage(key: String) = """
             |{
-            |   "Records": [
-            |   {
-            |       "s3": {
-            |           "object": {
-            |               "key": "$key"
-            |           }
-            |       }
-            |   }
-            |  ]
+            |    "Records": [
+            |        {
+            |            "s3": {
+            |                "object": {
+            |                    "key": "$key"
+            |                }
+            |            }
+            |        }
+            |    ]
             |}
             """.trimMargin()
 
@@ -120,6 +126,6 @@ class SnapshotSenderSQSMessagingService(private val amazonSQS: AmazonSQS) : Snap
     private lateinit var snapshotType: String
 
     companion object {
-        val logger = DataworksLogger.getLogger(SnapshotSenderSQSMessagingService::class)
+        val logger = DataworksLogger.getLogger(SQSMessagingService::class)
     }
 }

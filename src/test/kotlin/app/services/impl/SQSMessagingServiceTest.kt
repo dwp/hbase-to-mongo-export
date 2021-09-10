@@ -1,6 +1,6 @@
 package app.services.impl
 
-import app.services.SnapshotSenderMessagingService
+import app.services.MessagingService
 import com.amazonaws.SdkClientException
 import com.amazonaws.services.sqs.AmazonSQS
 import com.amazonaws.services.sqs.model.SendMessageRequest
@@ -19,23 +19,24 @@ import org.springframework.test.util.ReflectionTestUtils
 
 @RunWith(SpringRunner::class)
 @EnableRetry
-@SpringBootTest(classes = [SnapshotSenderSQSMessagingService::class])
+@SpringBootTest(classes = [SQSMessagingService::class])
 @TestPropertySource(properties = [
     "snapshot.sender.export.date=2020-06-05",
     "snapshot.sender.reprocess.files=false",
     "snapshot.sender.shutdown.flag=true",
-    "snapshot.sender.sqs.queue.url=http://aws:4566",
+    "snapshot.sender.sqs.queue.url=http://aws:4566/000000000000/snapshot-sender-queue",
     "snapshot.type=incremental",
     "sqs.retry.delay=1",
     "sqs.retry.maxAttempts=10",
     "sqs.retry.multiplier=1",
     "topic.name=db.database.collection",
+    "data.egress.sqs.queue.url=http://aws:4566/000000000000/data-egress-queue",
     "trigger.snapshot.sender=true",
 ])
-class SnapshotSenderSQSMessagingServiceTest {
+class SQSMessagingServiceTest {
 
     @Autowired
-    private lateinit var snapshotSenderMessagingService: SnapshotSenderMessagingService
+    private lateinit var messagingService: MessagingService
 
     @MockBean
     private lateinit var amazonSQS: AmazonSQS
@@ -44,17 +45,17 @@ class SnapshotSenderSQSMessagingServiceTest {
     fun init() {
         reset(amazonSQS)
         System.setProperty("correlation_id", "correlation-id")
-        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "true")
+        ReflectionTestUtils.setField(messagingService, "triggerSnapshotSender", "true")
     }
 
     @Test
     fun notifySnapshotSenderRetries() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any()))
-                .willThrow(SdkClientException(""))
-                .willThrow(SdkClientException(""))
-                .willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+            .willThrow(SdkClientException(""))
+            .willThrow(SdkClientException(""))
+            .willReturn(sendMessageResult)
+        messagingService.notifySnapshotSender("db.collection")
         verify(amazonSQS, times(3)).sendMessage(any())
     }
 
@@ -62,10 +63,10 @@ class SnapshotSenderSQSMessagingServiceTest {
     fun notifySnapshotSenderNoFilesSentRetries() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any()))
-                .willThrow(SdkClientException(""))
-                .willThrow(SdkClientException(""))
-                .willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+            .willThrow(SdkClientException(""))
+            .willThrow(SdkClientException(""))
+            .willReturn(sendMessageResult)
+        messagingService.notifySnapshotSenderNoFilesExported()
         verify(amazonSQS, times(3)).sendMessage(any())
         verifyNoMoreInteractions(amazonSQS)
     }
@@ -75,9 +76,9 @@ class SnapshotSenderSQSMessagingServiceTest {
     fun notifySnapshotSenderSendsCorrectMessageIfFlagTrue() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        messagingService.notifySnapshotSender("db.collection")
         val expected = SendMessageRequest().apply {
-            queueUrl = "http://aws:4566"
+            queueUrl = "http://aws:4566/000000000000/snapshot-sender-queue"
             messageBody = """
             |{
             |   "shutdown_flag": "true",
@@ -96,12 +97,37 @@ class SnapshotSenderSQSMessagingServiceTest {
     }
 
     @Test
+    fun triggerDataEgressSendsCorrectMessage() {
+        val sendMessageResult = mock<SendMessageResult>()
+        given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
+        messagingService.sendDataEgressMessage("db.collection")
+        val expected = SendMessageRequest().apply {
+            queueUrl = "http://aws:4566/000000000000/data-egress-queue"
+            messageBody = """
+            |{
+            |    "Records": [
+            |        {
+            |            "s3": {
+            |                "object": {
+            |                    "key": "db.collection"
+            |                }
+            |            }
+            |        }
+            |    ]
+            |}
+            """.trimMargin()
+        }
+        verify(amazonSQS, times(1)).sendMessage(expected)
+        verifyNoMoreInteractions(amazonSQS)
+    }
+
+    @Test
     fun notifySnapshotSenderNoFilesExportedSendsCorrectMessageIfFlagTrue() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        messagingService.notifySnapshotSenderNoFilesExported()
         val expected = SendMessageRequest().apply {
-            queueUrl = "http://aws:4566"
+            queueUrl = "http://aws:4566/000000000000/snapshot-sender-queue"
             messageBody = """
             |{
             |   "shutdown_flag": "true",
@@ -122,15 +148,15 @@ class SnapshotSenderSQSMessagingServiceTest {
 
     @Test
     fun notifySnapshotSenderDoesNotSendMessageIfFlagFalse() {
-        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
-        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        ReflectionTestUtils.setField(messagingService, "triggerSnapshotSender", "false")
+        messagingService.notifySnapshotSender("db.collection")
         verifyZeroInteractions(amazonSQS)
     }
 
     @Test
     fun notifySnapshotSenderNoFilesExportedDoesNotSendMessageIfFlagFalse() {
-        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
-        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        ReflectionTestUtils.setField(messagingService, "triggerSnapshotSender", "false")
+        messagingService.notifySnapshotSenderNoFilesExported()
         verifyZeroInteractions(amazonSQS)
     }
 }

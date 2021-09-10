@@ -369,7 +369,7 @@ class JobCompletionNotificationListenerTest {
         }
 
     private val productStatusService = mock<ProductStatusService>()
-    private val messagingService = mock<SnapshotSenderMessagingService>()
+    private val messagingService = mock<MessagingService>()
     private val snsService = mock<SnsService>()
     private val pushgatewayService = mock<PushGatewayService>()
     private val postProcessor = mock<ScheduledAnnotationBeanPostProcessor>()
