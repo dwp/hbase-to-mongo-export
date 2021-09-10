@@ -37,7 +37,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         private val streamingManifestWriter: StreamingManifestWriter,
                         private val compressionInstanceProvider: CompressionInstanceProvider,
                         private val exportStatusService: ExportStatusService,
-                        private val snapshotSenderMessagingService: MessagingService,
+                        private val messagingService: MessagingService,
                         private val s3ObjectService: S3ObjectService,
                         private val recordCounter: Counter,
                         private val byteCounter: Counter,
@@ -129,7 +129,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                         "total_records_already_written" to "$totalRecords")
 
                     exportStatusService.incrementExportedCount(objectKey)
-                    snapshotSenderMessagingService.notifySnapshotSender(objectKey)
+                    messagingService.notifySnapshotSender(objectKey)
                     totalBatches++
                     totalBytes += batchSizeBytes
                     totalRecords += recordsInBatch

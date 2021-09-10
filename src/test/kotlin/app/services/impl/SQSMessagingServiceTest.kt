@@ -36,7 +36,7 @@ import org.springframework.test.util.ReflectionTestUtils
 class SQSMessagingServiceTest {
 
     @Autowired
-    private lateinit var snapshotSenderMessagingService: MessagingService
+    private lateinit var messagingService: MessagingService
 
     @MockBean
     private lateinit var amazonSQS: AmazonSQS
@@ -45,7 +45,7 @@ class SQSMessagingServiceTest {
     fun init() {
         reset(amazonSQS)
         System.setProperty("correlation_id", "correlation-id")
-        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "true")
+        ReflectionTestUtils.setField(messagingService, "triggerSnapshotSender", "true")
     }
 
     @Test
@@ -55,7 +55,7 @@ class SQSMessagingServiceTest {
             .willThrow(SdkClientException(""))
             .willThrow(SdkClientException(""))
             .willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        messagingService.notifySnapshotSender("db.collection")
         verify(amazonSQS, times(3)).sendMessage(any())
     }
 
@@ -66,7 +66,7 @@ class SQSMessagingServiceTest {
             .willThrow(SdkClientException(""))
             .willThrow(SdkClientException(""))
             .willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        messagingService.notifySnapshotSenderNoFilesExported()
         verify(amazonSQS, times(3)).sendMessage(any())
         verifyNoMoreInteractions(amazonSQS)
     }
@@ -76,7 +76,7 @@ class SQSMessagingServiceTest {
     fun notifySnapshotSenderSendsCorrectMessageIfFlagTrue() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        messagingService.notifySnapshotSender("db.collection")
         val expected = SendMessageRequest().apply {
             queueUrl = "http://aws:4566/000000000000/snapshot-sender-queue"
             messageBody = """
@@ -100,7 +100,7 @@ class SQSMessagingServiceTest {
     fun triggerDataEgressSendsCorrectMessage() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
-        snapshotSenderMessagingService.sendDataEgressMessage("db.collection")
+        messagingService.sendDataEgressMessage("db.collection")
         val expected = SendMessageRequest().apply {
             queueUrl = "http://aws:4566/000000000000/data-egress-queue"
             messageBody = """
@@ -125,7 +125,7 @@ class SQSMessagingServiceTest {
     fun notifySnapshotSenderNoFilesExportedSendsCorrectMessageIfFlagTrue() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
-        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        messagingService.notifySnapshotSenderNoFilesExported()
         val expected = SendMessageRequest().apply {
             queueUrl = "http://aws:4566/000000000000/snapshot-sender-queue"
             messageBody = """
@@ -148,15 +148,15 @@ class SQSMessagingServiceTest {
 
     @Test
     fun notifySnapshotSenderDoesNotSendMessageIfFlagFalse() {
-        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
-        snapshotSenderMessagingService.notifySnapshotSender("db.collection")
+        ReflectionTestUtils.setField(messagingService, "triggerSnapshotSender", "false")
+        messagingService.notifySnapshotSender("db.collection")
         verifyZeroInteractions(amazonSQS)
     }
 
     @Test
     fun notifySnapshotSenderNoFilesExportedDoesNotSendMessageIfFlagFalse() {
-        ReflectionTestUtils.setField(snapshotSenderMessagingService, "triggerSnapshotSender", "false")
-        snapshotSenderMessagingService.notifySnapshotSenderNoFilesExported()
+        ReflectionTestUtils.setField(messagingService, "triggerSnapshotSender", "false")
+        messagingService.notifySnapshotSenderNoFilesExported()
         verifyZeroInteractions(amazonSQS)
     }
 }
