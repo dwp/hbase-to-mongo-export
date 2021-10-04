@@ -178,12 +178,14 @@ class JobCompletionNotificationListenerTest {
                 on { exportCompletionStatus() } doReturn exportCompletionStatus
             }
             val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
+            ReflectionTestUtils.setField(jobCompletionNotificationListener, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verifyZeroInteractions(messagingService)
+//            verifyZeroInteractions(messagingService)
+            verify(messagingService, times(1)).sendRisJsons(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
