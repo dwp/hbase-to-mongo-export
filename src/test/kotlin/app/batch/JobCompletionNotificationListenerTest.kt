@@ -79,6 +79,7 @@ class JobCompletionNotificationListenerTest {
 
         val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
         ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
+        ReflectionTestUtils.setField(jobCompletionNotificationListener, "testPdmPrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
             on { allFailureExceptions } doReturn listOf(Exception(Exception("Failed")))
@@ -365,6 +366,7 @@ class JobCompletionNotificationListenerTest {
                     ReflectionTestUtils.setField(this, "sendToRis", sendToRis)
                     ReflectionTestUtils.setField(this, "snapshotType", "drift_testing_incremental")
                     ReflectionTestUtils.setField(this, "topicName", TEST_TOPIC)
+                    ReflectionTestUtils.setField(this, "testPdmPrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
                     ReflectionTestUtils.setField(this, "exportPrefix", S3_PREFIX)
         }
 
@@ -384,6 +386,7 @@ class JobCompletionNotificationListenerTest {
     private val textUtils = TextUtils()
     companion object {
         private const val TEST_TOPIC = "db.test.topic"
+        private const val TEST_PDM_COMMON_MODEL_INPUTS_PREFIX = "test/prefix/pipeline_success.flag"
         private const val S3_PREFIX = "data/2021-08-01/type"
     }
 }
