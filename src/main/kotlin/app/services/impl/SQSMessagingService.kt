@@ -46,17 +46,6 @@ class SQSMessagingService(private val amazonSQS: AmazonSQS): MessagingService {
         logger.info("Sent message to data egress queue", "message" to message)
     }
 
-    @Retryable(value = [Exception::class],
-            maxAttemptsExpression = "\${sqs.retry.maxAttempts:5}",
-            backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
-                    multiplierExpression = "\${sqs.retry.multiplier:2}"))
-    override fun sendDataEgressMessage(prefix: String) {
-        logger.info("Sending message to data egress queue")
-        val message = dataEgressRisMessage(prefix)
-        amazonSQS.sendMessage(notFifoQueueMessageRequest(message, dataEgressSqsQueueUrl))
-        logger.info("Sent message to data egress queue", "message" to message)
-    }
-
     private fun fifoQueueMessageRequest(message: String, sqsQueueUrl: String) =
         SendMessageRequest().apply {
             queueUrl = sqsQueueUrl
