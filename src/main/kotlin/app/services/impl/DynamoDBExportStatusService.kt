@@ -22,7 +22,7 @@ class DynamoDBExportStatusService(private val dynamoDB: AmazonDynamoDB,
                                   private val successfulNonEmptyCollectionCounter: Counter,
                                   private val emptyCollectionCounter: Counter,
                                   private val failedCollectionCounter: Counter): ExportStatusService {
-d ..
+
     @Retryable(value = [Exception::class],
         maxAttemptsExpression = "\${dynamodb.retry.maxAttempts:5}",
         backoff = Backoff(delayExpression = "\${dynamodb.retry.delay:1000}",
