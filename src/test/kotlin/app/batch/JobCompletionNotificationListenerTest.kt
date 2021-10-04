@@ -135,7 +135,7 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).notifySnapshotSenderNoFilesExported()
-            verify(messagingService, times(1)).triggerDataEgressSendsCorrectPDMMessage()
+            verify(messagingService, times(1)).sendDataEgressMessage()
             verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
