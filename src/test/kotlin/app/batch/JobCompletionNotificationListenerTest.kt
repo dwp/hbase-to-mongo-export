@@ -129,11 +129,13 @@ class JobCompletionNotificationListenerTest {
                 on { exportCompletionStatus() } doReturn exportCompletionStatus
             }
             val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
+            ReflectionTestUtils.setField(jobCompletionNotificationListener, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.COMPLETED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).notifySnapshotSenderNoFilesExported()
+            verify(messagingService, times(1)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
@@ -159,6 +161,7 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).sendDataEgressMessage("$S3_PREFIX/$TEST_TOPIC-")
+            verify(messagingService, times(1)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
@@ -185,7 +188,7 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
 //            verifyZeroInteractions(messagingService)
-            verify(messagingService, times(1)).sendRisJsons(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+            verify(messagingService, times(1)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
