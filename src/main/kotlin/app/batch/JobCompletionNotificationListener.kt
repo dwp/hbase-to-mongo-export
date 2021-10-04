@@ -158,6 +158,9 @@ class JobCompletionNotificationListener(
     @Value("\${s3.prefix.folder}")
     private lateinit var exportPrefix: String
 
+    @Value("\${pdm.common.model.site.prefix}")
+    private lateinit var pdmCommonModelSitePrefix: String
+
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()
     }
