@@ -185,7 +185,7 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
 //            verifyZeroInteractions(messagingService)
-            verify(messagingService, times(1)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+//            verify(messagingService, times(1)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
