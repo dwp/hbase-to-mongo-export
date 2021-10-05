@@ -79,7 +79,7 @@ class JobCompletionNotificationListenerTest {
 
         val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
         ReflectionTestUtils.setField(jobCompletionNotificationListener, "topicName", TEST_TOPIC)
-        ReflectionTestUtils.setField(jobCompletionNotificationListener, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+//        ReflectionTestUtils.setField(jobCompletionNotificationListener, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
         val jobExecution = mock<JobExecution> {
             on { exitStatus } doReturn ExitStatus.FAILED
             on { allFailureExceptions } doReturn listOf(Exception(Exception("Failed")))
@@ -129,7 +129,7 @@ class JobCompletionNotificationListenerTest {
                 on { exportCompletionStatus() } doReturn exportCompletionStatus
             }
             val jobCompletionNotificationListener = jobCompletionNotificationListener(exportStatusService)
-            ReflectionTestUtils.setField(jobCompletionNotificationListener, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+//            ReflectionTestUtils.setField(jobCompletionNotificationListener, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             val jobExecution = mock<JobExecution> {
                 on { exitStatus } doReturn ExitStatus.COMPLETED
             }
