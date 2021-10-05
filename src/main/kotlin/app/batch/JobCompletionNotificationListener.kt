@@ -103,7 +103,7 @@ class JobCompletionNotificationListener(
 
 
     private fun sendRisJsons(completionStatus: ExportCompletionStatus) {
-        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && sendToRis.toBoolean() || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY && sendToRis.toBoolean())) {
             messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
         }
     }
