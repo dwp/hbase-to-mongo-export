@@ -133,7 +133,7 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).notifySnapshotSenderNoFilesExported()
-            verify(messagingService, times(5)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+            verify(messagingService, times(4)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
@@ -159,7 +159,7 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).sendDataEgressMessage("$S3_PREFIX/$TEST_TOPIC-")
-            verify(messagingService, times(5)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+            verify(messagingService, times(4)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
@@ -184,7 +184,7 @@ class JobCompletionNotificationListenerTest {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verify(messagingService, times(5)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+            verify(messagingService, times(4)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verifyZeroInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
