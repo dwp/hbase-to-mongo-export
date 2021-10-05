@@ -184,9 +184,9 @@ class JobCompletionNotificationListenerTest {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verify(messagingService, times(5).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX))
+            verify(messagingService, times(5)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
             verifyZeroInteractions(messagingService)
-            verify(pushgatewayService, times(1)).pushFinalMetrics())
+            verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
             reset(pushgatewayService)
