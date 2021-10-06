@@ -32,7 +32,6 @@ import org.springframework.test.util.ReflectionTestUtils
     "topic.name=db.database.collection",
     "data.egress.sqs.queue.url=http://aws:4566/000000000000/data-egress-queue",
     "trigger.snapshot.sender=true",
-    "pdm.common.model.site.prefix=test/prefix/pipeline_success.flag",
 ])
 class SQSMessagingServiceTest {
 
