@@ -125,9 +125,6 @@ class SQSMessagingService(private val amazonSQS: AmazonSQS): MessagingService {
     @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
 
-    @Value("\${pdm.common.model.site.prefix}")
-    private lateinit var pdmCommonModelSitePrefix: String
-
     companion object {
         val logger = DataworksLogger.getLogger(SQSMessagingService::class)
     }
