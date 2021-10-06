@@ -53,7 +53,7 @@ class JobCompletionNotificationListener(
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendAdgMessage(completionStatus)
             sendDataEgressRisMessage(jobExecution)
-            sendRisJsons(completionStatus)
+            sendPdmCommonModelMessage(completionStatus)
             setProductStatus(completionStatus)
             sendCompletionMonitoringMessage(completionStatus)
         } finally {
@@ -102,7 +102,7 @@ class JobCompletionNotificationListener(
     }
 
 
-    private fun sendRisJsons(completionStatus: ExportCompletionStatus) {
+    private fun sendPdmCommonModelMessage(completionStatus: ExportCompletionStatus) {
         if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
             messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
         }
