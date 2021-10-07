@@ -103,7 +103,7 @@ class JobCompletionNotificationListener(
 
 
     private fun sendPdmCommonModelMessage(completionStatus: ExportCompletionStatus) {
-        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && exportStatusService.exportedFilesCount() > 0|| completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY) && exportStatusService.exportedFilesCount() > 0) {
             messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
         }
     }
