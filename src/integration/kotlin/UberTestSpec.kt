@@ -313,7 +313,7 @@ class UberTestSpec: StringSpec() {
                     .map { Gson().fromJson(it, JsonObject::class.java) }
                     .map(JsonObject::toString)
 
-            received shouldHaveSize 7
+            received shouldHaveSize 3
 
             val firstExpected = """{"Records":[{"s3":{"object":{"key":"equality/data.equality-"}}}]}"""
             val secondExpected = """{"Records":[{"s3":{"object":{"key":"output/db.database.collection-"}}}]}"""

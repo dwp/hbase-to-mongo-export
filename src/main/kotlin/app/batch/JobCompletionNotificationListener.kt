@@ -104,6 +104,7 @@ class JobCompletionNotificationListener(
 
     private fun sendPdmCommonModelMessage(completionStatus: ExportCompletionStatus) {
         if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+            logger.info( "im called for topic ${topicName}")
             messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
         }
     }
