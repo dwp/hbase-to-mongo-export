@@ -205,6 +205,7 @@ class JobCompletionNotificationListenerTest {
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
         verify(messagingService, times(1)).sendDataEgressMessage(TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
+        reset(messagingService)
         verify(productStatusService, times(1)).setCompletedStatus()
         verifyNoMoreInteractions(productStatusService)
     }
