@@ -97,13 +97,14 @@ class JobCompletionNotificationListener(
 
     private fun sendAdgMessage(completionStatus: ExportCompletionStatus) {
         if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && triggerAdg.toBoolean()) {
+            logger.info( "ADG! im called for topic ${topicName}")
             snsService.sendExportCompletedSuccessfullyMessage()
         }
     }
 
 
     private fun sendPdmCommonModelMessage(completionStatus: ExportCompletionStatus) {
-        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+        if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && sendToRis.toBoolean()) {
             logger.info( "im called for topic ${topicName}")
             messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
         }
@@ -111,6 +112,7 @@ class JobCompletionNotificationListener(
 
     private fun sendDataEgressRisMessage(jobExecution: JobExecution) {
         if (jobExecution.exitStatus.equals(ExitStatus.COMPLETED) && sendToRis.toBoolean() && exportStatusService.exportedFilesCount() > 0) {
+            logger.info( "DATAEGRESS! im called for topic ${topicName}")
             messagingService.sendDataEgressMessage("$exportPrefix/$topicName-")
         }
     }
