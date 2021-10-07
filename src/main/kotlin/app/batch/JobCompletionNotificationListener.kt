@@ -105,7 +105,6 @@ class JobCompletionNotificationListener(
 
     private fun sendPdmCommonModelMessage(completionStatus: ExportCompletionStatus) {
         if (pdmCommonModelSitePrefix.isNotBlank()) {
-            logger.info("-------INSIDE PDM THING--------")
             if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
                 messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
             }
