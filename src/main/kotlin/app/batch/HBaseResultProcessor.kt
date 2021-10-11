@@ -49,6 +49,10 @@ class HBaseResultProcessor(private val textUtils: TextUtils): ItemProcessor<Resu
             validateMandatoryField(collection, idBytes, "collection")
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
 
+            // Note that should this should never be set to 'full', or if it is ts should be
+            // strictly temporary and reverted as soon as possible. Logging the ids of all records
+            // in the full export floods cloudwatch with billions of messages which significantly
+            // slows down attempt to run queries.
             if (snapshotType == "incremental") {
                 logger.info("Record read from hbase", "key" to printableKey(idBytes))
             }
