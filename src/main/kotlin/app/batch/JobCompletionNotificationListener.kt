@@ -8,6 +8,7 @@ import app.utils.TextUtils
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
+import org.apache.commons.lang.ObjectUtils
 import org.apache.hadoop.hbase.TableNotEnabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.Connection
@@ -53,6 +54,7 @@ class JobCompletionNotificationListener(
             val completionStatus = exportStatusService.exportCompletionStatus()
             sendAdgMessage(completionStatus)
             sendDataEgressRisMessage(jobExecution)
+            sendPdmCommonModelMessage(completionStatus)
             setProductStatus(completionStatus)
             sendCompletionMonitoringMessage(completionStatus)
         } finally {
@@ -97,6 +99,15 @@ class JobCompletionNotificationListener(
     private fun sendAdgMessage(completionStatus: ExportCompletionStatus) {
         if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) && triggerAdg.toBoolean()) {
             snsService.sendExportCompletedSuccessfullyMessage()
+        }
+    }
+
+
+    private fun sendPdmCommonModelMessage(completionStatus: ExportCompletionStatus) {
+        if (pdmCommonModelSitePrefix.isNotBlank()) {
+            if (completionStatus.equals(ExportCompletionStatus.COMPLETED_SUCCESSFULLY) || completionStatus.equals(ExportCompletionStatus.COMPLETED_UNSUCCESSFULLY)) {
+                messagingService.sendDataEgressMessage(pdmCommonModelSitePrefix)
+            }
         }
     }
 
@@ -149,6 +160,9 @@ class JobCompletionNotificationListener(
 
     @Value("\${s3.prefix.folder}")
     private lateinit var exportPrefix: String
+
+    @Value("\${pdm.common.model.site.prefix:}")
+    private lateinit var pdmCommonModelSitePrefix: String
 
     private val timer: Summary.Timer by lazy {
         topicDurationSummary.startTimer()

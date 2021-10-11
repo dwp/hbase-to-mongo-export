@@ -122,6 +122,31 @@ class SQSMessagingServiceTest {
     }
 
     @Test
+    fun triggerDataEgressSendsCorrectPDMMessage() {
+        val sendMessageResult = mock<SendMessageResult>()
+        given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)
+        messagingService.sendDataEgressMessage("test/prefix/pipeline_success.flag")
+        val expected = SendMessageRequest().apply {
+            queueUrl = "http://aws:4566/000000000000/data-egress-queue"
+            messageBody = """
+            |{
+            |    "Records": [
+            |        {
+            |            "s3": {
+            |                "object": {
+            |                    "key": "test/prefix/pipeline_success.flag"
+            |                }
+            |            }
+            |        }
+            |    ]
+            |}
+            """.trimMargin()
+        }
+        verify(amazonSQS, times(1)).sendMessage(expected)
+        verifyNoMoreInteractions(amazonSQS)
+    }
+
+    @Test
     fun notifySnapshotSenderNoFilesExportedSendsCorrectMessageIfFlagTrue() {
         val sendMessageResult = mock<SendMessageResult>()
         given(amazonSQS.sendMessage(any())).willReturn(sendMessageResult)

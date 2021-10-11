@@ -53,6 +53,7 @@ services:
       --topic.arn.completion.full=arn:aws:sns:eu-west-2:000000000000:full-completion-topic
       --topic.arn.monitoring=arn:aws:sns:eu-west-2:000000000000:monitoring-topic
       --topic.name=db.database.collection
+      --pdm.common.model.site.prefix=common-model-inputs/data/site/pipeline_success.flag
     environment:
       - CORRELATION_ID=s3-export
 

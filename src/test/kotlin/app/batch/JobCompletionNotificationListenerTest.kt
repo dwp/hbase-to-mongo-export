@@ -133,7 +133,6 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).notifySnapshotSenderNoFilesExported()
-            verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
@@ -158,7 +157,6 @@ class JobCompletionNotificationListenerTest {
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
             verify(messagingService, times(1)).sendDataEgressMessage("$S3_PREFIX/$TEST_TOPIC-")
-            verifyNoMoreInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
@@ -182,7 +180,6 @@ class JobCompletionNotificationListenerTest {
                 on { exitStatus } doReturn ExitStatus.FAILED
             }
             jobCompletionNotificationListener.afterJob(jobExecution)
-            verifyZeroInteractions(messagingService)
             verify(pushgatewayService, times(1)).pushFinalMetrics()
             verifyNoMoreInteractions(pushgatewayService)
             reset(messagingService)
@@ -204,6 +201,7 @@ class JobCompletionNotificationListenerTest {
             on { exitStatus } doReturn ExitStatus.COMPLETED
         }
         jobCompletionNotificationListener.afterJob(jobExecution)
+        reset(messagingService)
         verify(productStatusService, times(1)).setCompletedStatus()
         verifyNoMoreInteractions(productStatusService)
     }
@@ -365,6 +363,7 @@ class JobCompletionNotificationListenerTest {
                     ReflectionTestUtils.setField(this, "sendToRis", sendToRis)
                     ReflectionTestUtils.setField(this, "snapshotType", "drift_testing_incremental")
                     ReflectionTestUtils.setField(this, "topicName", TEST_TOPIC)
+                    ReflectionTestUtils.setField(this, "pdmCommonModelSitePrefix", TEST_PDM_COMMON_MODEL_INPUTS_PREFIX)
                     ReflectionTestUtils.setField(this, "exportPrefix", S3_PREFIX)
         }
 
@@ -384,6 +383,7 @@ class JobCompletionNotificationListenerTest {
     private val textUtils = TextUtils()
     companion object {
         private const val TEST_TOPIC = "db.test.topic"
+        private const val TEST_PDM_COMMON_MODEL_INPUTS_PREFIX = "common-model-inputs/data/site/pipeline_success.flag"
         private const val S3_PREFIX = "data/2021-08-01/type"
     }
 }
