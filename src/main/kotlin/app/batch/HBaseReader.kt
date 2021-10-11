@@ -26,7 +26,7 @@ class HBaseReader(private val connection: Connection,
                   private val textUtils: TextUtils,
                   private val filterBlockedTopicsUtils: FilterBlockedTopicsUtils,
                   private val scanRetriesCounter: Counter,
-                  private val failedScansCounter: Counter) : ItemReader<Result> {
+                  private val failedScansCounter: Counter): ItemReader<Result> {
 
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
@@ -37,26 +37,22 @@ class HBaseReader(private val connection: Connection,
             }
             retryAttempts = 0
             result
-        }
-        catch (e: BlockedTopicException) {
+        } catch (e: BlockedTopicException) {
             logger.error("Provided topic is blocked so cannot be processed",
-                    "exception" to (e.message ?: ""),
-                    "topic_name" to topicName)
+                "exception" to (e.message ?: ""),
+                "topic_name" to topicName)
             throw e
-        }
-        catch (e: TableNotFoundException) {
+        } catch (e: TableNotFoundException) {
             logger.error("Table does not exist for the provided topic",
-                    "exception" to (e.message ?: ""),
-                    "topic_name" to topicName)
+                "exception" to (e.message ?: ""),
+                "topic_name" to topicName)
             throw e
-        }
-        catch (e: TableNotEnabledException) {
+        } catch (e: TableNotEnabledException) {
             logger.error("Table is not enabled for the provided topic",
-                    "exception" to (e.message ?: ""),
-                    "topic_name" to topicName)
+                "exception" to (e.message ?: ""),
+                "topic_name" to topicName)
             throw e
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("Error with scanner", e)
             reopenScannerAndRetry(e)
         }
@@ -66,23 +62,22 @@ class HBaseReader(private val connection: Connection,
             val lastKey = latestId ?: byteArrayOf(start.toByte())
             return if (++retryAttempts < scanMaxRetries.toInt()) {
                 logger.warn("Failed to get next record, reopening scanner",
-                        "exception" to (e.message ?: ""),
-                        "attempt" to "$retryAttempts",
-                        "max_attempts" to scanMaxRetries,
-                        "latest_id" to printableKey(lastKey))
+                    "exception" to (e.message ?: ""),
+                    "attempt" to "$retryAttempts",
+                    "max_attempts" to scanMaxRetries,
+                    "latest_id" to printableKey(lastKey))
 
                 scanner?.close()
                 Thread.sleep(scanRetrySleepMs.toLong())
                 scanner = newScanner(lastKey)
                 scanRetriesCounter.labels(split()).inc()
                 read()
-            }
-            else {
+            } else {
                 logger.error("Failed to get next record after max retries", e,
-                        "exception" to (e.message ?: ""),
-                        "attempt" to "$retryAttempts",
-                        "max_attempts" to scanMaxRetries,
-                        "latest_id" to printableKey(lastKey))
+                    "exception" to (e.message ?: ""),
+                    "attempt" to "$retryAttempts",
+                    "max_attempts" to scanMaxRetries,
+                    "latest_id" to printableKey(lastKey))
                 failedScansCounter.labels(split()).inc()
                 throw ScanRetriesExhaustedException(printableKey(lastKey), retryAttempts, e)
             }
@@ -94,7 +89,6 @@ class HBaseReader(private val connection: Connection,
 
     private var latestId: ByteArray? = null
     private var retryAttempts = 0
-    private var isStale = false
     private var scanTimeRangeEndDefault = "2099-01-01T00:00:00.000Z"
     private var absoluteStart: Int = Int.MIN_VALUE
     private var absoluteStop: Int = Int.MAX_VALUE
@@ -117,6 +111,7 @@ class HBaseReader(private val connection: Connection,
     fun scanner(): ResultScanner {
         if (scanner == null) {
             scanner = newScanner(byteArrayOf(start.toByte()))
+
         }
         return scanner!!
     }
@@ -132,9 +127,9 @@ class HBaseReader(private val connection: Connection,
     }
 
     fun getScanTimeRangeStartEpoch() =
-            if (scanTimeRangeStart.isNotBlank())
-                ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
-            else 0
+        if (scanTimeRangeStart.isNotBlank())
+            ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
+        else 0
 
     fun getScanTimeRangeEndEpoch(): Long {
         var endDateTime = ZonedDateTime.parse(scanTimeRangeEndDefault)
@@ -176,28 +171,28 @@ class HBaseReader(private val connection: Connection,
         }
 
         logger.info("Scan caching config",
-                "scan_caching" to "${scan.caching}",
-                "scan.maxResultSize" to "${scan.maxResultSize}",
-                "cache_blocks" to "${scan.cacheBlocks}",
-                "start" to "$start",
-                "stop" to "$stop",
-                "scan_time_range_start" to timeStart.toString(),
-                "scan_time_range_end" to timeEnd.toString(),
-                "use_timeline_consistency" to useTimelineConsistency)
+            "scan_id" to (scan.id ?: ""),
+            "scan_caching" to "${scan.caching}",
+            "scan.maxResultSize" to "${scan.maxResultSize}",
+            "cache_blocks" to "${scan.cacheBlocks}",
+            "start" to "$start",
+            "stop" to "$stop",
+            "scan_time_range_start" to timeStart.toString(),
+            "scan_time_range_end" to timeEnd.toString(),
+            "use_timeline_consistency" to useTimelineConsistency)
 
         return scan
     }
 
     fun printableKey(key: ByteArray) =
-            if (key.size > 4) {
-                val hash = key.slice(IntRange(0, 3))
-                val hex = hash.joinToString("") { String.format("\\x%02X", it) }
-                val renderable = key.slice(IntRange(4, key.size - 1)).map(Byte::toChar).joinToString("")
-                "${hex}${renderable}"
-            }
-            else {
-                String(key)
-            }
+        if (key.size > 4) {
+            val hash = key.slice(IntRange(0, 3))
+            val hex = hash.joinToString("") { String.format("\\x%02X", it) }
+            val renderable = key.slice(IntRange(4, key.size - 1)).map(Byte::toChar).joinToString("")
+            "${hex}${renderable}"
+        } else {
+            String(key)
+        }
 
     private var scanner: ResultScanner? = null
 

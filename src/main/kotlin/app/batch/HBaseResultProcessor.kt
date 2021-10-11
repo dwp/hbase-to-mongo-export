@@ -49,7 +49,7 @@ class HBaseResultProcessor(private val textUtils: TextUtils): ItemProcessor<Resu
             validateMandatoryField(collection, idBytes, "collection")
             val encryptionBlock = EncryptionBlock(keyEncryptionKeyId, initializationVector, encryptedEncryptionKey)
 
-            if (snapshotType == "drift_testing_incremental") {
+            if (snapshotType == "incremental") {
                 logger.info("Record read from hbase", "key" to printableKey(idBytes))
             }
 
