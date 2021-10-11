@@ -40,10 +40,10 @@ class SQSMessagingService(private val amazonSQS: AmazonSQS): MessagingService {
         backoff = Backoff(delayExpression = "\${sqs.retry.delay:1000}",
             multiplierExpression = "\${sqs.retry.multiplier:2}"))
     override fun sendDataEgressMessage(prefix: String) {
-        logger.info("Sending message to data egress queue")
         val message = dataEgressRisMessage(prefix)
+        logger.info("Sending message to data egress queue", "message" to message, "prefix" to prefix)
         amazonSQS.sendMessage(notFifoQueueMessageRequest(message, dataEgressSqsQueueUrl))
-        logger.info("Sent message to data egress queue", "message" to message)
+        logger.info("Sent message to data egress queue", "message" to message, "prefix" to prefix)
     }
 
     private fun fifoQueueMessageRequest(message: String, sqsQueueUrl: String) =
