@@ -3,6 +3,7 @@ package app.batch
 import app.exceptions.BlockedTopicException
 import app.exceptions.ScanRetriesExhaustedException
 import app.utils.FilterBlockedTopicsUtils
+import app.utils.PropertyUtility
 import app.utils.TextUtils
 import io.prometheus.client.Counter
 import org.apache.hadoop.hbase.TableName
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
+import java.util.*
 import kotlin.math.absoluteValue
 
 @Component
@@ -167,7 +169,7 @@ class HBaseReader(private val connection: Connection,
             }
 
             allowPartialResults = partialResultsAllowed.toBoolean()
-
+            id = "${PropertyUtility.correlationId()}//${Date().time}/$topicName/$absoluteStart/$absoluteStop"
         }
 
         logger.info("Scan caching config",
