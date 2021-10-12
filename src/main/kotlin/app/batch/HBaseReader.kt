@@ -169,7 +169,7 @@ class HBaseReader(private val connection: Connection,
             }
 
             allowPartialResults = partialResultsAllowed.toBoolean()
-            id = "${PropertyUtility.correlationId()}//${Date().time}/$topicName/$absoluteStart/$absoluteStop"
+            id = "${PropertyUtility.correlationId()}/${Date().time}/$topicName/$absoluteStart/$absoluteStop"
         }
 
         logger.info("Scan caching config",
