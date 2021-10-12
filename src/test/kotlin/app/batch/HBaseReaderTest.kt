@@ -10,16 +10,23 @@ import org.apache.hadoop.hbase.NotServingRegionException
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.springframework.test.util.ReflectionTestUtils
 
 class HBaseReaderTest {
 
+
+    @Before
+    fun init() {
+        System.setProperty("correlation_id", "${HBaseReaderTest::class}")
+    }
+
     companion object {
-        const val tableName = "database:collection"
-        const val topicName = "db.database.collection"
-        const val blockedTopicName = "db.crypto.encryptedData.unencrypted"
-        const val blockedTopics = "db.crypto.encryptedData.unencrypted"
+        const val tableName: String = "database:collection"
+        const val topicName: String = "db.database.collection"
+        const val blockedTopicName: String = "db.crypto.encryptedData.unencrypted"
+        const val blockedTopics: String = "db.crypto.encryptedData.unencrypted"
     }
 
     @Test
