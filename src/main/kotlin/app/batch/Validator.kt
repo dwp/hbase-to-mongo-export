@@ -21,11 +21,11 @@ import java.util.*
 
 @Component
 class Validator(private val failedValidationCounter: Counter) {
-    private final val validIncomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
-    private final val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    private val validIncomingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+    private val validOutgoingFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
     val validTimestamps = listOf(validIncomingFormat, validOutgoingFormat)
-    private final val jsonUtils = JsonUtils()
+    private val jsonUtils = JsonUtils()
     private val gson = GsonBuilder().serializeNulls().create()
 
     fun skipBadDecryptedRecords(item: SourceRecord, decrypted: String): DecryptedRecord? {
@@ -37,7 +37,13 @@ class Validator(private val failedValidationCounter: Counter) {
         try {
             val dbObject = gson.fromJson(decrypted, JsonObject::class.java)
             if (dbObject != null) {
-                val (dbObjectWithWrappedDates) = wrapDates(dbObject)
+                val (dbObjectWithWrappedDates, _) = wrapDates(dbObject)
+
+                if (dbObjectWithWrappedDates.has(ARCHIVED_DATE_TIME_FIELD) &&
+                    dbObjectWithWrappedDates.has(REMOVED_DATE_TIME_FIELD)) {
+                    dbObjectWithWrappedDates.remove(ARCHIVED_DATE_TIME_FIELD)
+                }
+
                 return retrieveId(dbObject)?.let { idElement ->
                     if (idElement.isJsonPrimitive) {
                         replaceElementValueWithKeyValuePair(dbObject, "_id", "\$oid", idElement.asJsonPrimitive.asString)
@@ -195,6 +201,7 @@ class Validator(private val failedValidationCounter: Counter) {
         const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
         const val CREATED_DATE_TIME_FIELD = "createdDateTime"
         const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         const val INNER_DATE_FIELD = "\$date"
     }
 }

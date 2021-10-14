@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.DecryptedRecord
 import app.domain.EncryptionBlock
 import app.domain.ManifestRecord
 import app.domain.SourceRecord
@@ -12,8 +13,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.prometheus.client.Counter
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -125,6 +125,48 @@ class ValidatorTest {
         verifyNoMoreInteractions(counter)
     }
 
+    @Test
+    fun shouldRemoveArchiveDateTimeIfRemovedDateTimePresent() {
+        val decryptedDbObject = """{
+            |    "_id": {
+            |       "id": "12345"
+            |    },
+            |    "_archivedDateTime": "2021-10-10T03:35:51.145+0000",
+            |    "_removedDateTime": "2021-10-12T10:06:01.280+0000",
+            |    "_lastModifiedDateTime": "2021-10-02T14:02:16.653+0000"
+            |}""".trimMargin()
+        val encryptionBlock =
+            EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
+            encryptionBlock, "dbObject", 1000,"db", "collection", "OUTER_TYPE", "INNER_TYPE", "")
+        val decrypted: DecryptedRecord? = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
+        assertNotNull(decrypted)
+        decrypted?.let { (dbObject, _) ->
+            assertTrue(dbObject.has("_removedDateTime"))
+            assertFalse(dbObject.has("_archivedDateTime"))
+        }
+    }
+
+    @Test
+    fun shouldNotRemoveArchiveDateTimeIfRemovedDateTimeNotPresent() {
+        val decryptedDbObject = """{
+            |    "_id": {
+            |       "id": "12345"
+            |    },
+            |    "_archivedDateTime": "2021-10-10T03:35:51.145+0000",
+            |    "_lastModifiedDateTime": "2021-10-02T14:02:16.653+0000"
+            |}""".trimMargin()
+        val encryptionBlock =
+            EncryptionBlock("keyEncryptionKeyId", "initialisationVector", "encryptedEncryptionKey")
+        val sourceRecord = SourceRecord(generateFourByteChecksum("00001"),
+            encryptionBlock, "dbObject", 1000,"db", "collection", "OUTER_TYPE", "INNER_TYPE", "")
+        val decrypted: DecryptedRecord? = validator.skipBadDecryptedRecords(sourceRecord, decryptedDbObject)
+        assertNotNull(decrypted)
+        decrypted?.let { (dbObject, _) ->
+            assertTrue(dbObject.has("_archivedDateTime"))
+            assertFalse(dbObject.has("_removedDateTime"))
+        }
+    }
     @Test
     fun Should_Retrieve_ID_If_DbObject_Is_A_Valid_Json() {
         val dateOne = "2019-12-14T15:01:02.000+0000"
