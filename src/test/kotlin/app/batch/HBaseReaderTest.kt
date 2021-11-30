@@ -25,8 +25,8 @@ class HBaseReaderTest {
     companion object {
         const val tableName: String = "database:collection"
         const val topicName: String = "db.database.collection"
-        const val blockedTopicName: String = "db.crypto.encryptedData.unencrypted"
-        const val blockedTopics: String = "db.crypto.encryptedData.unencrypted"
+        const val blockedTopicName: String = "db.no.topicIs.blockedATM"
+        const val blockedTopics: String = "db.no.topicIs.blockedATM"
     }
 
     @Test
