@@ -307,6 +307,31 @@ class UberTestSpec: StringSpec() {
                 }""")
         }
 
+        "It should send the successful completion message" {
+            validateQueueMessage(adgQueueUrl, """{
+                "additional_step_args": {
+                        "submit-job": [
+                          "--correlation_id", "s3-export",
+                          "--s3_prefix", "output",
+                          "--snapshot_type", "full",
+                          "--export_date", "2020-07-06"
+                        ],
+                        "courtesy-flush": [
+                          "--correlation_id", "s3-export",
+                          "--s3_prefix", "output",
+                          "--snapshot_type", "full",
+                          "--export_date", "2020-07-06"
+                        ],
+                        "send_notification": [
+                          "--correlation_id", "s3-export",
+                          "--s3_prefix", "output",
+                          "--snapshot_type", "full",
+                          "--export_date", "2020-07-06"
+                        ]
+                    }
+                }""".trimIndent())
+        }
+
         "Correct data egress messages sent" {
             val received = queueMessages(dataEgressQueueUrl)
                     .map(Message::getBody)
