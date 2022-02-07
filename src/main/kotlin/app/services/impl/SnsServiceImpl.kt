@@ -49,11 +49,27 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     private fun exportCompletedPayload() =
             """{
-                "correlation_id": "${correlationId()}",
-                "s3_prefix": "$s3prefix",
-                "snapshot_type": "$snapshotType",
-                "export_date": "$exportDate"
-            }"""
+                "additional_step_args": {
+                        "submit-job": [
+                          "--correlation_id", "${correlationId()}",
+                          "--s3_prefix", "$s3prefix",
+                          "--snapshot_type", "$snapshotType",
+                          "--export_date", "$exportDate"
+                        ],
+                        "courtesy-flush": [
+                          "--correlation_id", "${correlationId()}",
+                          "--s3_prefix", "$s3prefix",
+                          "--snapshot_type", "$snapshotType",
+                          "--export_date", "$exportDate"
+                        ],
+                        "send_notification": [
+                          "--correlation_id", "${correlationId()}",
+                          "--s3_prefix", "$s3prefix",
+                          "--snapshot_type", "$snapshotType",
+                          "--export_date", "$exportDate"
+                        ]
+                    }
+              }"""
 
     private fun failedTopicMonitoringPayload() =
             """{
