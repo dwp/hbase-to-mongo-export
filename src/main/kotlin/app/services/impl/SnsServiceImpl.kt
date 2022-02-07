@@ -69,7 +69,7 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
                           "--export_date", "$exportDate"
                         ]
                     }
-              }"""
+                }""".trimIndent()
 
     private fun failedTopicMonitoringPayload() =
             """{

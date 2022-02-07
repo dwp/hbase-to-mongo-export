@@ -66,11 +66,27 @@ class SnsServiceImplTest {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
-                "correlation_id": "correlation.id",
-                "s3_prefix": "prefix",
-                "snapshot_type": "full",
-                "export_date": "2020-12-12"
-            }""", firstValue.message)
+                "additional_step_args": {
+                        "submit-job": [
+                          "--correlation_id", "correlation.id",
+                          "--s3_prefix", "prefix",
+                          "--snapshot_type", "full",
+                          "--export_date", "2020-12-12"
+                        ],
+                        "courtesy-flush": [
+                          "--correlation_id", "correlation.id",
+                          "--s3_prefix", "prefix",
+                          "--snapshot_type", "full",
+                          "--export_date", "2020-12-12"
+                        ],
+                        "send_notification": [
+                          "--correlation_id", "correlation.id",
+                          "--s3_prefix", "prefix",
+                          "--snapshot_type", "full",
+                          "--export_date", "2020-12-12"
+                        ]
+                    }
+                }""".trimIndent(), firstValue.message)
         }
         verifyNoMoreInteractions(amazonSNS)
     }
