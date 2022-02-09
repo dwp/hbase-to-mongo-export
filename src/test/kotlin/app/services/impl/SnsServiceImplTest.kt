@@ -66,6 +66,9 @@ class SnsServiceImplTest {
             verify(amazonSNS, times(1)).publish(capture())
             assertEquals(TOPIC_ARN, firstValue.topicArn)
             assertEquals("""{
+                "overrides": {
+                        "Name": "analytical-dataset-generator-full"
+                },
                 "additional_step_args": {
                         "submit-job": [
                           "--correlation_id", "correlation.id",

@@ -300,6 +300,9 @@ class UberTestSpec: StringSpec() {
 
         "It should send the successful completion message" {
             validateQueueMessage(adgQueueUrl, """{
+                "overrides": {
+                        "Name": "analytical-dataset-generator-full"
+                },
                 "additional_step_args": {
                         "submit-job": [
                           "--correlation_id", "s3-export",
