@@ -49,6 +49,9 @@ class SnsServiceImpl(private val sns: AmazonSNS): SnsService {
 
     private fun exportCompletedPayload() =
             """{
+                "overrides": {
+                        "Name": "analytical-dataset-generator-$snapshotType"
+                },
                 "additional_step_args": {
                         "submit-job": [
                           "--correlation_id", "${correlationId()}",
