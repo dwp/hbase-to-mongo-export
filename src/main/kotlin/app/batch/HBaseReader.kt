@@ -138,6 +138,7 @@ class HBaseReader(private val connection: Connection,
             if (topicName.contains("db.calculator.calculationParts-before-2020")) {
                 scanTimeRangeEnd = "2020-01-01T00:00:00.000Z"
                 logger.info("Picked up collection db.calculator.calculationParts-before-2020")
+
             }
             if (topicName.contains("db.calculator.calculationParts-after-2020")) {
                 scanTimeRangeStart = "2020-01-01T00:00:00.000Z"
