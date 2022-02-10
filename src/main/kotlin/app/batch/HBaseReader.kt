@@ -129,10 +129,11 @@ class HBaseReader(private val connection: Connection,
         return table.getScanner(scan(start))
     }
 
-    fun shardCalculationPartsCollection(topicName: String, var qualifiedTableName: String): String {
+    fun shardCalculationPartsCollection(topicName: String, qualifiedTableName: String): String {
+        var table_name = qualifiedTableName
         logger.info("Started sharding calculationParts collection")
         if(topicName.contains("db.calculator.calculationParts", ignoreCase = true)) {
-            qualifiedTableName = "calculator:calculationParts"
+            table_name = "calculator:calculationParts"
             logger.info("set table to calculator:calculationParts")
             if (topicName.contains("db.calculator.calculationParts-before-2020")) {
                 scanTimeRangeEnd = "2020-01-01T00:00:00.000Z"
@@ -143,7 +144,7 @@ class HBaseReader(private val connection: Connection,
                 logger.info("Picked up collection db.calculator.calculationParts-after-2020")
             }
         }
-        return qualifiedTableName
+        return table_name
     }
     fun getScanTimeRangeStartEpoch() =
         if (scanTimeRangeStart.isNotBlank())
