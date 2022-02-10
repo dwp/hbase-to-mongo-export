@@ -129,7 +129,7 @@ class HBaseReader(private val connection: Connection,
         return table.getScanner(scan(start))
     }
 
-    fun shardCalculationPartsCollection(topicName: String, qualifiedTableName: String): String {
+    fun shardCalculationPartsCollection(topicName: String, var qualifiedTableName: String): String {
         logger.info("Started sharding calculationParts collection")
         if(topicName.contains("db.calculator.calculationParts", ignoreCase = true)) {
             qualifiedTableName = "calculator:calculationParts"
