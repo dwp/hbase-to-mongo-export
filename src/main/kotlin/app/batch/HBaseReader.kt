@@ -130,13 +130,17 @@ class HBaseReader(private val connection: Connection,
     }
 
     fun shardCalculationPartsCollection(topicName: String, table: string) {
+        logger.info("Started sharding calculationParts collection")
         if(topicName.contains("db.calculator.calculationParts", ignoreCase = true)) {
             table = "calculator:calculationParts"
+            logger.info("set table to calculator:calculationParts")
             if (topicName.contains("db.calculator.calculationParts-before-2020")) {
-                scanTimeRangeEnd = "2019-12-31T00:00:00.000Z"
+                scanTimeRangeEnd = "2020-01-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-before-2020")
             }
             if (topicName.contains("db.calculator.calculationParts-after-2020")) {
                 scanTimeRangeStart = "2020-01-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-after-2020")
             }
         }
         return table
