@@ -124,10 +124,23 @@ class HBaseReader(private val connection: Connection,
         val namespace = matcher?.groupValues?.get(1)
         val tableName = matcher?.groupValues?.get(2)
         val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
-        val table = connection.getTable(TableName.valueOf(qualifiedTableName))
+        var table = connection.getTable(TableName.valueOf(qualifiedTableName))
+        table = shardCalculationPartsCollection(topicName, table)
         return table.getScanner(scan(start))
     }
 
+    fun shardCalculationPartsCollection(topicName: String, table: string) {
+        if(topicName.contains("db.calculator.calculationParts", ignoreCase = true)) {
+            table = "calculator:calculationParts"
+            if (topicName.contains("db.calculator.calculationParts-before-2020")) {
+                scanTimeRangeEnd = "2019-12-31T00:00:00.000Z"
+            }
+            if (topicName.contains("db.calculator.calculationParts-after-2020")) {
+                scanTimeRangeStart = "2020-01-01T00:00:00.000Z"
+            }
+        }
+        return table
+    }
     fun getScanTimeRangeStartEpoch() =
         if (scanTimeRangeStart.isNotBlank())
             ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
