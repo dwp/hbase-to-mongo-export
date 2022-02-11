@@ -135,14 +135,56 @@ class HBaseReader(private val connection: Connection,
         if(topicName.contains("db.calculator.calculationParts", ignoreCase = true)) {
             table_name = "calculator:calculationParts"
             logger.info("set table to calculator:calculationParts")
-            if (topicName.contains("db.calculator.calculationParts-before-2020")) {
-                scanTimeRangeEnd = "2020-01-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-before-2020")
+            if (topicName.contains("db.calculator.calculationParts-q1-2020")) {
+                scanTimeRangeEnd = "2020-04-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q1-2020")
 
             }
-            if (topicName.contains("db.calculator.calculationParts-after-2020")) {
-                scanTimeRangeStart = "2020-01-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-after-2020")
+            if (topicName.contains("db.calculator.calculationParts-q2-2020")) {
+                scanTimeRangeStart = "2020-04-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2020-07-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q2-2020")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q3-2020")) {
+                scanTimeRangeStart = "2020-07-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2020-10-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q3-2020")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q4-2020")) {
+                scanTimeRangeStart = "2020-10-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2021-01-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q4-2020")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q1-2021")) {
+                scanTimeRangeStart = "2021-01-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2021-04-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q1-2021")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q2-2021")) {
+                scanTimeRangeStart = "2021-04-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2021-07-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q2-2021")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q3-2021")) {
+                scanTimeRangeStart = "2021-07-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2021-10-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q3-2021")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q4-2021")) {
+                scanTimeRangeStart = "2021-10-01T00:00:00.000Z"
+                scanTimeRangeEnd = "2022-01-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q4-2021")
+
+            }
+            if (topicName.contains("db.calculator.calculationParts-q1-2022")) {
+                scanTimeRangeStart = "2022-01-01T00:00:00.000Z"
+                logger.info("Picked up collection db.calculator.calculationParts-q1-2022")
             }
         }
         return table_name
