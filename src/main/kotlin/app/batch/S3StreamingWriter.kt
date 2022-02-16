@@ -223,7 +223,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
 
-    @Value("\${snapshot.type:incremental}")
+    @Value("\${snapshot.type}")
     private lateinit var snapshotType: String
 
     companion object {

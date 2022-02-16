@@ -242,7 +242,7 @@ class S3StreamingWriterTest {
     @MockBean(name = "failedBatchPutCounter")
     private lateinit var failedBatchPutCounter: Counter
 
-    @MockBean(name = "failedManifestPutCounter")F
+    @MockBean(name = "failedManifestPutCounter")
     private lateinit var failedManifestPutCounter: Counter
 
     @MockBean(name = "dksNewDataKeyFailuresCounter")
