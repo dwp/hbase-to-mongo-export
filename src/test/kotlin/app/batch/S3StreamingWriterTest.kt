@@ -35,6 +35,7 @@ import java.security.SecureRandom
     "s3.manifest.prefix.folder=manifestprefix",
     "s3.prefix.folder=prefix",
     "topic.name=db.database.collection",
+    "snapshot.type=incremental"
 ])
 class S3StreamingWriterTest {
 
@@ -241,7 +242,7 @@ class S3StreamingWriterTest {
     @MockBean(name = "failedBatchPutCounter")
     private lateinit var failedBatchPutCounter: Counter
 
-    @MockBean(name = "failedManifestPutCounter")
+    @MockBean(name = "failedManifestPutCounter")F
     private lateinit var failedManifestPutCounter: Counter
 
     @MockBean(name = "dksNewDataKeyFailuresCounter")
