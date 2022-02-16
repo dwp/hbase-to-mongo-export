@@ -44,7 +44,7 @@ class UberTestSpec: StringSpec() {
 
     init {
 
-        "It should have pushed metrics " {
+        /*"It should have pushed metrics " {
             val response = client.get<JsonObject>("http://prometheus:9090/api/v1/targets/metadata")
             val metricNames = response["data"].asJsonArray
                 .map(JsonElement::getAsJsonObject)
@@ -97,7 +97,7 @@ class UberTestSpec: StringSpec() {
                 "spring_batch_step_seconds",
                 "spring_batch_step_seconds_max"
             )
-        }
+        }*/
 
         "It should have pushed correct records read metrics " {
             // note that the extra 8 are the nulls that each reader returns as its final value,
