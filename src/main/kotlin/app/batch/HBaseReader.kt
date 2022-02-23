@@ -36,14 +36,14 @@ class HBaseReader(private val connection: Connection,
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
         try {
-            collectClusterMetrics(connection)
+            //collectClusterMetrics(connection)
             val scanner = scanner()
             val scanMetrics = scanner.getScanMetrics()
             logger.info("scan metrics", "countOfRPCcalls" to "${scanMetrics.countOfRPCcalls}",
             "countOfRemoteRPCcalls" to "${scanMetrics.countOfRemoteRPCcalls}",
             "sumOfMillisSecBetweenNexts" to "${scanMetrics.sumOfMillisSecBetweenNexts}",
             "countOfBytesInResults" to "${scanMetrics.countOfBytesInResults}",
-            "countOfBytesInRemoteResults" to "${countOfBytesInRemoteResults}",
+            "countOfBytesInRemoteResults" to "${scanMetrics.countOfBytesInRemoteResults}",
             "countOfRegions" to "${scanMetrics.countOfRegions}",
             "countOfRPCRetries" to "${scanMetrics.countOfRPCRetries}",
             "countOfRemoteRPCRetries" to "${scanMetrics.countOfRemoteRPCRetries}")
@@ -73,7 +73,7 @@ class HBaseReader(private val connection: Connection,
             logger.error("Error with scanner", e)
             reopenScannerAndRetry(e)
         }
-    private fun collectClusterMetrics(connection: Connection){
+/*    private fun collectClusterMetrics(connection: Connection){
         val admin: Admin = connection.getAdmin()
         val metrics: ClusterMetrics = admin.getClusterMetrics()
         logger.info("cluster metrics", "cluster id" to "${metrics.getClusterId()}",
@@ -82,7 +82,7 @@ class HBaseReader(private val connection: Connection,
         "Request count" to "${metrics.getRequestCount()}",
         "Servers name" to "${metrics.getServersName()}",
         "Region states count" to "${metrics.getTableRegionStatesCount()}")
-    }
+    }*/
 
     private fun reopenScannerAndRetry(e: Exception): Result? {
         try {
