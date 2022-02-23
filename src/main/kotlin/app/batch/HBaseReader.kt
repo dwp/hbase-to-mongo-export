@@ -21,6 +21,9 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.absoluteValue
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
+import org.apache.hadoop.hbase.ClusterMetrics;
+import org.apache.hadoop.hbase.client.Admin;
 
 @Component
 @StepScope
@@ -33,6 +36,18 @@ class HBaseReader(private val connection: Connection,
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
         try {
+            collectClusterMetrics(connection)
+            val scanner = scanner().next()
+            val scanMetrics = scanner.getScanMetrics()
+            logger.info("scan metrics", countOfRPCcalls to "${scanMetrics.countOfRPCcalls}",
+            countOfRemoteRPCcalls to "${scanMetrics.countOfRemoteRPCcalls}",
+            sumOfMillisSecBetweenNexts to "${scanMetrics.sumOfMillisSecBetweenNexts}",
+            countOfBytesInResults to "${scanMetrics.countOfBytesInResults}",
+            countOfBytesInRemoteResults to "${countOfBytesInRemoteResults}",
+            countOfRegions to "${scanMetrics.countOfRegions}",
+            countOfRPCRetries to "${scanMetrics.countOfRPCRetries}",
+            countOfRemoteRPCRetries to "${scanMetrics.countOfRemoteRPCRetries}")
+
             val result = scanner().next()
             if (result != null) {
                 latestId = result.row
@@ -58,6 +73,16 @@ class HBaseReader(private val connection: Connection,
             logger.error("Error with scanner", e)
             reopenScannerAndRetry(e)
         }
+    private fun collectClusterMetrics(connection: Connection){
+        val admin: Admin = connection.getAdmin()
+        val metrics: ClusterMetrics = admin.getClusterStatus()
+        logger.info("cluster metrics", "cluster id" to "${metrics.getClusterId()}",
+        "live server metrics" to "${metrics.getLiveServerMetrics()}",
+        "Region count" to "${metrics.getRegionCount()}",
+        "Request count" to "${metrics.getRequestCount()}",
+        "Servers name" to "${metrics.getServersName()}",
+        "Region states count" to "${metrics.getTableRegionStatesCount()}")
+    }
 
     private fun reopenScannerAndRetry(e: Exception): Result? {
         try {
@@ -221,6 +246,7 @@ class HBaseReader(private val connection: Connection,
 
         val scan = Scan().apply {
             setTimeRange(timeStart, timeEnd)
+            setScanMetricsEnabled(true)
 
             if (useTimelineConsistency.toBoolean()) {
                 consistency = Consistency.TIMELINE
@@ -288,7 +314,7 @@ class HBaseReader(private val connection: Connection,
     private var scanMaxResultSize: String = "-1"
 
     @Value("\${scan.max.retries:100}")
-    private var scanMaxRetries: String = "100"
+    private var scanMaxRetries: String = "100"§
 
     @Value("\${scan.retry.sleep.ms:10000}")
     private var scanRetrySleepMs: String = "10000"
@@ -308,6 +334,6 @@ class HBaseReader(private val connection: Connection,
     private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
     companion object {
-        val logger = DataworksLogger.getLogger(HBaseReader::class)
+        val logger = DataworksLogger. (HBaseReader::class)
     }
 }
