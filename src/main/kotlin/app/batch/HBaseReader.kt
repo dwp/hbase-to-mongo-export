@@ -40,13 +40,13 @@ class HBaseReader(private val connection: Connection,
             val scanner = scanner().next()
             val scanMetrics = scanner.getScanMetrics()
             logger.info("scan metrics", countOfRPCcalls to "${scanMetrics.countOfRPCcalls}",
-            countOfRemoteRPCcalls to "${scanMetrics.countOfRemoteRPCcalls}",
-            sumOfMillisSecBetweenNexts to "${scanMetrics.sumOfMillisSecBetweenNexts}",
-            countOfBytesInResults to "${scanMetrics.countOfBytesInResults}",
-            countOfBytesInRemoteResults to "${countOfBytesInRemoteResults}",
-            countOfRegions to "${scanMetrics.countOfRegions}",
-            countOfRPCRetries to "${scanMetrics.countOfRPCRetries}",
-            countOfRemoteRPCRetries to "${scanMetrics.countOfRemoteRPCRetries}")
+            "countOfRemoteRPCcalls" to "${scanMetrics.countOfRemoteRPCcalls}",
+            "sumOfMillisSecBetweenNexts" to "${scanMetrics.sumOfMillisSecBetweenNexts}",
+            "countOfBytesInResults" to "${scanMetrics.countOfBytesInResults}",
+            "countOfBytesInRemoteResults" to "${countOfBytesInRemoteResults}",
+            "countOfRegions" to "${scanMetrics.countOfRegions}",
+            "countOfRPCRetries" to "${scanMetrics.countOfRPCRetries}",
+            "countOfRemoteRPCRetries" to "${scanMetrics.countOfRemoteRPCRetries}")
 
             val result = scanner().next()
             if (result != null) {
@@ -75,7 +75,7 @@ class HBaseReader(private val connection: Connection,
         }
     private fun collectClusterMetrics(connection: Connection){
         val admin: Admin = connection.getAdmin()
-        val metrics: ClusterMetrics = admin.getClusterStatus()
+        val metrics: ClusterMetrics = admin.getClusterMetrics()
         logger.info("cluster metrics", "cluster id" to "${metrics.getClusterId()}",
         "live server metrics" to "${metrics.getLiveServerMetrics()}",
         "Region count" to "${metrics.getRegionCount()}",
