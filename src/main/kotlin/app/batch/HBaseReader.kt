@@ -22,8 +22,8 @@ import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.absoluteValue
 import org.apache.hadoop.hbase.client.metrics.ScanMetrics
-import org.apache.hadoop.hbase.ClusterMetrics
-import org.apache.hadoop.hbase.client.Admin
+//import org.apache.hadoop.hbase.ClusterMetrics
+//import org.apache.hadoop.hbase.client.Admin
 
 @Component
 @StepScope
@@ -37,7 +37,7 @@ class HBaseReader(private val connection: Connection,
     override fun read(): Result? =
         try {
             collectClusterMetrics(connection)
-            val scanner = scanner().next()
+            val scanner = scanner()
             val scanMetrics = scanner.getScanMetrics()
             logger.info("scan metrics", countOfRPCcalls to "${scanMetrics.countOfRPCcalls}",
             "countOfRemoteRPCcalls" to "${scanMetrics.countOfRemoteRPCcalls}",
@@ -48,7 +48,7 @@ class HBaseReader(private val connection: Connection,
             "countOfRPCRetries" to "${scanMetrics.countOfRPCRetries}",
             "countOfRemoteRPCRetries" to "${scanMetrics.countOfRemoteRPCRetries}")
 
-            val result = scanner().next()
+            val result = scanner.next()
             if (result != null) {
                 latestId = result.row
             }
