@@ -13,6 +13,8 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.springframework.test.util.ReflectionTestUtils
+import kotlin.math.absoluteValue
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics
 
 class HBaseReaderTest {
 
