@@ -38,8 +38,8 @@ class HBaseReader(private val connection: Connection,
         try {
             //collectClusterMetrics(connection)
             val scan_runnner = scanner()
-            val scanMetrics = scan_runnner.getScanMetrics()
             val result = scan_runnner.next()
+            val scanMetrics = scan_runnner.getScanMetrics()
             logger.info("scan metrics", "countOfRPCcalls" to "${scanMetrics.countOfRPCcalls}",
                     "countOfRemoteRPCcalls" to "${scanMetrics.countOfRemoteRPCcalls}",
                     "sumOfMillisSecBetweenNexts" to "${scanMetrics.sumOfMillisSecBetweenNexts}",
