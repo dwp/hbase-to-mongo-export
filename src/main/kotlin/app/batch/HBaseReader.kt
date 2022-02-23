@@ -33,6 +33,8 @@ class HBaseReader(private val connection: Connection,
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
         try {
+            checkCompactionState()
+
             val result = scanner().next()
             if (result != null) {
                 latestId = result.row
@@ -118,15 +120,32 @@ class HBaseReader(private val connection: Connection,
         return scanner!!
     }
 
+    private fun checkCompactionState(): Boolean {
+        val tableName = TableName.valueOf(qualifiedTableName(topicName))
+        val compacting = connection.admin.getCompactionState(tableName)
+        logger.info("Compaction state of table",
+            "table_name" to (tableName.toString()),
+            "compaction_state" to (compacting.toString()))
+        connection.admin.close()
+        return compacting.number != 0
+    }
+
     private fun newScanner(start: ByteArray): ResultScanner {
         filterBlockedTopicsUtils.isTopicBlocked(topicName)
+        val table = constructTable(topicName)
+        return table.getScanner(scan(start))
+    }
+
+    private fun qualifiedTableName(topicName: String): String {
         val matcher = textUtils.topicNameTableMatcher(topicName)
         val namespace = matcher?.groupValues?.get(1)
         val tableName = matcher?.groupValues?.get(2)
         var qualifiedTableName = "$namespace:$tableName".replace("-", "_")
-        qualifiedTableName = shardCalculationPartsCollection(topicName, qualifiedTableName)
-        val table = connection.getTable(TableName.valueOf(qualifiedTableName))
-        return table.getScanner(scan(start))
+        return shardCalculationPartsCollection(topicName, qualifiedTableName)
+    }
+
+    private fun constructTable(topicName: String): Table {
+        return connection.getTable(TableName.valueOf(qualifiedTableName(topicName)))
     }
 
     fun shardCalculationPartsCollection(topicName: String, qualifiedTableName: String): String {

@@ -9,6 +9,7 @@ import io.prometheus.client.Counter
 import org.apache.hadoop.hbase.NotServingRegionException
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.*
+import org.apache.hadoop.hbase.protobuf.generated.AdminProtos
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -46,10 +47,16 @@ class HBaseReaderTest {
         val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
         ReflectionTestUtils.setField(filterBlockedTopicsUtils, "blockedTopics", blockedTopics)
 
+        val admin = mock<Admin> {
+            on { getCompactionState(TableName.valueOf(tableName)) } doReturn AdminProtos.GetRegionInfoResponse.CompactionState.NONE
+        }
+
         val textUtils = TextUtils()
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
+            on { getAdmin() } doReturn admin
         }
+
 
         val scanRetriesCounter = mock<Counter>()
         val failedScansCounter = mock<Counter>()
@@ -97,8 +104,13 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn failingScanner doReturn successfulScanner
         }
 
+        val admin = mock<Admin> {
+            on { getCompactionState(TableName.valueOf(tableName)) } doReturn AdminProtos.GetRegionInfoResponse.CompactionState.NONE
+        }
+
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
+            on { getAdmin() } doReturn admin
         }
 
         val textUtils = TextUtils()
@@ -164,8 +176,13 @@ class HBaseReaderTest {
             on { getScanner(any<Scan>()) } doReturn firstFailingScanner doReturn secondFailingScanner
         }
 
+        val admin = mock<Admin> {
+            on { getCompactionState(TableName.valueOf(tableName)) } doReturn AdminProtos.GetRegionInfoResponse.CompactionState.NONE
+        }
+
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
+            on { getAdmin() } doReturn admin
         }
 
         val textUtils = TextUtils()
@@ -216,8 +233,13 @@ class HBaseReaderTest {
 
         val table = mock<Table>()
 
+        val admin = mock<Admin> {
+            on { getCompactionState(TableName.valueOf(tableName)) } doReturn AdminProtos.GetRegionInfoResponse.CompactionState.NONE
+        }
+
         val connection = mock<Connection> {
             on { getTable(TableName.valueOf(tableName)) } doReturn table
+            on { getAdmin() } doReturn admin
         }
 
         val filterBlockedTopicsUtils = FilterBlockedTopicsUtils()
