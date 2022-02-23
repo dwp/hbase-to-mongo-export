@@ -314,7 +314,7 @@ class HBaseReader(private val connection: Connection,
     private var scanMaxResultSize: String = "-1"
 
     @Value("\${scan.max.retries:100}")
-    private var scanMaxRetries: String = "100"§
+    private var scanMaxRetries: String = "100"
 
     @Value("\${scan.retry.sleep.ms:10000}")
     private var scanRetrySleepMs: String = "10000"
