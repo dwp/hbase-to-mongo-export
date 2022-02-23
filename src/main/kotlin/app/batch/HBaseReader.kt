@@ -21,9 +21,9 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.absoluteValue
-import org.apache.hadoop.hbase.client.metrics.ScanMetrics;
-import org.apache.hadoop.hbase.ClusterMetrics;
-import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics
+import org.apache.hadoop.hbase.ClusterMetrics
+import org.apache.hadoop.hbase.client.Admin
 
 @Component
 @StepScope
