@@ -334,6 +334,6 @@ class HBaseReader(private val connection: Connection,
     private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
     companion object {
-        val logger = DataworksLogger. (HBaseReader::class)
+        val logger = DataworksLogger.getLogger(HBaseReader::class)
     }
 }
