@@ -13,6 +13,8 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.springframework.test.util.ReflectionTestUtils
+import kotlin.math.absoluteValue
+import org.apache.hadoop.hbase.client.metrics.ScanMetrics
 
 class HBaseReaderTest {
 
@@ -37,6 +39,7 @@ class HBaseReaderTest {
 
         val resultScanner = mock<ResultScanner> {
             on { next() } doReturn result
+            on { getScanMetrics() } doReturn ScanMetrics()
         }
 
         val table = mock<Table> {
@@ -83,6 +86,7 @@ class HBaseReaderTest {
 
         val failingScanner = mock<ResultScanner> {
             on { next() } doReturn firstResult doThrow NotServingRegionException("Error")
+            on { getScanMetrics() } doReturn ScanMetrics()
         }
 
         val secondResult = mock<Result> {
@@ -91,6 +95,7 @@ class HBaseReaderTest {
 
         val successfulScanner = mock<ResultScanner> {
             on { next() } doReturn secondResult doReturn null
+            on { getScanMetrics() } doReturn ScanMetrics()
         }
 
         val table = mock<Table> {
@@ -153,11 +158,13 @@ class HBaseReaderTest {
 
         val firstFailingScanner = mock<ResultScanner> {
             on { next() } doReturn firstResult doThrow NotServingRegionException("Error")
+            on { getScanMetrics() } doReturn ScanMetrics()
         }
 
 
         val secondFailingScanner = mock<ResultScanner> {
             on { next() } doThrow NotServingRegionException("Error")
+            on { getScanMetrics() } doReturn ScanMetrics()
         }
 
         val table = mock<Table> {
