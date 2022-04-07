@@ -28,7 +28,6 @@ jobs:
         run: |
           VERSION=$(${{ needs.get-publish-version.outputs.publish-version }})
           sed -i s/version=.*/version=$VERSION/ gradle.properties
-          cat gradle.properties
           ./gradlew build
 
       # - name: Publish to GitHub Packages
