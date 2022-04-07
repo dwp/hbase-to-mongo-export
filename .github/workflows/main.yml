@@ -26,7 +26,7 @@ jobs:
 
       - name: Gradle build
         run: |
-          sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }/ gradle.properties
+          sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }}/ gradle.properties
           ./gradlew build
 
       # - name: Publish to GitHub Packages
