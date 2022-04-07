@@ -19,7 +19,7 @@ jobs:
 
       - name: Gradle build
         needs: [get-publish-version]
-        runs: |
+        run: |
           ./gradlew build
 
   integration-test:
@@ -28,5 +28,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run Integration Tests
-        runs: |
+        run: |
           make integration-all
