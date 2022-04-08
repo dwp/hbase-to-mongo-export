@@ -29,14 +29,6 @@ jobs:
           sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }}/ gradle.properties
           ./gradlew build
 
-      # - name: Publish to GitHub Packages
-      #   uses: gradle/gradle-build-action@v2
-      #   with:
-      #     arguments: publish
-      #   env:
-      #     USERNAME: ${{ github.actor }}
-      #     TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   integration-test:
     runs-on: ubuntu-latest
     needs: [build-app]
@@ -76,19 +68,26 @@ jobs:
         run: |
           echo "::set-output name=publish-version::${{ steps.semver.outputs.semver }}"
 
-  # publish-github-release:
-  #   runs-on: ubuntu-latest
-  #   needs: [build-app, get-publish-version, integration-tetst]
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@master
-  #     - name: Create GitHub Release
-  #       id: create_release
-  #       uses: actions/create-release@latest
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ needs.get-publish-version.outputs.publish-version }}
-  #         release_name: Release ${{ needs.get-publish-version.outputs.publish-version }}
-  #         draft: false
-  #         prerelease: false
+  publish-github-release:
+    runs-on: ubuntu-latest
+    needs: [build-app, get-publish-version, integration-tetst]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.get-publish-version.outputs.publish-version }}-test
+          release_name: ${{ needs.get-publish-version.outputs.publish-version }}-test
+          prerelease: false
+
+    # - name: Publish to GitHub Packages
+    #   uses: gradle/gradle-build-action@v2
+    #   with:
+    #     arguments: publish
+    #   env:
+    #     USERNAME: ${{ github.actor }}
+    #     TOKEN: ${{ secrets.GITHUB_TOKEN }}
