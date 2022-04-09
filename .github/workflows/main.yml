@@ -29,6 +29,11 @@ jobs:
           sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }}/ gradle.properties
           ./gradlew build
 
+      - name: mkdir for artifact
+        run: |
+          mkdir artifacts
+          cp build/libs/hbase-to-mongo-export-*.jar ./artifacts/
+
   # integration-test:
   #   runs-on: ubuntu-latest
   #   needs: [build-app]
