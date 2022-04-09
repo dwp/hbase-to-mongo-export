@@ -27,9 +27,9 @@ jobs:
           gradle-version: 6.4.1
 
       - name: debug before
-      run: |
-        ls -a
-        ls build/libs
+        run: |
+          ls -a
+          ls build/libs
   
       - name: Gradle build
         run: |
