@@ -111,7 +111,7 @@ jobs:
       - name: DEBUG
         run: |
           ls
-          ls build
+          ls artifacts
       - name: Upload Release Asset
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
