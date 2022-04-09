@@ -71,7 +71,7 @@ jobs:
   publish-github-release:
     runs-on: ubuntu-latest
     #needs: [build-app, get-publish-version, integration-test]
-    needs: [[build-app, get-publish-version]
+    needs: [build-app, get-publish-version]
     steps:
       - name: Checkout code
         uses: actions/checkout@master
