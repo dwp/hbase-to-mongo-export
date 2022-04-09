@@ -33,6 +33,7 @@ jobs:
 
       - name: debug
         run: |
+          ls -a
           ls build/libs
 
       - name: mkdir for artifact
