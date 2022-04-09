@@ -31,6 +31,7 @@ jobs:
 
       - name: mkdir for artifact
         run: |
+          pwd
           mkdir artifacts
           cp build/libs/hbase-to-mongo-export-*.jar ./artifacts/
 
