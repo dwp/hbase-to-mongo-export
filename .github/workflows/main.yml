@@ -28,6 +28,7 @@ jobs:
 
       - name: Gradle Version
         run: |
+          echo ${{ needs.get-publish-version.outputs.publish-version }}
           sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }}/ gradle.properties
       
       - name: Gradle build
