@@ -28,9 +28,7 @@ jobs:
 
       - name: Gradle Version
         run: |
-          mkdir .gradle
           sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }}/ gradle.properties
-          mv gradle.properties .gradle/
       
       - name: Gradle build
         run: |
