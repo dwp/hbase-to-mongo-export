@@ -32,7 +32,7 @@ jobs:
       
       - name: Gradle build
         run: |
-          gradle build
+          gradle -i build
 
       - name: debug after
         run: |
