@@ -38,6 +38,7 @@ jobs:
         run: |
           ls -a
           ls build/libs
+          cat gradle.properties
 
       - name: mkdir for artifact
         run: |
