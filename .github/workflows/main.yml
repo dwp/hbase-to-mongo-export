@@ -26,12 +26,17 @@ jobs:
         with:
           gradle-version: 6.4.1
 
+      - name: debug before
+      run: |
+        ls -a
+        ls build/libs
+  
       - name: Gradle build
         run: |
           sed -i s/version=.*/version=${{ needs.get-publish-version.outputs.publish-version }}/ gradle.properties
           gradle build
 
-      - name: debug
+      - name: debug after
         run: |
           ls -a
           ls build/libs
