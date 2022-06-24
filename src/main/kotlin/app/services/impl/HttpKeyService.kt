@@ -101,9 +101,12 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
                 decryptedKeyCache[cacheKey]!!
             } else {
                 httpClientProvider.client().use { client ->
-                    val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${
-                        URLEncoder.encode(encryptionKeyId,"US-ASCII")
-                    }"
+                    val decryptEndpoint = "/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
+                    val dksUrl = if (dataKeyServiceDecryptOverrideUrl.isEmpty()) {
+                        "$dataKeyServiceUrl$decryptEndpoint"
+                    } else {
+                        "$dataKeyServiceDecryptOverrideUrl$decryptEndpoint"
+                    }
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
                     val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
@@ -164,4 +167,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider,
 
     @Value("\${data.key.service.url}")
     private lateinit var dataKeyServiceUrl: String
+
+    @Value("\${data.key.service.decrypt.override.url:}")
+    private lateinit var dataKeyServiceDecryptOverrideUrl: String
 }
