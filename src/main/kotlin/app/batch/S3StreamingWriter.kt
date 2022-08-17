@@ -188,8 +188,17 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
     }
 
-    private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
-
+    // private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
+    private fun filePrefix(): String {
+        var renderedTopicName = if (topicName.count{ c -> c == '.' } == 2) {
+            if (topicName.lastIndexOf('-') > topicName.lastIndexOf('.')) {
+                topicName.substring(0, topicName.lastIndexOf('-')).plus(
+                    topicName.subSequence(topicName.lastIndexOf('-') + 1, topicName.length)[0].uppercaseChar()
+                ).plus(topicName.subSequence(topicName.lastIndexOf('-') + 1, topicName.length).substring(1))
+            } else topicName
+        } else topicName
+        return "$renderedTopicName-%03d-%03d".format(absoluteStart, absoluteStop)
+    }
     private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
     private var currentOutputStream: EncryptingOutputStream? = null
