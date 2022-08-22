@@ -16,6 +16,8 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -196,6 +198,24 @@ class S3StreamingWriterTest {
         verifyZeroInteractions(failedBatchPutCounter)
         verifyZeroInteractions(failedManifestPutCounter)
         verifyZeroInteractions(dksNewDataKeyFailuresCounter)
+    }
+
+    @Test
+    fun testFilePrefix() {
+        val testTopicNames = mapOf(
+            "db.testdb-one.testTableOne" to "db.testdb-one.testTableOne",
+            "db.testdb-one.testTable-Two" to "db.testdb-one.testTableTwo",
+            "db.testdbtwo.testTableOne" to "db.testdbtwo.testTableOne",
+            "db.testdbtwo.testTable-Two" to "db.testdbtwo.testTableTwo"
+        )
+
+        // epoch milliseconds
+        val absoluteStart = 2147483648
+        val absoluteStop = 2147483647
+
+        testTopicNames.forEach{ (topicName, tableName) ->
+            Assert.assertEquals(s3StreamingWriter.filePrefix(topicName), "$tableName-%03d-%03d".format(absoluteStart, absoluteStop))
+        }
     }
 
     private fun dataKeyResult() = DataKeyResult("dataKeyEncryptionKeyId",

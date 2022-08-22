@@ -94,7 +94,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
     fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
-            val filePrefix = filePrefix()
+            val filePrefix = filePrefix(topicName)
             val slashRemovedPrefix = exportPrefix.replace(Regex("""/+$"""), "")
             val objectKey =
                 "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc"
@@ -172,7 +172,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             }
             val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
             val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
-            val filePrefix = filePrefix()
+            val filePrefix = filePrefix(topicName)
             val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
             val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
@@ -189,8 +189,8 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     // private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
-    private fun filePrefix(): String {
-        var renderedTopicName = if (topicName.count{ c -> c == '.' } == 2) {
+    fun filePrefix(topicName: String): String {
+        val renderedTopicName = if (topicName.count{ c -> c == '.' } == 2) {
             if (topicName.lastIndexOf('-') > topicName.lastIndexOf('.')) {
                 topicName.substring(0, topicName.lastIndexOf('-')).plus(
                     topicName.subSequence(topicName.lastIndexOf('-') + 1, topicName.length)[0].toUpperCase()
