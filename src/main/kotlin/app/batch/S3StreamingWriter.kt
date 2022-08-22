@@ -94,7 +94,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
     fun writeOutput(openNext: Boolean = true) {
         if (batchSizeBytes > 0) {
-            val filePrefix = filePrefix(topicName)
+            val filePrefix = filePrefix()
             val slashRemovedPrefix = exportPrefix.replace(Regex("""/+$"""), "")
             val objectKey =
                 "${slashRemovedPrefix}/$filePrefix-%06d.txt.${compressionInstanceProvider.compressionExtension()}.enc"
@@ -172,7 +172,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
             }
             val cipherOutputStream = cipherService.cipherOutputStream(key, initialisationVector, byteArrayOutputStream)
             val compressingStream = compressionInstanceProvider.compressorOutputStream(cipherOutputStream)
-            val filePrefix = filePrefix(topicName)
+            val filePrefix = filePrefix()
             val manifestFile = File("$manifestOutputDirectory/$filePrefix-%06d.csv".format(currentBatch))
             val manifestWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(manifestFile)))
 
@@ -188,16 +188,45 @@ class S3StreamingWriter(private val cipherService: CipherService,
         }
     }
 
-    // private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
-    fun filePrefix(topicName: String): String {
-        val renderedTopicName = if (topicName.count{ c -> c == '.' } == 2) {
-            if (topicName.lastIndexOf('-') > topicName.lastIndexOf('.')) {
-                topicName.substring(0, topicName.lastIndexOf('-')).plus(
-                    topicName.subSequence(topicName.lastIndexOf('-') + 1, topicName.length)[0].toUpperCase()
-                ).plus(topicName.subSequence(topicName.lastIndexOf('-') + 1, topicName.length).substring(1))
-            } else topicName
-        } else topicName
-        return "$renderedTopicName-%03d-%03d".format(absoluteStart, absoluteStop)
+    private fun filePrefix(): String {
+        // set default file prefix
+        var renderedTopicName: String = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
+
+        // if topic name matches pattern db.database-name.tableName then sanitise the table name
+        val splitTopicName = topicName.split(".")
+        if (splitTopicName.size == 3) {
+            renderedTopicName = "%s.%s.%s-%03d-%03d".format(
+                splitTopicName[0],
+                splitTopicName[1],
+                sanitiseTableName(splitTopicName[2]),
+                absoluteStart,
+                absoluteStop
+            )
+        }
+
+        return renderedTopicName
+    }
+
+    fun sanitiseTableName(tableName: String): String {
+        val pattern = "-"
+        val index = tableName.indexOf(pattern)
+
+        val sanitisedTableName: String
+
+        return if (index != -1) {
+            // remove index
+            val modifiedString = tableName.removeRange(index, index+1)
+            // concat existing strings whilst making new char in index upper case
+            sanitisedTableName = modifiedString.substring(0, index).plus(
+                modifiedString[index].toUpperCase()
+            ).plus(
+                modifiedString.substring(index+1)
+            )
+            // recurse and check for any more instances of pattern
+            sanitiseTableName(sanitisedTableName)
+        } else {
+            tableName
+        }
     }
 
     private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)

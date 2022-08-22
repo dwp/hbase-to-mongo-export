@@ -201,20 +201,20 @@ class S3StreamingWriterTest {
     }
 
     @Test
-    fun testFilePrefix() {
-        val testTopicNames = mapOf(
-            "db.testdb-one.testTableOne" to "db.testdb-one.testTableOne",
-            "db.testdb-one.testTable-Two" to "db.testdb-one.testTableTwo",
-            "db.testdbtwo.testTableOne" to "db.testdbtwo.testTableOne",
-            "db.testdbtwo.testTable-Two" to "db.testdbtwo.testTableTwo"
+    fun testSanitiseTableName() {
+        val testTableNames = listOf(
+            "simple-test-table",
+            "simple-test-Table",
+            "simple-Test-Table",
+            "simple-testTable",
+            "simple-TestTable",
+            "simpleTest-table",
+            "simpleTest-Table"
         )
 
-        // epoch milliseconds
-        val absoluteStart = 2147483648
-        val absoluteStop = 2147483647
-
-        testTopicNames.forEach{ (topicName, tableName) ->
-            Assert.assertEquals("$tableName-%03d-%03d".format(absoluteStart, absoluteStop), s3StreamingWriter.filePrefix(topicName))
+        testTableNames.forEach { t ->
+            val testCaseTable = s3StreamingWriter.sanitiseTableName(t)
+            Assert.assertEquals("simpleTestTable", testCaseTable)
         }
     }
 
