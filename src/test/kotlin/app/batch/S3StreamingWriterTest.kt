@@ -214,7 +214,7 @@ class S3StreamingWriterTest {
         val absoluteStop = 2147483647
 
         testTopicNames.forEach{ (topicName, tableName) ->
-            Assert.assertEquals(s3StreamingWriter.filePrefix(topicName), "$tableName-%03d-%03d".format(absoluteStart, absoluteStop))
+            Assert.assertEquals("$tableName-%03d-%03d".format(absoluteStart, absoluteStop), s3StreamingWriter.filePrefix(topicName))
         }
     }
 
