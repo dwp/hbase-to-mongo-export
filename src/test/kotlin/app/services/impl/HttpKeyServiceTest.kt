@@ -64,7 +64,6 @@ class HttpKeyServiceTest {
         reset(dksDecryptKeyRetriesCounter)
         reset(dksNewDataKeyRetriesCounter)
         ReflectionTestUtils.setField(keyService, "dataKeyResult", null)
-        ReflectionTestUtils.setField(keyService, "dataKeyServiceDecryptOverrideUrl", "")
     }
 
     @Test
@@ -400,92 +399,6 @@ class HttpKeyServiceTest {
             verifyZeroInteractions(dksNewDataKeyRetriesCounter)
         }
     }
-
-    @Test
-    fun testDualDKS_HappyCase_WillCallClientDatakeyOnce_AndReturnCorrectUri() {
-        val responseBody = datakeyServiceResponseBody
-
-        val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
-        val entity = mock<HttpEntity>()
-        given(entity.content).willReturn(byteArrayInputStream)
-
-        val statusLine = mock<StatusLine>()
-        given(statusLine.statusCode).willReturn(201)
-        val httpResponse = mock<CloseableHttpResponse>()
-        given(httpResponse.statusLine).willReturn(statusLine)
-        given(httpResponse.entity).willReturn(entity)
-        val httpClient = mock<CloseableHttpClient>()
-        given(httpClient.execute(any<HttpGet>())).willReturn(httpResponse)
-        given(httpClientProvider.client()).willReturn(httpClient)
-        val dksCallId = nextDksCorrelationId()
-        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
-
-        val dataKeyResult = keyService.batchDataKey()
-
-        val argumentCaptor = argumentCaptor<HttpGet>()
-        verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
-        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
-    }
-
-    @Test
-    fun testDualDKS_HappyCase_WillCallServerOnceWithDecryptOverrideURL_AndReturnCorrectDataKeyUri() {
-        ReflectionTestUtils.setField(keyService, "dataKeyServiceDecryptOverrideUrl", "https://dks-decrypt:8443")
-
-        val responseBody = datakeyServiceResponseBody
-
-        val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
-        val entity = mock<HttpEntity>()
-        given(entity.content).willReturn(byteArrayInputStream)
-
-        val statusLine = mock<StatusLine>()
-        given(statusLine.statusCode).willReturn(201)
-        val httpResponse = mock<CloseableHttpResponse>()
-        given(httpResponse.statusLine).willReturn(statusLine)
-        given(httpResponse.entity).willReturn(entity)
-        val httpClient = mock<CloseableHttpClient>()
-        given(httpClient.execute(any<HttpGet>())).willReturn(httpResponse)
-        given(httpClientProvider.client()).willReturn(httpClient)
-        val dksCallId = nextDksCorrelationId()
-        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
-
-        val dataKeyResult = keyService.batchDataKey()
-
-        val argumentCaptor = argumentCaptor<HttpGet>()
-        verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("https://dks:8443/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
-        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
-    }
-
-    @Test
-    fun testDualDKS_HappyCase_WillCallServerOnceWithDecryptOverrideURL_AndReturnCorrectDecryptUri() {
-        ReflectionTestUtils.setField(keyService, "dataKeyServiceDecryptOverrideUrl", "https://dks-decrypt:8443")
-
-        val responseBody = datakeyServiceResponseBody
-
-        val byteArrayInputStream = ByteArrayInputStream(responseBody.toByteArray())
-        val statusLine = mock<StatusLine>()
-        val entity = mock<HttpEntity>()
-        given(entity.content).willReturn(byteArrayInputStream)
-        given(statusLine.statusCode).willReturn(200)
-        val httpResponse = mock<CloseableHttpResponse>()
-        given(httpResponse.statusLine).willReturn(statusLine)
-        given(httpResponse.entity).willReturn(entity)
-        val httpClient = mock<CloseableHttpClient>()
-        given(httpClient.execute(any<HttpPost>())).willReturn(httpResponse)
-        given(httpClientProvider.client()).willReturn(httpClient)
-        val dksCallId = nextDksCorrelationId()
-        whenever(uuidGenerator.randomUUID()).thenReturn(dksCallId)
-
-        keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-
-        val argumentCaptor = argumentCaptor<HttpPost>()
-        verify(httpClient, times(1)).execute(argumentCaptor.capture())
-        assertEquals("https://dks-decrypt:8443/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
-        verifyZeroInteractions(dksDecryptKeyRetriesCounter)
-    }
-
-
 
     @Autowired
     private lateinit var keyService: KeyService

@@ -35,7 +35,6 @@ import java.security.SecureRandom
     "s3.manifest.prefix.folder=manifestprefix",
     "s3.prefix.folder=prefix",
     "topic.name=db.database.collection",
-    "snapshot.type=incremental",
 ])
 class S3StreamingWriterTest {
 
