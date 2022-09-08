@@ -44,7 +44,7 @@ class UberTestSpec: StringSpec() {
 
     init {
 
-        /*"It should have pushed metrics " {
+        "It should have pushed metrics " {
             val response = client.get<JsonObject>("http://prometheus:9090/api/v1/targets/metadata")
             val metricNames = response["data"].asJsonArray
                 .map(JsonElement::getAsJsonObject)
@@ -97,7 +97,7 @@ class UberTestSpec: StringSpec() {
                 "spring_batch_step_seconds",
                 "spring_batch_step_seconds_max"
             )
-        }*/
+        }
 
         "It should have pushed correct records read metrics " {
             // note that the extra 8 are the nulls that each reader returns as its final value,
@@ -117,9 +117,9 @@ class UberTestSpec: StringSpec() {
             validateMetric("""htme_s3_batch_put_operation_duration_count{topic="db.database.collection"}""", "20")
         }
 
-        /*    "It should have pushed correct manifest put metrics " {
+        "It should have pushed correct manifest put metrics " {
             validateMetric("""htme_s3_manifest_put_operation_duration_count{topic="db.database.collection"}""", "20")
-        }*/
+        }
 
         "It should have pushed correct successful collection metrics " {
             validateMetric("""htme_successful_collections{topic="db.database.collection"}""", "1")
@@ -153,11 +153,11 @@ class UberTestSpec: StringSpec() {
             }.toSet() shouldHaveSize 2
         }
 
-        /*"Writes the manifests" {
+        "Writes the manifests" {
             s3BucketKeys("manifests") shouldContainExactly expectedManifests()
-        } */
+        }
 
-        /*"Writes the correct manifest entries" {
+        "Writes the correct manifest entries" {
             val entries = s3BucketObjects("manifests")
                 .map(S3Object::getObjectContent)
                 .map { it.copyToByteArrayOutputStream() }.lines().toList()
@@ -175,7 +175,7 @@ class UberTestSpec: StringSpec() {
 
             modified shouldHaveSize 10_000
             unmodified shouldHaveSize 10_000
-        } */
+        }
 
         "Writes the correct records" {
             val (equalityRecords, regularRecords) = s3BucketObjects("exports")

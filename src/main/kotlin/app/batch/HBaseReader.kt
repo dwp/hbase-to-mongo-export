@@ -21,9 +21,6 @@ import uk.gov.dwp.dataworks.logging.DataworksLogger
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.absoluteValue
-import org.apache.hadoop.hbase.client.metrics.ScanMetrics
-//import org.apache.hadoop.hbase.ClusterMetrics
-//import org.apache.hadoop.hbase.client.Admin
 
 @Component
 @StepScope
@@ -36,18 +33,7 @@ class HBaseReader(private val connection: Connection,
     @Throws(TableNotFoundException::class, TableNotEnabledException::class, BlockedTopicException::class)
     override fun read(): Result? =
         try {
-            //collectClusterMetrics(connection)
-            val scan_runnner = scanner()
-            val result = scan_runnner.next()
-            val scanMetrics = scan_runnner.getScanMetrics()
-            logger.info("scan metrics", "countOfRPCcalls" to "${scanMetrics.countOfRPCcalls}",
-                    "countOfRemoteRPCcalls" to "${scanMetrics.countOfRemoteRPCcalls}",
-                    "sumOfMillisSecBetweenNexts" to "${scanMetrics.sumOfMillisSecBetweenNexts}",
-                    "countOfBytesInResults" to "${scanMetrics.countOfBytesInResults}",
-                    "countOfBytesInRemoteResults" to "${scanMetrics.countOfBytesInRemoteResults}",
-                    "countOfRegions" to "${scanMetrics.countOfRegions}",
-                    "countOfRPCRetries" to "${scanMetrics.countOfRPCRetries}",
-                    "countOfRemoteRPCRetries" to "${scanMetrics.countOfRemoteRPCRetries}")
+            val result = scanner().next()
             if (result != null) {
                 latestId = result.row
             }
@@ -72,16 +58,6 @@ class HBaseReader(private val connection: Connection,
             logger.error("Error with scanner", e)
             reopenScannerAndRetry(e)
         }
-    /*  private fun collectClusterMetrics(connection: Connection){
-        val admin: Admin = connection.getAdmin()
-        val metrics: ClusterMetrics = admin.getClusterMetrics()
-        logger.info("cluster metrics", "cluster id" to "${metrics.getClusterId()}",
-        "live server metrics" to "${metrics.getLiveServerMetrics()}",
-        "Region count" to "${metrics.getRegionCount()}",
-        "Request count" to "${metrics.getRequestCount()}",
-        "Servers name" to "${metrics.getServersName()}",
-        "Region states count" to "${metrics.getTableRegionStatesCount()}")
-    }*/
 
     private fun reopenScannerAndRetry(e: Exception): Result? {
         try {
@@ -147,84 +123,11 @@ class HBaseReader(private val connection: Connection,
         val matcher = textUtils.topicNameTableMatcher(topicName)
         val namespace = matcher?.groupValues?.get(1)
         val tableName = matcher?.groupValues?.get(2)
-        var qualifiedTableName = "$namespace:$tableName".replace("-", "_")
-        qualifiedTableName = shardCalculationPartsCollection(topicName, qualifiedTableName)
+        val qualifiedTableName = "$namespace:$tableName".replace("-", "_")
         val table = connection.getTable(TableName.valueOf(qualifiedTableName))
         return table.getScanner(scan(start))
     }
 
-    fun shardCalculationPartsCollection(topicName: String, qualifiedTableName: String): String {
-        var table_name = qualifiedTableName
-        logger.info("Started sharding calculationParts collection")
-        if(topicName.contains("db.calculator.calculationParts", ignoreCase = true)) {
-            table_name = "calculator:calculationParts"
-            logger.info("set table to calculator:calculationParts")
-            if (topicName.contains("db.calculator.calculationParts-q1-2021")) {
-                scanTimeRangeEnd = "2021-04-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-q1-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Apr-2021")) {
-                scanTimeRangeStart = "2021-04-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-05-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Apr-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-May-2021")) {
-                scanTimeRangeStart = "2021-05-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-06-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-May-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Jun-2021")) {
-                scanTimeRangeStart = "2021-06-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-07-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Jun-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Jul-2021")) {
-                scanTimeRangeStart = "2021-07-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-08-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Jul-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Aug-2021")) {
-                scanTimeRangeStart = "2021-08-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-09-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Aug-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Sep-2021")) {
-                scanTimeRangeStart = "2021-09-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-10-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Sep-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Oct-2021")) {
-                scanTimeRangeStart = "2021-10-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-11-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Oct-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Nov-2021")) {
-                scanTimeRangeStart = "2021-11-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2021-12-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Nov-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-Dec-2021")) {
-                scanTimeRangeStart = "2021-12-01T00:00:00.000Z"
-                scanTimeRangeEnd = "2022-01-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-Dec-2021")
-
-            }
-            if (topicName.contains("db.calculator.calculationParts-q1-2022")) {
-                scanTimeRangeStart = "2022-01-01T00:00:00.000Z"
-                logger.info("Picked up collection db.calculator.calculationParts-q1-2022")
-            }
-        }
-        return table_name
-    }
     fun getScanTimeRangeStartEpoch() =
         if (scanTimeRangeStart.isNotBlank())
             ZonedDateTime.parse(scanTimeRangeStart).toInstant().toEpochMilli()
@@ -245,7 +148,6 @@ class HBaseReader(private val connection: Connection,
 
         val scan = Scan().apply {
             setTimeRange(timeStart, timeEnd)
-            setScanMetricsEnabled(true)
 
             if (useTimelineConsistency.toBoolean()) {
                 consistency = Consistency.TIMELINE

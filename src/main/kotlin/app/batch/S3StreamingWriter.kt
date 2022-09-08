@@ -138,9 +138,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
                     byteCounter.labels(split()).inc(batchSizeBytes.toDouble())
 
                     try {
-                        if (snapshotType == "incremental") {
-                            streamingManifestWriter.sendManifest(s3, encryptingOutputStream.manifestFile, manifestBucket, manifestPrefix)
-                        }
+                        streamingManifestWriter.sendManifest(s3, encryptingOutputStream.manifestFile, manifestBucket, manifestPrefix)
                     } catch (e: Exception) {
                         failedManifestPutCounter.labels(split()).inc()
                         throw e
@@ -261,9 +259,6 @@ class S3StreamingWriter(private val cipherService: CipherService,
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
-
-    @Value("\${snapshot.type}")
-    private lateinit var snapshotType: String
 
     companion object {
         val logger = DataworksLogger.getLogger(S3StreamingWriter::class)
