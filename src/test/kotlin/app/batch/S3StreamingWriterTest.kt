@@ -197,24 +197,6 @@ class S3StreamingWriterTest {
         verifyZeroInteractions(dksNewDataKeyFailuresCounter)
     }
 
-    @Test
-    fun testSanitiseTableName() {
-        val testTableNames = listOf(
-            "simple-test-table",
-            "simple-test-Table",
-            "simple-Test-Table",
-            "simple-testTable",
-            "simple-TestTable",
-            "simpleTest-table",
-            "simpleTest-Table"
-        )
-
-        testTableNames.forEach { t ->
-            val testCaseTable = s3StreamingWriter.sanitiseTableName(t)
-            Assert.assertEquals("simpleTestTable", testCaseTable)
-        }
-    }
-
     private fun dataKeyResult() = DataKeyResult("dataKeyEncryptionKeyId",
             "plaintextDataKey",
             "ciphertextDataKey")
