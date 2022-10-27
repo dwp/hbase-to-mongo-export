@@ -187,6 +187,7 @@ class S3StreamingWriter(private val cipherService: CipherService,
     }
 
     private fun filePrefix() = "$topicName-%03d-%03d".format(absoluteStart, absoluteStop)
+    
 
     private fun split() = "%03d-%03d".format(absoluteStart, absoluteStop)
 
