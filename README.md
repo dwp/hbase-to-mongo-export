@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # hbase-to-mongo-export
 
 Selects the latest records from a single hbase table and writes them out in
